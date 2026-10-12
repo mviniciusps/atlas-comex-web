@@ -57,7 +57,7 @@ export class DetalheProcessoComponent implements OnInit {
     private processosService: ProcessosService,
   ) { }
 
-  get documentoPendentes(): TipoDocumento[] {
+  get documentosPendentes(): TipoDocumento[] {
     const documentosObrigadotorios: TipoDocumento[] = [
       'Invoice',
       'Packing List',

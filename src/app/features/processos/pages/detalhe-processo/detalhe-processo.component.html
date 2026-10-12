@@ -22,11 +22,7 @@
         <a class="aba" href="#historico">Histórico</a>
     </nav>
 
-    <section class="cartao" id="resumo"></section>
-
-    <section class="cartao" id="historico"></section>
-
-    <section class="cartao">
+    <section class="cartao" id="resumo">
         <h2>Dados do embarque</h2>
 
         <dl class="dados">
@@ -85,7 +81,7 @@
             <span>PDF, XML, Excel ou imagem</span>
 
             @if (erroUpload) {
-            <p class="ero-upload" role="alert">{{erroUpload}}</p>
+            <p class="erro-upload" role="alert">{{erroUpload}}</p>
             }
 
         </label>
@@ -132,7 +128,7 @@
         <p>O preenchimento assistido da DUIMP ficará disponível nesta seção.</p>
     </section>
 
-    <section class="cartao">
+    <section class="cartao" id="historico">
         <h2>Etapas do processo</h2>
         <ol class="etapas">
             <li class="concluida">Cadastro do embarque</li>
