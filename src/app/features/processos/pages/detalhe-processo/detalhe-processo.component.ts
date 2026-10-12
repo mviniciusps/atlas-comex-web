@@ -1,45 +1,35 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Processo, ProcessosService } from '../../services/processos.service';
 import { FormsModule } from '@angular/forms';
-import { DocumentosService, TipoDocumento, DocumentoProcesso } from '../../services/documentos.service';
-
-// type TipoDocumento =
-//   | 'Invoice'
-//   | 'Packing List'
-//   | 'Conhecimento de carga'
-//   | 'Certificado'
-//   | 'Outro';
-
-// interface DocumentoProcesso {
-//   nome: string,
-//   tamanho: string,
-//   tipo: TipoDocumento;
-//   status: string;
-// }
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import {
+  DocumentoProcesso,
+  DocumentosService,
+  TipoDocumento,
+} from '../../services/documentos.service';
+import {
+  Processo,
+  ProcessosService,
+} from '../../services/processos.service';
 
 @Component({
   selector: 'app-detalhe-processo',
   standalone: true,
   imports: [RouterLink, FormsModule],
   templateUrl: './detalhe-processo.component.html',
-  styleUrl: './detalhe-processo.component.scss'
+  styleUrl: './detalhe-processo.component.scss',
 })
 export class DetalheProcessoComponent implements OnInit {
-
   processo?: Processo;
-
   processoNumero = '';
+  erroUpload = '';
 
   tiposDocumento: TipoDocumento[] = [
     'Invoice',
     'Packing List',
     'Conhecimento de carga',
     'Certificado',
-    'Outro'
-  ]
-
-  erroUpload = '';
+    'Outro',
+  ];
 
   private readonly extensoesPermitidas = [
     '.pdf',
@@ -48,7 +38,7 @@ export class DetalheProcessoComponent implements OnInit {
     '.xls',
     '.jpg',
     '.jpeg',
-    '.png'
+    '.png',
   ];
 
   private readonly tamanhoMaximoArquivo = 20 * 1024 * 1024;
@@ -56,27 +46,31 @@ export class DetalheProcessoComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private processosService: ProcessosService,
-    private documentoService: DocumentosService
-  ) { }
+    private documentosService: DocumentosService,
+  ) {}
+
+  get documentos(): DocumentoProcesso[] {
+    return this.documentosService.listar(this.processoNumero);
+  }
 
   get documentosPendentes(): TipoDocumento[] {
-    const documentosObrigadotorios: TipoDocumento[] = [
+    const documentosObrigatorios: TipoDocumento[] = [
       'Invoice',
       'Packing List',
-      'Conhecimento de carga'
+      'Conhecimento de carga',
     ];
 
-    return documentosObrigadotorios.filter(
+    return documentosObrigatorios.filter(
       (tipo) => !this.documentos.some((documento) => documento.tipo === tipo),
-    )
+    );
   }
 
   ngOnInit(): void {
     const numero = this.route.snapshot.paramMap.get('id');
 
     if (numero) {
-      this.processo = this.processosService.buscarPorNumero(numero);
       this.processoNumero = numero;
+      this.processo = this.processosService.buscarPorNumero(numero);
     }
   }
 
@@ -106,25 +100,25 @@ export class DetalheProcessoComponent implements OnInit {
 
     this.erroUpload = '';
 
-    const novosDocumentos = arquivos.map((arquivo) => ({
-      nome: arquivo.name,
-      tamanho:
-        arquivo.size < 1024 * 1024
-          ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB`
-          : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`,
-      tipo: this.identificarTipoDocumento(arquivo.name),
-      status: 'Aguardando conferência',
-    }));
+    const novosDocumentos: Omit<DocumentoProcesso, 'id'>[] = arquivos.map(
+      (arquivo) => ({
+        nome: arquivo.name,
+        tamanho:
+          arquivo.size < 1024 * 1024
+            ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB`
+            : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`,
+        tipo: this.identificarTipoDocumento(arquivo.name),
+        status: 'Aguardando conferência',
+        arquivo,
+      }),
+    );
 
-
-    this.documentos = [...this.documentos, ...novosDocumentos];
+    this.documentosService.adicionar(this.processoNumero, novosDocumentos);
     input.value = '';
   }
 
   identificarTipoDocumento(nomeArquivo: string): TipoDocumento {
-    const nome = nomeArquivo
-      .toLowerCase()
-      .replace(/[_-]+/g, ' ');
+    const nome = nomeArquivo.toLowerCase().replace(/[_-]+/g, ' ');
 
     if (/\b(invoice|fatura)\b/.test(nome)) {
       return 'Invoice';
@@ -145,12 +139,7 @@ export class DetalheProcessoComponent implements OnInit {
     return 'Outro';
   }
 
-  removerDocumento(indice: number): void {
-    this.documentos = this.documentos.filter((_, i) => i !== indice);
+  removerDocumento(id: number): void {
+    this.documentosService.remover(this.processoNumero, id);
   }
-
-  get documentos(): DocumentoProcesso[] {
-    return this.documentosService.listar(this.processoNumero);
-  }
-
 }
