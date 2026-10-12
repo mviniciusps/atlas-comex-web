@@ -187,28 +187,6 @@ td {
     clip-path: inset(50%);
 }
 
-@media (max-width: 760px) {
-    .pagina {
-        padding: 24px 16px;
-    }
-
-    .cabecalho,
-    .painel-cabecalho {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .indicadores {
-        grid-template-columns: 1fr;
-    }
-
-    .campo-busca,
-    .campo-busca input {
-        width: 100%;
-        box-sizing: border-box;
-    }
-}
-
 .formulario-processo {
     margin: 28px 0;
     padding: 24px;
@@ -275,18 +253,8 @@ td {
     cursor: pointer;
 }
 
-.filtros {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.filtro-select select {
-    min-height: 41px;
-    padding: 10px 12px;
-    border: 1px solid #d9e2df;
-    border-radius: 8px;
-    background: #fff;
-    color: #34413e;
-    font: inherit;
+.sem-resultados {
+    padding: 28px;
+    color: #687572;
+    text-align: center;
 }
