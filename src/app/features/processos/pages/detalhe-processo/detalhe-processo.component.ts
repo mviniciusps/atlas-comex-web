@@ -2,20 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Processo, ProcessosService } from '../../services/processos.service';
 import { FormsModule } from '@angular/forms';
+import { DocumentosService, TipoDocumento, DocumentoProcesso } from '../../services/documentos.service';
 
-type TipoDocumento =
-  | 'Invoice'
-  | 'Packing List'
-  | 'Conhecimento de carga'
-  | 'Certificado'
-  | 'Outro';
+// type TipoDocumento =
+//   | 'Invoice'
+//   | 'Packing List'
+//   | 'Conhecimento de carga'
+//   | 'Certificado'
+//   | 'Outro';
 
-interface DocumentoProcesso {
-  nome: string,
-  tamanho: string,
-  tipo: TipoDocumento;
-  status: string;
-}
+// interface DocumentoProcesso {
+//   nome: string,
+//   tamanho: string,
+//   tipo: TipoDocumento;
+//   status: string;
+// }
 
 @Component({
   selector: 'app-detalhe-processo',
@@ -28,7 +29,7 @@ export class DetalheProcessoComponent implements OnInit {
 
   processo?: Processo;
 
-  documentos: DocumentoProcesso[] = [];
+  processoNumero = '';
 
   tiposDocumento: TipoDocumento[] = [
     'Invoice',
@@ -55,6 +56,7 @@ export class DetalheProcessoComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private processosService: ProcessosService,
+    private documentoService: DocumentosService
   ) { }
 
   get documentosPendentes(): TipoDocumento[] {
@@ -74,6 +76,7 @@ export class DetalheProcessoComponent implements OnInit {
 
     if (numero) {
       this.processo = this.processosService.buscarPorNumero(numero);
+      this.processoNumero = numero;
     }
   }
 
@@ -119,34 +122,35 @@ export class DetalheProcessoComponent implements OnInit {
   }
 
   identificarTipoDocumento(nomeArquivo: string): TipoDocumento {
-    const nome = nomeArquivo.toLowerCase();
+    const nome = nomeArquivo
+      .toLowerCase()
+      .replace(/[_-]+/g, ' ');
 
-    if (nome.includes('invoice') || nome.includes('fatura')) {
+    if (/\b(invoice|fatura)\b/.test(nome)) {
       return 'Invoice';
     }
 
-    if (nome.includes('packing') || nome.includes('romaneio')) {
+    if (/\b(packing|romaneio)\b/.test(nome)) {
       return 'Packing List';
     }
 
-    if (
-      nome.includes('bl') ||
-      nome.includes('awb') ||
-      nome.includes('conhecimento')
-    ) {
+    if (/\b(bl|bill of lading|awb|mawb|hawb|conhecimento)\b/.test(nome)) {
       return 'Conhecimento de carga';
     }
 
-    if (nome.includes('certificado')) {
+    if (/\b(certificado|certificate)\b/.test(nome)) {
       return 'Certificado';
     }
 
     return 'Outro';
   }
 
-
   removerDocumento(indice: number): void {
     this.documentos = this.documentos.filter((_, i) => i !== indice);
+  }
+
+  get documentos(): DocumentoProcesso[] {
+    return this.documentosService.listar(this.processoNumero);
   }
 
 }
