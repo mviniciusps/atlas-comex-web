@@ -60,6 +60,22 @@
             para conferência.
         </p>
 
+        <div class="resumo-documentacao" [class.completo]="documentosPendentes.length === 0">
+            @if (documentosPendentes.length > 0) {
+            <strong>Documentos a incluir:</strong>
+
+            <ul>
+                @for (tipo of documentosPendentes; track tipo) {
+                <li>{{ tipo }}</li>
+                }
+            </ul>
+            } @else {
+            <strong>Documentação básica incluída</strong>
+            <p>Confira se os arquivos correspondem ao embarque.</p>
+            }
+        </div>
+
+
         <label class="area-upload">
             <input class="entrada-arquivos" type="file" multiple accept=".pdf,.xml,.xlsx,.xls,.jpg,.jpeg,.png"
                 (change)="adicionarDocumentos($event)" />
@@ -76,7 +92,16 @@
                 <div>
                     <strong>{{ documento.nome }}</strong>
                     <span>{{ documento.tamanho }}</span>
-                    <span>{{ documento.tipo }} · {{ documento.status }}</span>
+                    <label class="seletor-tipo">
+                        Tipo do documento
+                        <select [(ngModel)]="documento.tipo">
+                            @for (tipo of tiposDocumento; track tipo) {
+                            <option [value]="tipo">{{ tipo }}</option>
+                            }
+                        </select>
+                    </label>
+
+                    <span>{{ documento.tamanho }} · {{ documento.status }}</span>
                 </div>
 
                 <button class="botao-remover" type="button" aria-label="Remover documento"

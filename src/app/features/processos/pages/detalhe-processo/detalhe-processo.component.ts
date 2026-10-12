@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Processo, ProcessosService } from '../../services/processos.service';
+import { FormsModule } from '@angular/forms';
 
 type TipoDocumento =
   | 'Invoice'
-  | 'Packing list'
+  | 'Packing List'
   | 'Conhecimento de carga'
   | 'Certificado'
   | 'Outro';
@@ -19,7 +20,7 @@ interface DocumentoProcesso {
 @Component({
   selector: 'app-detalhe-processo',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule],
   templateUrl: './detalhe-processo.component.html',
   styleUrl: './detalhe-processo.component.scss'
 })
@@ -29,10 +30,44 @@ export class DetalheProcessoComponent implements OnInit {
 
   documentos: DocumentoProcesso[] = [];
 
+  tiposDocumento: TipoDocumento[] = [
+    'Invoice',
+    'Packing List',
+    'Conhecimento de carga',
+    'Certificado',
+    'Outro'
+  ]
+
+  erroUpload = '';
+
+  private readonly extensoesPermitidas = [
+    '.pdf',
+    '.xml',
+    '.xlsx',
+    '.xls',
+    '.jpg',
+    '.jpeg',
+    '.png'
+  ];
+
+  private readonly tamanhoMaximoArquivo = 20 * 1024 * 1024;
+
   constructor(
     private route: ActivatedRoute,
     private processosService: ProcessosService,
   ) { }
+
+  get documentoPendentes(): TipoDocumento[] {
+    const documentosObrigadotorios: TipoDocumento[] = [
+      'Invoice',
+      'Packing List',
+      'Conhecimento de carga'
+    ];
+
+    return documentosObrigadotorios.filter(
+      (tipo) => !this.documentos.some((documento) => documento.tipo === tipo),
+    )
+  }
 
   ngOnInit(): void {
     const numero = this.route.snapshot.paramMap.get('id');
@@ -46,6 +81,28 @@ export class DetalheProcessoComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const arquivos = Array.from(input.files ?? []);
 
+    const arquivosInvalidos = arquivos.filter((arquivo) => {
+      const extensao = arquivo.name
+        .slice(arquivo.name.lastIndexOf('.'))
+        .toLowerCase();
+
+      return (
+        !this.extensoesPermitidas.includes(extensao) ||
+        arquivo.size > this.tamanhoMaximoArquivo
+      );
+    });
+
+    if (arquivosInvalidos.length > 0) {
+      this.erroUpload =
+        'Arquivo inválido ou maior que 20 MB: ' +
+        arquivosInvalidos.map((arquivo) => arquivo.name).join(', ');
+
+      input.value = '';
+      return;
+    }
+
+    this.erroUpload = '';
+
     const novosDocumentos = arquivos.map((arquivo) => ({
       nome: arquivo.name,
       tamanho:
@@ -55,6 +112,7 @@ export class DetalheProcessoComponent implements OnInit {
       tipo: this.identificarTipoDocumento(arquivo.name),
       status: 'Aguardando conferência',
     }));
+
 
     this.documentos = [...this.documentos, ...novosDocumentos];
     input.value = '';
@@ -68,7 +126,7 @@ export class DetalheProcessoComponent implements OnInit {
     }
 
     if (nome.includes('packing') || nome.includes('romaneio')) {
-      return 'Packing list';
+      return 'Packing List';
     }
 
     if (

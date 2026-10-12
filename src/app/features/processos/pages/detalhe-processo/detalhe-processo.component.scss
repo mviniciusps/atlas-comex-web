@@ -232,3 +232,45 @@ h1 {
     color: #a33e3e;
     cursor: pointer;
 }
+
+.seletor-tipo {
+    display: grid;
+    gap: 5px;
+    color: #687572;
+    font-size: 12px;
+}
+
+.seletor-tipo select {
+    min-height: 36px;
+    padding: 7px 9px;
+    border: 1px solid #d9e2df;
+    border-radius: 6px;
+    background: #fff;
+    color: #172321;
+    font: inherit;
+}
+
+
+.resumo-documentacao {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid #f0dca8;
+    border-radius: 8px;
+    background: #fff9e9;
+    color: #745718;
+}
+
+.resumo-documentacao ul {
+    margin-bottom: 0;
+    padding-left: 20px;
+}
+
+.resumo-documentacao.completo {
+    border-color: #b9dfd1;
+    background: #eef8f4;
+    color: #08745f;
+}
+
+.resumo-documentacao.completo p {
+    margin: 6px 0 0;
+}
