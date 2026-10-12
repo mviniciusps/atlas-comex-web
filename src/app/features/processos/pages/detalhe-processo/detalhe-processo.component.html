@@ -83,6 +83,11 @@
             <span class="upload-icone" aria-hidden="true">↑</span>
             <strong>Selecionar arquivos</strong>
             <span>PDF, XML, Excel ou imagem</span>
+
+            @if (erroUpload) {
+            <p class="ero-upload" role="alert">{{erroUpload}}</p>
+            }
+
         </label>
 
         @if (documentos.length > 0) {
