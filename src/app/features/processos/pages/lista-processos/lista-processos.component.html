@@ -142,7 +142,12 @@
           @for (processo of processosFiltrados; track processo.numero) {
             <tr>
               <td>
-                <a class="link-processo" href="#">{{ processo.numero }}</a>
+                <a 
+                  class="link-processo"
+                  [routerLink]="['/processos', processo.numero]"
+                >
+                  {{ processo.numero }}
+                </a>
               </td>
               <td>{{ processo.importador }}</td>
               <td>{{ processo.modalidade }}</td>

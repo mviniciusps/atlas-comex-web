@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { Processo, ProcessosService } from '../../services/processos.service';
 
 @Component({
   selector: 'app-lista-processos',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './lista-processos.component.html',
   styleUrl: './lista-processos.component.scss'
 })
@@ -21,38 +23,7 @@ export class ListaProcessosComponent {
     chegada: '',
   }
 
-  processos = [
-    {
-      numero: 'IMP-2026-001',
-      importador: 'Empresa Exemplo Ltda.',
-      modalidade: 'Marítimo',
-      conhecimento: 'BL MSCU1234567',
-      chegada: '18/10/2026',
-      etapa: 'Conferência de carga',
-      status: 'Em andamento',
-      statusClass: 'andamento',
-    },
-    {
-      numero: 'IMP-2026-002',
-      importador: 'Comercial Sul S.A.',
-      modalidade: 'Aéreo',
-      conhecimento: 'MAWB 123-45678901',
-      chegada: '20/10/2026',
-      etapa: 'Aguardando documentos',
-      status: 'Pendente',
-      statusClass: 'pendente',
-    },
-    {
-      numero: 'IMP-2026-003',
-      importador: 'Indústria Horizonte Ltda.',
-      modalidade: 'Marítimo',
-      conhecimento: 'BL HLCU7654321',
-      chegada: '22/10/2026',
-      etapa: 'Preenchimento da DUIMP',
-      status: 'Em andamento',
-      statusClass: 'andamento',
-    }
-  ]
+  constructor(private processosService: ProcessosService) { }
 
   abrirFormulario(): void {
     this.formularioAberto = true;
@@ -76,7 +47,7 @@ export class ListaProcessosComponent {
       return;
     }
 
-    this.processos = [
+    this.processosService.adicionar(
       {
         numero: numero.trim(),
         importador: importador.trim(),
@@ -86,11 +57,13 @@ export class ListaProcessosComponent {
         etapa: 'Cadastro inicial',
         status: 'Em andamento',
         statusClass: 'andamento',
-      },
-      ...this.processos,
-    ];
+      });
 
     this.cancelarFormulario();
+  }
+
+  get processos(): Processo[] {
+    return this.processosService.listar();
   }
 
   get processosFiltrados() {
