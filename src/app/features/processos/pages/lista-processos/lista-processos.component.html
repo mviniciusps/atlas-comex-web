@@ -1,0 +1,149 @@
+<main class="pagina">
+    <header class="cabecalho">
+        <div>
+            <p class="sobretitulo">ATLAS COMEX</p>
+            <h1>Processos de importação</h1>
+            <p class="descricao"> Acompanhe os embarques e avance nas etapas de cada processo.</p>
+        </div>
+
+        <button class="botao-principal" type="button" (click)="abrirFormulario()">
+            <span aria-hidden="true">+</span>
+            Novo processo
+        </button>
+    </header>
+
+    @if (formularioAberto) {
+    <section class="formulario-processo">
+        <h2>Novo processo</h2>
+
+        <div class="campos-formulario">
+            <label>
+                Número do processo *
+                <input type="text" [(ngModel)]="novoProcesso.numero" placeholder="Ex.: IMP-2026-004" />
+            </label>
+
+            <label>
+                Importador *
+                <input type="text" [(ngModel)]="novoProcesso.importador" placeholder="Razão social" />
+            </label>
+
+            <label>
+                Modalidade
+                <select [(ngModel)]="novoProcesso.modalidade">
+                    <option value="Marítimo">Marítimo</option>
+                    <option value="Aéreo">Aéreo</option>
+                    <option value="Rodoviário">Rodoviário</option>
+                </select>
+            </label>
+
+            <label>
+                Conhecimento de carga
+                <input type="text" [(ngModel)]="novoProcesso.conhecimento" placeholder="BL, MAWB ou documento" />
+            </label>
+
+            <label>
+                Chegada prevista
+                <input type="date" [(ngModel)]="novoProcesso.chegada" />
+            </label>
+        </div>
+
+        <p class="nota-formulario">Os campos com * são obrigatórios.</p>
+
+        <div class="acoes-formulario">
+            <button class="botao-secundario" type="button" (click)="cancelarFormulario()">
+                Cancelar
+            </button>
+
+            <button class="botao-principal" type="button" (click)="adicionarProcesso()">
+                Salvar processo
+            </button>
+        </div>
+    </section>
+    }
+
+    <section class="indicadores" aria-label="Resumo dos processos">
+
+        <article class="cartao-indicador">
+            <span class="indicador-titulo">Processos ativos</span>
+            <strong>{{totalProcessos}}</strong>
+            <span class="indicador-detalhe">Em acompanhamento</span>
+        </article>
+
+        <article class="cartao-indicador">
+            <span class="indicador-titulo">Aguardando documentos</span>
+            <strong>{{processosAguardandoDocumentos}}</strong>
+            <span class="indicador-detalhe">Requer atenção</span>
+        </article>
+
+        <article class="cartao-indicador">
+            <span class="indicador-titulo">Chegadas previstas</span>
+            <strong>{{chegadasPrevistas}}</strong>
+            <span class="indicador-detalhe">Nos próximos dias</span>
+        </article>
+
+    </section>
+    <section class="painel-processos">
+        <div class="filtros">
+            <label class="campo-busca">
+                <span class="texto-acessivel">Buscar processo</span>
+                <input type="search" placeholder="Buscar por processo ou importador" [(ngModel)]="termoBusca" />
+            </label>
+
+            <label class="filtro-select">
+                <span class="texto-acessivel">Filtrar por modalidade</span>
+                <select [(ngModel)]="filtroModalidade">
+                    <option value="">Todas as modalidades</option>
+                    <option value="Marítimo">Marítimo</option>
+                    <option value="Aéreo">Aéreo</option>
+                    <option value="Rodoviário">Rodoviário</option>
+                </select>
+            </label>
+
+            <label class="filtro-select">
+                <span class="texto-acessivel">Filtrar por status</span>
+                <select [(ngModel)]="filtroStatus">
+                    <option value="">Todos os status</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Pendente">Pendente</option>
+                </select>
+            </label>
+        </div>
+
+
+        <div class="tabela-responsiva">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Processo</th>
+                        <th>Importador</th>
+                        <th>Modalidade</th>
+                        <th>Conhecimento</th>
+                        <th>Chegada prevista</th>
+                        <th>Etapa</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (processo of processosFiltrados; track processo.numero) {
+                    <tr>
+                        <td>
+                            <a class="link-processo" href="#">{{ processo.numero }}</a>
+                        </td>
+                        <td>{{ processo.importador }}</td>
+                        <td>{{ processo.modalidade }}</td>
+                        <td>{{ processo.conhecimento }}</td>
+                        <td>{{ processo.chegada }}</td>
+                        <td>{{ processo.etapa }}</td>
+                        <td>
+                            <span [class]="'status status-' + processo.statusClass">
+                                {{ processo.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
