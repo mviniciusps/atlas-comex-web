@@ -14,6 +14,18 @@
         </span>
     </header>
 
+    <nav class="abas-processo" aria-label="Seções do processo">
+        <a class="aba ativa" href="#resumo">Resumo</a>
+        <a class="aba" href="#documentos">Documentos</a>
+        <a class="aba" href="#carga">Carga</a>
+        <a class="aba" href="#duimp">DUIMP</a>
+        <a class="aba" href="#historico">Histórico</a>
+    </nav>
+
+    <section class="cartao" id="resumo"></section>
+
+    <section class="cartao" id="historico"></section>
+
     <section class="cartao">
         <h2>Dados do embarque</h2>
 
@@ -39,6 +51,55 @@
                 <dd>{{ processo.etapa }}</dd>
             </div>
         </dl>
+    </section>
+
+    <section class="cartao" id="documentos">
+        <h2>Documentos do embarque</h2>
+        <p class="texto-apoio">
+            Adicione invoice, packing list, conhecimento de carga e outros arquivos
+            para conferência.
+        </p>
+
+        <label class="area-upload">
+            <input class="entrada-arquivos" type="file" multiple accept=".pdf,.xml,.xlsx,.xls,.jpg,.jpeg,.png"
+                (change)="adicionarDocumentos($event)" />
+
+            <span class="upload-icone" aria-hidden="true">↑</span>
+            <strong>Selecionar arquivos</strong>
+            <span>PDF, XML, Excel ou imagem</span>
+        </label>
+
+        @if (documentos.length > 0) {
+        <ul class="lista-documentos">
+            @for (documento of documentos; track $index) {
+            <li class="documento">
+                <div>
+                    <strong>{{ documento.nome }}</strong>
+                    <span>{{ documento.tamanho }}</span>
+                    <span>{{ documento.tipo }} · {{ documento.status }}</span>
+                </div>
+
+                <button class="botao-remover" type="button" aria-label="Remover documento"
+                    (click)="removerDocumento($index)">
+                    Remover
+                </button>
+            </li>
+            }
+        </ul>
+        } @else {
+        <p class="lista-vazia">Nenhum documento selecionado.</p>
+        }
+    </section>
+
+
+    <section class="cartao" id="carga">
+        <h2>Carga</h2>
+        <p>As consultas de Mercante e presença de carga aparecerão aqui.</p>
+    </section>
+
+    <section class="cartao" id="duimp">
+        <h2>DUIMP</h2>
+        <p>O preenchimento assistido da DUIMP ficará disponível nesta seção.</p>
     </section>
 
     <section class="cartao">

@@ -131,3 +131,104 @@ h1 {
 .nao-encontrado p {
     color: #687572;
 }
+
+.abas-processo {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #dfe7e4;
+}
+
+.aba {
+    padding: 12px 16px;
+    color: #687572;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.aba:hover,
+.aba.ativa {
+    color: #00796d;
+}
+
+.aba.ativa {
+    border-bottom: 2px solid #008577;
+}
+
+.texto-apoio,
+.lista-vazia {
+    color: #687572;
+    font-size: 14px;
+}
+
+.area-upload {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 28px;
+    border: 1px dashed #9bbab2;
+    border-radius: 10px;
+    background: #f8fbfa;
+    color: #52615d;
+    cursor: pointer;
+}
+
+.area-upload:hover {
+    border-color: #008577;
+    background: #f0f8f6;
+}
+
+.entrada-arquivos {
+    display: none;
+}
+
+.upload-icone {
+    color: #008577;
+    font-size: 26px;
+}
+
+.area-upload strong {
+    color: #00796d;
+}
+
+.lista-documentos {
+    display: grid;
+    gap: 10px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.documento {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px;
+    border: 1px solid #e3eae8;
+    border-radius: 8px;
+}
+
+.documento div {
+    display: grid;
+    gap: 5px;
+}
+
+.documento strong {
+    overflow-wrap: anywhere;
+}
+
+.documento span {
+    color: #687572;
+    font-size: 12px;
+}
+
+.botao-remover {
+    border: 0;
+    background: transparent;
+    color: #a33e3e;
+    cursor: pointer;
+}
