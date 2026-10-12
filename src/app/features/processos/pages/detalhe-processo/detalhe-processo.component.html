@@ -1,1 +1,60 @@
-<p>detalhe-processo works!</p>
+<main class="pagina">
+    @if (processo) {
+    <a class="voltar" routerLink="/">← Voltar aos processos</a>
+
+    <header class="cabecalho">
+        <div>
+            <p class="sobretitulo">PROCESSO DE IMPORTAÇÃO</p>
+            <h1>{{ processo.numero }}</h1>
+            <p class="descricao">{{ processo.importador }}</p>
+        </div>
+
+        <span [class]="'status status-' + processo.statusClass">
+            {{ processo.status }}
+        </span>
+    </header>
+
+    <section class="cartao">
+        <h2>Dados do embarque</h2>
+
+        <dl class="dados">
+            <div>
+                <dt>Importador</dt>
+                <dd>{{ processo.importador }}</dd>
+            </div>
+            <div>
+                <dt>Modalidade</dt>
+                <dd>{{ processo.modalidade }}</dd>
+            </div>
+            <div>
+                <dt>Conhecimento de carga</dt>
+                <dd>{{ processo.conhecimento || 'Não informado' }}</dd>
+            </div>
+            <div>
+                <dt>Chegada prevista</dt>
+                <dd>{{ processo.chegada || 'Não informada' }}</dd>
+            </div>
+            <div>
+                <dt>Etapa atual</dt>
+                <dd>{{ processo.etapa }}</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="cartao">
+        <h2>Etapas do processo</h2>
+        <ol class="etapas">
+            <li class="concluida">Cadastro do embarque</li>
+            <li class="atual">{{ processo.etapa }}</li>
+            <li>Acompanhamento da carga</li>
+            <li>Preenchimento e conferência da DUIMP</li>
+        </ol>
+    </section>
+    } @else {
+    <section class="cartao nao-encontrado">
+        <h1>Processo não encontrado</h1>
+        <p>Volte à lista e selecione um processo cadastrado.</p>
+        <a class="voltar" routerLink="/">Voltar aos processos</a>
+    </section>
+    }
+</main>

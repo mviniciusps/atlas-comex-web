@@ -1,0 +1,133 @@
+:host {
+    display: block;
+    min-height: 100vh;
+    background: #f4f7f8;
+    color: #172321;
+    font-family: Arial, sans-serif;
+}
+
+.pagina {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+.voltar {
+    display: inline-block;
+    margin-bottom: 24px;
+    color: #00796d;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.voltar:hover {
+    text-decoration: underline;
+}
+
+.cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.sobretitulo {
+    margin: 0 0 8px;
+    color: #008577;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+}
+
+h1,
+h2,
+p {
+    margin-top: 0;
+}
+
+h1 {
+    margin-bottom: 8px;
+    font-size: 30px;
+}
+
+.descricao {
+    margin-bottom: 0;
+    color: #687572;
+}
+
+.cartao {
+    margin-bottom: 20px;
+    padding: 24px;
+    border: 1px solid #e3eae8;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgb(23 35 33 / 4%);
+}
+
+.cartao h2 {
+    margin-bottom: 20px;
+    font-size: 19px;
+}
+
+.dados {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin: 0;
+}
+
+.dados dt {
+    margin-bottom: 6px;
+    color: #687572;
+    font-size: 13px;
+}
+
+.dados dd {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.status {
+    display: inline-block;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-andamento {
+    background: #e5f4ef;
+    color: #08745f;
+}
+
+.status-pendente {
+    background: #fff3dc;
+    color: #946200;
+}
+
+.etapas {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding-left: 22px;
+}
+
+.etapas li {
+    padding-left: 4px;
+    color: #687572;
+}
+
+.etapas .concluida {
+    color: #08745f;
+}
+
+.etapas .atual {
+    color: #172321;
+    font-weight: 700;
+}
+
+.nao-encontrado p {
+    color: #687572;
+}
