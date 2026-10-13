@@ -107,6 +107,7 @@
             <th>Chegada prevista</th>
             <th>Etapa</th>
             <th>Presença de carga</th>
+            <th>Situação da DUIMP</th>
             <th>Dados da carga</th>
             <th>Status</th>
           </tr>
@@ -135,6 +136,21 @@
               </span>
             </td>
             <td>
+              <div class="duimp-lista">
+                <span
+                  class="status"
+                  [class.status-duimp-pendente]="processo.situacaoDuimp === 'Não iniciada'"
+                  [class.status-duimp-andamento]="processo.situacaoDuimp === 'Em preenchimento'"
+                  [class.status-duimp-revisao]="processo.situacaoDuimp === 'Pronta para revisão'"
+                >
+                  {{ processo.situacaoDuimp }}
+                </span>
+                <small>
+                  DUIMP: {{ processo.numeroDuimp || 'Não informada' }}
+                </small>
+              </div>
+            </td>
+            <td>
               <div class="dados-carga-lista">
                 <span>
                   {{ processo.portoOrigem || 'Origem não informada' }}
@@ -154,7 +170,7 @@
           </tr>
           } @empty {
           <tr>
-            <td class="sem-resultados" colspan="9">
+            <td class="sem-resultados" colspan="10">
               Nenhum processo corresponde à busca.
             </td>
           </tr>

@@ -61,6 +61,11 @@ export class ListaProcessosComponent {
         portoDestino: '',
         numeroMercante: '',
         presencaCarga: 'Pendente',
+        numeroDuimp: '',
+        situacaoDuimp: 'Não iniciada',
+        unidadeDespacho: '',
+        moedaNegociacao: '',
+        valorAduaneiro: '',
       });
 
     this.cancelarFormulario();

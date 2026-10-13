@@ -172,4 +172,18 @@ export class DetalheProcessoComponent implements OnInit {
     );
   }
 
+  atualizarDadosDuimp(): void {
+    if (!this.processo) {
+      return;
+    }
+
+    this.processosService.atualizarDadosDuimp(this.processoNumero, {
+      numeroDuimp: this.processo.numeroDuimp,
+      situacaoDuimp: this.processo.situacaoDuimp,
+      unidadeDespacho: this.processo.unidadeDespacho,
+      moedaNegociacao: this.processo.moedaNegociacao,
+      valorAduaneiro: this.processo.valorAduaneiro,
+    })
+  }
+
 }

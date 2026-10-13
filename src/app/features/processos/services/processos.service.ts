@@ -13,6 +13,11 @@ export interface Processo {
   portoDestino: string;
   numeroMercante: string;
   presencaCarga: 'Pendente' | 'Confirmada' | 'Divergente';
+  numeroDuimp: string;
+  situacaoDuimp: 'Não iniciada' | 'Em preenchimento' | 'Pronta para revisão';
+  unidadeDespacho: string;
+  moedaNegociacao: string;
+  valorAduaneiro: string;
 }
 
 @Injectable({
@@ -33,6 +38,11 @@ export class ProcessosService {
       portoDestino: '',
       numeroMercante: '',
       presencaCarga: 'Pendente',
+      numeroDuimp: '',
+      situacaoDuimp: 'Não iniciada',
+      unidadeDespacho: '',
+      moedaNegociacao: '',
+      valorAduaneiro: '',
     },
     {
       numero: 'IMP-2026-002',
@@ -47,6 +57,11 @@ export class ProcessosService {
       portoDestino: '',
       numeroMercante: '',
       presencaCarga: 'Pendente',
+      numeroDuimp: '',
+      situacaoDuimp: 'Não iniciada',
+      unidadeDespacho: '',
+      moedaNegociacao: '',
+      valorAduaneiro: '',
     },
     {
       numero: 'IMP-2026-003',
@@ -61,6 +76,11 @@ export class ProcessosService {
       portoDestino: '',
       numeroMercante: '',
       presencaCarga: 'Pendente',
+      numeroDuimp: '',
+      situacaoDuimp: 'Não iniciada',
+      unidadeDespacho: '',
+      moedaNegociacao: '',
+      valorAduaneiro: '',
     },
   ];
 
@@ -90,4 +110,21 @@ export class ProcessosService {
     );
   }
 
+  atualizarDadosDuimp(
+    numero: string,
+    dados: Pick<
+      Processo,
+      | 'numeroDuimp'
+      | 'situacaoDuimp'
+      | 'unidadeDespacho'
+      | 'moedaNegociacao'
+      | 'valorAduaneiro'
+    >,
+  ): void {
+    this.processos = this.processos.map((processo) =>
+      processo.numero === numero
+        ? { ...processo, ...dados }
+        : processo,
+    );
+  }
 }

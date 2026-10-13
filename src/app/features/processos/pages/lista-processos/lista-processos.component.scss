@@ -278,3 +278,29 @@ td {
     background: #e5f4ef;
     color: #08745f;
 }
+
+.status-duimp-pendente {
+    background: #f1f3f2;
+    color: #687572
+}
+
+.status-duimp-andamento {
+    background: #fff3dc;
+    color: #946200;
+}
+
+.status-duimp-revisao {
+    background: #e5f4ef;
+    color: #08745f;
+}
+
+.duimp-lista {
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+}
+
+.duimp-lista small {
+    color: #687572;
+    font-size: 12px;
+}

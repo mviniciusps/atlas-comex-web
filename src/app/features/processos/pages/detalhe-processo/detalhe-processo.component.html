@@ -151,8 +151,61 @@
   </section>
 
   <section class="cartao" id="duimp">
-    <h2>DUIMP</h2>
-    <p>O preenchimento assistido da DUIMP ficará disponível nesta seção.</p>
+    <h2>Dados da DUIMP</h2>
+
+    <div>
+      <label>
+        Número da DUIMP
+        <input
+          type="text"
+          [(ngModel)]="processo.numeroDuimp"
+          (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Informe o número da DUIMP"
+          >
+      </label>
+
+      <label>
+        Situaçao
+        <select 
+          [(ngModel)]="processo.situacaoDuimp"
+          (ngModelChange)="atualizarDadosDuimp()"
+        >
+          <option value="Não iniciada"></option>
+          <option value="Em preenchimento"></option>
+          <option value="Pronta para revisão"></option>
+        </select>
+      </label>
+
+      <label>
+        <input
+          type="text"
+          [(ngModel)]="processo.unidadeDespacho"
+          (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Ex.: Santos"
+        >
+      </label>
+
+       <label>
+      Moeda da negociação
+      <input
+        type="text"
+        [(ngModel)]="processo.moedaNegociacao"
+        (ngModelChange)="atualizarDadosDuimp()"
+        placeholder="Ex.: USD"
+      />
+    </label>
+
+    <label>
+      Valor aduaneiro
+      <input
+        type="text"
+        [(ngModel)]="processo.valorAduaneiro"
+        (ngModelChange)="atualizarDadosDuimp()"
+        placeholder="Informe o valor"
+      />
+    </label>
+
+    </div>
   </section>
 
   <section class="cartao" id="historico">
