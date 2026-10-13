@@ -65,7 +65,7 @@ export class ListaProcessosComponent {
         situacaoDuimp: 'Não iniciada',
         unidadeDespacho: '',
         moedaNegociacao: '',
-        valorAduaneiro: '',
+        valorAduaneiro: null,
       });
 
     this.cancelarFormulario();

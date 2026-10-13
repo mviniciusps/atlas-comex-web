@@ -153,58 +153,44 @@
   <section class="cartao" id="duimp">
     <h2>Dados da DUIMP</h2>
 
-    <div>
+    <div class="campos-carga">
       <label>
         Número da DUIMP
-        <input
-          type="text"
-          [(ngModel)]="processo.numeroDuimp"
-          (ngModelChange)="atualizarDadosDuimp()"
-          placeholder="Informe o número da DUIMP"
-          >
+        <input type="text" [(ngModel)]="processo.numeroDuimp" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Informe o número da DUIMP" />
       </label>
 
       <label>
-        Situaçao
-        <select 
-          [(ngModel)]="processo.situacaoDuimp"
-          (ngModelChange)="atualizarDadosDuimp()"
-        >
-          <option value="Não iniciada"></option>
-          <option value="Em preenchimento"></option>
-          <option value="Pronta para revisão"></option>
+        Situação
+        <select [(ngModel)]="processo.situacaoDuimp" (ngModelChange)="atualizarDadosDuimp()">
+          <option value="Não iniciada">Não iniciada</option>
+          <option value="Em preenchimento">Em preenchimento</option>
+          <option value="Pronta para revisão">Pronta para revisão</option>
         </select>
       </label>
 
       <label>
-        <input
-          type="text"
-          [(ngModel)]="processo.unidadeDespacho"
-          (ngModelChange)="atualizarDadosDuimp()"
-          placeholder="Ex.: Santos"
-        >
+        Unidade de despacho
+        <input type="text" [(ngModel)]="processo.unidadeDespacho" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Ex.: Santos" />
       </label>
 
-       <label>
-      Moeda da negociação
-      <input
-        type="text"
-        [(ngModel)]="processo.moedaNegociacao"
-        (ngModelChange)="atualizarDadosDuimp()"
-        placeholder="Ex.: USD"
-      />
-    </label>
+      <label>
+        Moeda da negociação
+        <select [(ngModel)]="processo.moedaNegociacao" (ngModelChange)="atualizarDadosDuimp()">
+          <option value="">Selecione a moeda</option>
+          <option value="USD">Dólar americano (USD)</option>
+          <option value="EUR">Euro (EUR)</option>
+          <option value="CNY">Yuan chinês (CNY)</option>
+          <option value="BRL">Real (BRL)</option>
+        </select>
+      </label>
 
-    <label>
-      Valor aduaneiro
-      <input
-        type="text"
-        [(ngModel)]="processo.valorAduaneiro"
-        (ngModelChange)="atualizarDadosDuimp()"
-        placeholder="Informe o valor"
-      />
-    </label>
-
+      <label>
+        Valor aduaneiro
+        <input type="number" min="0" step="0.01" [(ngModel)]="processo.valorAduaneiro"
+          (ngModelChange)="atualizarDadosDuimp()" placeholder="0,00" />
+      </label>
     </div>
   </section>
 

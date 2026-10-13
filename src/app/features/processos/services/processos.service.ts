@@ -17,7 +17,7 @@ export interface Processo {
   situacaoDuimp: 'Não iniciada' | 'Em preenchimento' | 'Pronta para revisão';
   unidadeDespacho: string;
   moedaNegociacao: string;
-  valorAduaneiro: string;
+  valorAduaneiro: number | null;
 }
 
 @Injectable({
@@ -42,7 +42,7 @@ export class ProcessosService {
       situacaoDuimp: 'Não iniciada',
       unidadeDespacho: '',
       moedaNegociacao: '',
-      valorAduaneiro: '',
+      valorAduaneiro: null,
     },
     {
       numero: 'IMP-2026-002',
@@ -61,7 +61,7 @@ export class ProcessosService {
       situacaoDuimp: 'Não iniciada',
       unidadeDespacho: '',
       moedaNegociacao: '',
-      valorAduaneiro: '',
+      valorAduaneiro: null,
     },
     {
       numero: 'IMP-2026-003',
@@ -80,7 +80,7 @@ export class ProcessosService {
       situacaoDuimp: 'Não iniciada',
       unidadeDespacho: '',
       moedaNegociacao: '',
-      valorAduaneiro: '',
+      valorAduaneiro: null,
     },
   ];
 
