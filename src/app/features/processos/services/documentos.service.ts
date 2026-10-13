@@ -54,4 +54,14 @@ export class DocumentosService {
 
     this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
   }
+
+  atualizarTipo(
+    numeroProcesso: string,
+    id: number,
+    tipo: TipoDocumento,
+  ): void {
+    const doucmentosAtualizados = this.listar(numeroProcesso).map((documento) => documento.id === id ? { ...documento, tipo } : documento,);
+
+    this.documentosPorProcesso.set(numeroProcesso, doucmentosAtualizados);
+  }
 }

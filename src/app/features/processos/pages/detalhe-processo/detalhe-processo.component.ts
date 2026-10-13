@@ -21,7 +21,7 @@ import {
 export class DetalheProcessoComponent implements OnInit {
   processo?: Processo;
   processoNumero = '';
-  erroUpload = '';
+  mensagensUpload: string[] = [];
 
   tiposDocumento: TipoDocumento[] = [
     'Invoice',
@@ -47,7 +47,7 @@ export class DetalheProcessoComponent implements OnInit {
     private route: ActivatedRoute,
     private processosService: ProcessosService,
     private documentosService: DocumentosService,
-  ) {}
+  ) { }
 
   get documentos(): DocumentoProcesso[] {
     return this.documentosService.listar(this.processoNumero);
@@ -77,31 +77,35 @@ export class DetalheProcessoComponent implements OnInit {
   adicionarDocumentos(event: Event): void {
     const input = event.target as HTMLInputElement;
     const arquivos = Array.from(input.files ?? []);
+    const arquivosValidos: File[] = [];
 
-    const arquivosInvalidos = arquivos.filter((arquivo) => {
-      const extensao = arquivo.name
-        .slice(arquivo.name.lastIndexOf('.'))
-        .toLowerCase();
+    this.mensagensUpload = [];
 
-      return (
-        !this.extensoesPermitidas.includes(extensao) ||
-        arquivo.size > this.tamanhoMaximoArquivo
-      );
-    });
+    for (const arquivo of arquivos) {
+      const ponto = arquivo.name.lastIndexOf('.');
+      const extensao = ponto >= 0
+        ? arquivo.name.slice(ponto).toLowerCase()
+        : '';
 
-    if (arquivosInvalidos.length > 0) {
-      this.erroUpload =
-        'Arquivo inválido ou maior que 20 MB: ' +
-        arquivosInvalidos.map((arquivo) => arquivo.name).join(', ');
+      if (!this.extensoesPermitidas.includes(extensao)) {
+        this.mensagensUpload.push(
+          `${arquivo.name}: formato não permitido.`,
+        );
+        continue;
+      }
 
-      input.value = '';
-      return;
+      if (arquivo.size > this.tamanhoMaximoArquivo) {
+        this.mensagensUpload.push(
+          `${arquivo.name}: excede o limite de 20 MB.`,
+        );
+        continue;
+      }
+
+      arquivosValidos.push(arquivo);
     }
 
-    this.erroUpload = '';
-
-    const novosDocumentos: Omit<DocumentoProcesso, 'id'>[] = arquivos.map(
-      (arquivo) => ({
+    const novosDocumentos: Omit<DocumentoProcesso, 'id'>[] =
+      arquivosValidos.map((arquivo) => ({
         nome: arquivo.name,
         tamanho:
           arquivo.size < 1024 * 1024
@@ -110,10 +114,15 @@ export class DetalheProcessoComponent implements OnInit {
         tipo: this.identificarTipoDocumento(arquivo.name),
         status: 'Aguardando conferência',
         arquivo,
-      }),
-    );
+      }));
 
-    this.documentosService.adicionar(this.processoNumero, novosDocumentos);
+    if (novosDocumentos.length > 0) {
+      this.documentosService.adicionar(
+        this.processoNumero,
+        novosDocumentos,
+      );
+    }
+
     input.value = '';
   }
 
@@ -142,4 +151,9 @@ export class DetalheProcessoComponent implements OnInit {
   removerDocumento(id: number): void {
     this.documentosService.remover(this.processoNumero, id);
   }
+
+  atualizarTipoDocumento(id: number, tipo: TipoDocumento): void {
+    this.documentosService.atualizarTipo(this.processoNumero, id, tipo);
+  }
+
 }
