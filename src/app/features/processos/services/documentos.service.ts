@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 
 export type TipoDocumento =
@@ -14,14 +13,18 @@ export interface DocumentoProcesso {
   tamanho: string;
   tipo: TipoDocumento;
   status: string;
+  arquivo: File;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DocumentosService {
+  private readonly documentosPorProcesso = new Map<
+    string,
+    DocumentoProcesso[]
+  >();
 
-  private documentosPorProcesso = new Map<string, DocumentoProcesso[]>();
   private proximoId = 1;
 
   listar(numeroProcesso: string): DocumentoProcesso[] {
@@ -51,6 +54,4 @@ export class DocumentosService {
 
     this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
   }
-
 }
-
