@@ -107,6 +107,7 @@
             <th>Chegada prevista</th>
             <th>Etapa</th>
             <th>Presença de carga</th>
+            <th>Dados da carga</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -125,10 +126,25 @@
             <td>{{ processo.chegada }}</td>
             <td>{{ processo.etapa }}</td>
             <td>
-              <span class="status" [class.status-pendente]="processo.presencaCarga === 'Pendente'"
-                [class.status-divergente]="processo.presencaCarga === 'Divergente'">
+              <span class="status" 
+                [class.status-pendente]="processo.presencaCarga === 'Pendente'"
+                [class.status-divergente]="processo.presencaCarga === 'Divergente'"
+                [class.status-confirmada]="processo.presencaCarga ==='Confirmada'"
+                >
                 {{processo.presencaCarga}}
               </span>
+            </td>
+            <td>
+              <div class="dados-carga-lista">
+                <span>
+                  {{ processo.portoOrigem || 'Origem não informada' }}
+                  →
+                  {{ processo.portoDestino || 'Destino não informado' }}
+                </span>
+                <small>
+                  Mercante: {{ processo.numeroMercante || 'Não informado' }}
+                </small>
+              </div>
             </td>
             <td>
               <span [class]="'status status-' + processo.statusClass">
@@ -138,7 +154,7 @@
           </tr>
           } @empty {
           <tr>
-            <td class="sem-resultados" colspan="8">
+            <td class="sem-resultados" colspan="9">
               Nenhum processo corresponde à busca.
             </td>
           </tr>

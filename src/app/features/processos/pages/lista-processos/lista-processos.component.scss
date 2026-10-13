@@ -263,3 +263,18 @@ td {
     background: #fdeaea;
     color: #a33e3e;
 }
+
+.dados-carga-lista {
+    display: grid;
+    gap: 4px;
+}
+
+.dados-carga-lista small {
+    color: #687572;
+    font-size: 12px;
+}
+
+.status-confirmada {
+    background: #e5f4ef;
+    color: #08745f;
+}
