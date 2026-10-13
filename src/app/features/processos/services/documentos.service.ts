@@ -60,8 +60,11 @@ export class DocumentosService {
     id: number,
     tipo: TipoDocumento,
   ): void {
-    const doucmentosAtualizados = this.listar(numeroProcesso).map((documento) => documento.id === id ? { ...documento, tipo } : documento,);
+    const documentosAtualizados = this.listar(numeroProcesso).map(
+      (documento) =>
+        documento.id === id ? { ...documento, tipo } : documento,
+    );
 
-    this.documentosPorProcesso.set(numeroProcesso, doucmentosAtualizados);
+    this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
   }
 }

@@ -8,83 +8,59 @@
       </p>
     </div>
 
-    <button
-      class="botao-principal"
-      type="button"
-      (click)="abrirFormulario()"
-    >
+    <button class="botao-principal" type="button" (click)="abrirFormulario()">
       <span aria-hidden="true">+</span>
       Novo processo
     </button>
   </header>
 
   @if (formularioAberto) {
-    <section class="formulario-processo">
-      <h2>Novo processo</h2>
+  <section class="formulario-processo">
+    <h2>Novo processo</h2>
 
-      <div class="campos-formulario">
-        <label>
-          Número do processo *
-          <input
-            type="text"
-            [(ngModel)]="novoProcesso.numero"
-            placeholder="Ex.: IMP-2026-004"
-          />
-        </label>
+    <div class="campos-formulario">
+      <label>
+        Número do processo *
+        <input type="text" [(ngModel)]="novoProcesso.numero" placeholder="Ex.: IMP-2026-004" />
+      </label>
 
-        <label>
-          Importador *
-          <input
-            type="text"
-            [(ngModel)]="novoProcesso.importador"
-            placeholder="Razão social"
-          />
-        </label>
+      <label>
+        Importador *
+        <input type="text" [(ngModel)]="novoProcesso.importador" placeholder="Razão social" />
+      </label>
 
-        <label>
-          Modalidade
-          <select [(ngModel)]="novoProcesso.modalidade">
-            <option value="Marítimo">Marítimo</option>
-            <option value="Aéreo">Aéreo</option>
-            <option value="Rodoviário">Rodoviário</option>
-          </select>
-        </label>
+      <label>
+        Modalidade
+        <select [(ngModel)]="novoProcesso.modalidade">
+          <option value="Marítimo">Marítimo</option>
+          <option value="Aéreo">Aéreo</option>
+          <option value="Rodoviário">Rodoviário</option>
+        </select>
+      </label>
 
-        <label>
-          Conhecimento de carga
-          <input
-            type="text"
-            [(ngModel)]="novoProcesso.conhecimento"
-            placeholder="BL, MAWB ou documento"
-          />
-        </label>
+      <label>
+        Conhecimento de carga
+        <input type="text" [(ngModel)]="novoProcesso.conhecimento" placeholder="BL, MAWB ou documento" />
+      </label>
 
-        <label>
-          Chegada prevista
-          <input type="date" [(ngModel)]="novoProcesso.chegada" />
-        </label>
-      </div>
+      <label>
+        Chegada prevista
+        <input type="date" [(ngModel)]="novoProcesso.chegada" />
+      </label>
+    </div>
 
-      <p class="nota-formulario">Os campos com * são obrigatórios.</p>
+    <p class="nota-formulario">Os campos com * são obrigatórios.</p>
 
-      <div class="acoes-formulario">
-        <button
-          class="botao-secundario"
-          type="button"
-          (click)="cancelarFormulario()"
-        >
-          Cancelar
-        </button>
+    <div class="acoes-formulario">
+      <button class="botao-secundario" type="button" (click)="cancelarFormulario()">
+        Cancelar
+      </button>
 
-        <button
-          class="botao-principal"
-          type="button"
-          (click)="adicionarProcesso()"
-        >
-          Salvar processo
-        </button>
-      </div>
-    </section>
+      <button class="botao-principal" type="button" (click)="adicionarProcesso()">
+        Salvar processo
+      </button>
+    </div>
+  </section>
   }
 
   <section class="indicadores" aria-label="Resumo dos processos">
@@ -116,11 +92,7 @@
 
       <label class="campo-busca">
         <span class="texto-acessivel">Buscar em todos os processos</span>
-        <input
-          type="search"
-          placeholder="Buscar por processo, importador, carga ou etapa"
-          [(ngModel)]="termoBusca"
-        />
+        <input type="search" placeholder="Buscar por processo, importador, carga ou etapa" [(ngModel)]="termoBusca" />
       </label>
     </div>
 
@@ -134,38 +106,42 @@
             <th>Conhecimento</th>
             <th>Chegada prevista</th>
             <th>Etapa</th>
+            <th>Presença de carga</th>
             <th>Status</th>
           </tr>
         </thead>
 
         <tbody>
           @for (processo of processosFiltrados; track processo.numero) {
-            <tr>
-              <td>
-                <a 
-                  class="link-processo"
-                  [routerLink]="['/processos', processo.numero]"
-                >
-                  {{ processo.numero }}
-                </a>
-              </td>
-              <td>{{ processo.importador }}</td>
-              <td>{{ processo.modalidade }}</td>
-              <td>{{ processo.conhecimento }}</td>
-              <td>{{ processo.chegada }}</td>
-              <td>{{ processo.etapa }}</td>
-              <td>
-                <span [class]="'status status-' + processo.statusClass">
-                  {{ processo.status }}
-                </span>
-              </td>
-            </tr>
+          <tr>
+            <td>
+              <a class="link-processo" [routerLink]="['/processos', processo.numero]">
+                {{ processo.numero }}
+              </a>
+            </td>
+            <td>{{ processo.importador }}</td>
+            <td>{{ processo.modalidade }}</td>
+            <td>{{ processo.conhecimento }}</td>
+            <td>{{ processo.chegada }}</td>
+            <td>{{ processo.etapa }}</td>
+            <td>
+              <span class="status" [class.status-pendente]="processo.presencaCarga === 'Pendente'"
+                [class.status-divergente]="processo.presencaCarga === 'Divergente'">
+                {{processo.presencaCarga}}
+              </span>
+            </td>
+            <td>
+              <span [class]="'status status-' + processo.statusClass">
+                {{ processo.status }}
+              </span>
+            </td>
+          </tr>
           } @empty {
-            <tr>
-              <td class="sem-resultados" colspan="7">
-                Nenhum processo corresponde à busca.
-              </td>
-            </tr>
+          <tr>
+            <td class="sem-resultados" colspan="8">
+              Nenhum processo corresponde à busca.
+            </td>
+          </tr>
           }
         </tbody>
       </table>

@@ -290,3 +290,27 @@ h1 {
     color: #8f3030;
     font-size: 13px;
 }
+
+.campos-carga {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.campos-carga label {
+    display: grid;
+    gap: 6px;
+    color: #687572;
+    font-size: 13px;
+}
+
+.campos-carga input,
+.campos-carga select {
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid #d9e2df;
+    border-radius: 6px;
+    background: #fff;
+    color: #172321;
+    font: inherit;
+}

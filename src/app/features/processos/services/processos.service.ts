@@ -9,6 +9,10 @@ export interface Processo {
   etapa: string;
   status: string;
   statusClass: string;
+  portoOrigem: string;
+  portoDestino: string;
+  numeroMercante: string;
+  presencaCarga: 'Pendente' | 'Confirmada' | 'Divergente';
 }
 
 @Injectable({
@@ -25,6 +29,10 @@ export class ProcessosService {
       etapa: 'Conferência de carga',
       status: 'Em andamento',
       statusClass: 'andamento',
+      portoOrigem: '',
+      portoDestino: '',
+      numeroMercante: '',
+      presencaCarga: 'Pendente',
     },
     {
       numero: 'IMP-2026-002',
@@ -35,6 +43,10 @@ export class ProcessosService {
       etapa: 'Aguardando documentos',
       status: 'Pendente',
       statusClass: 'pendente',
+      portoOrigem: '',
+      portoDestino: '',
+      numeroMercante: '',
+      presencaCarga: 'Pendente',
     },
     {
       numero: 'IMP-2026-003',
@@ -45,6 +57,10 @@ export class ProcessosService {
       etapa: 'Preenchimento da DUIMP',
       status: 'Em andamento',
       statusClass: 'andamento',
+      portoOrigem: '',
+      portoDestino: '',
+      numeroMercante: '',
+      presencaCarga: 'Pendente',
     },
   ];
 
@@ -58,6 +74,20 @@ export class ProcessosService {
 
   adicionar(processo: Processo): void {
     this.processos = [processo, ...this.processos];
+  }
+
+  atualizarDadosCarga(
+    numero: string,
+    dados: Pick<
+      Processo,
+      'portoOrigem' | 'portoDestino' | 'numeroMercante' | 'presencaCarga'
+    >,
+  ): void {
+    this.processos = this.processos.map((processo) =>
+      processo.numero === numero
+        ? { ...processo, ...dados }
+        : processo,
+    );
   }
 
 }

@@ -96,9 +96,7 @@
           <strong>{{ documento.nome }}</strong>
           <label class="seletor-tipo">
             Tipo do documento
-            <select
-              [(ngModel)]="documento.tipo"
-              (ngModelChange)="atualizarTipoDocumento(documento.id, $event)">
+            <select [ngModel]="documento.tipo" (ngModelChange)="atualizarTipoDocumento(documento.id, $event)">
               @for (tipo of tiposDocumento; track tipo) {
               <option [ngValue]="tipo">{{ tipo }}</option>
               }
@@ -120,8 +118,36 @@
   </section>
 
   <section class="cartao" id="carga">
-    <h2>Carga</h2>
-    <p>As consultas de Mercante e presença de carga aparecerão aqui.</p>
+    <h2>Conferência da carga</h2>
+
+    <div class="campos-carga">
+      <label>
+        Porto de origem
+        <input type="text" [(ngModel)]="processo.portoOrigem" (ngModelChange)="atualizarDadosCarga()"
+          placeholder="Ex.: Xangai" />
+      </label>
+
+      <label>
+        Porto de destino
+        <input type="text" [(ngModel)]="processo.portoDestino" (ngModelChange)="atualizarDadosCarga()"
+          placeholder="Ex.: Santos" />
+      </label>
+
+      <label>
+        Número Mercante
+        <input type="text" [(ngModel)]="processo.numeroMercante" (ngModelChange)="atualizarDadosCarga()"
+          placeholder="Informe o número" />
+      </label>
+
+      <label>
+        Presença de carga
+        <select [(ngModel)]="processo.presencaCarga" (ngModelChange)="atualizarDadosCarga()">
+          <option value="Pendente">Pendente</option>
+          <option value="Confirmada">Confirmada</option>
+          <option value="Divergente">Divergente</option>
+        </select>
+      </label>
+    </div>
   </section>
 
   <section class="cartao" id="duimp">

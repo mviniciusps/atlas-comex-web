@@ -57,6 +57,10 @@ export class ListaProcessosComponent {
         etapa: 'Cadastro inicial',
         status: 'Em andamento',
         statusClass: 'andamento',
+        portoOrigem: '',
+        portoDestino: '',
+        numeroMercante: '',
+        presencaCarga: 'Pendente',
       });
 
     this.cancelarFormulario();
