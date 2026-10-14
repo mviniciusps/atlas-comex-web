@@ -91,6 +91,15 @@ export class ListaProcessosComponent {
         processo.chegada,
         processo.etapa,
         processo.status,
+        processo.portoOrigem,
+        processo.portoDestino,
+        processo.numeroMercante,
+        processo.presencaCarga,
+        processo.numeroDuimp,
+        processo.situacaoDuimp,
+        processo.unidadeDespacho,
+        processo.moedaNegociacao,
+        processo.valorAduaneiro
       ]
         .join(' ')
         .toLowerCase()
