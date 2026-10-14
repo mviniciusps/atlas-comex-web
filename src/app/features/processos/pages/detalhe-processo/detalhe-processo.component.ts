@@ -156,6 +156,17 @@ export class DetalheProcessoComponent implements OnInit {
     this.documentosService.atualizarTipo(this.processoNumero, id, tipo);
   }
 
+  atualizarStatusDocumento(
+    id: number,
+    status: DocumentoProcesso['status'],
+  ): void {
+    this.documentosService.atualizarStatus(
+      this.processoNumero,
+      id,
+      status
+    );
+  }
+
   atualizarDadosCarga(): void {
     if (!this.processo) {
       return;

@@ -12,7 +12,7 @@ export interface DocumentoProcesso {
   nome: string;
   tamanho: string;
   tipo: TipoDocumento;
-  status: string;
+  status: 'Aguardando conferência' | 'Conferido' | 'Com divergência';
   arquivo: File;
 }
 
@@ -63,6 +63,19 @@ export class DocumentosService {
     const documentosAtualizados = this.listar(numeroProcesso).map(
       (documento) =>
         documento.id === id ? { ...documento, tipo } : documento,
+    );
+
+    this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
+  }
+
+  atualizarStatus(
+    numeroProcesso: string,
+    id: number,
+    status: DocumentoProcesso['status'],
+  ): void {
+    const documentosAtualizados = this.listar(numeroProcesso).map(
+      (documento) =>
+        documento.id === id ? { ...documento, status } : documento,
     );
 
     this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);

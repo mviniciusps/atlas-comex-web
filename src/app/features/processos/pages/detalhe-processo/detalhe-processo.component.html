@@ -102,7 +102,20 @@
               }
             </select>
           </label>
-          <span>{{ documento.tamanho }} · {{ documento.status }}</span>
+
+          <label class="seletor-tipo">
+            Conferência
+            <select
+              [ngModel]="documento.status"
+              (ngModelChange)="atualizarStatusDocumento(documento.id, $event)"
+            >
+              <option value="Aguardando conferência">Aguardando conferência</option>
+              <option value="Conferido">Conferido</option>
+              <option value="Com conferência">Com divergência</option>
+            </select>
+          </label>
+
+          <span>{{ documento.tamanho }}</span>
         </div>
 
         <button class="botao-remover" type="button" aria-label="Remover documento"
