@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
@@ -10,11 +11,15 @@ import {
   Processo,
   ProcessosService,
 } from '../../services/processos.service';
+import {
+  EventoProcesso,
+  HistoricoProcessoService,
+} from '../../services/historico-processo.service';
 
 @Component({
   selector: 'app-detalhe-processo',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, DatePipe],
   templateUrl: './detalhe-processo.component.html',
   styleUrl: './detalhe-processo.component.scss',
 })
@@ -47,10 +52,15 @@ export class DetalheProcessoComponent implements OnInit {
     private route: ActivatedRoute,
     private processosService: ProcessosService,
     private documentosService: DocumentosService,
+    private historicoProcessoService: HistoricoProcessoService,
   ) { }
 
   get documentos(): DocumentoProcesso[] {
     return this.documentosService.listar(this.processoNumero);
+  }
+
+  get eventosHistorico(): EventoProcesso[] {
+    return this.historicoProcessoService.listar(this.processoNumero);
   }
 
   get documentosAguardandoConferencia(): number {
@@ -137,6 +147,13 @@ export class DetalheProcessoComponent implements OnInit {
         this.processoNumero,
         novosDocumentos,
       );
+
+      for (const documento of novosDocumentos) {
+        this.historicoProcessoService.registrar(
+          this.processoNumero,
+          'Documento incluído: ' + documento.nome + ' (' + documento.tipo + ')',
+        );
+      }
     }
 
     input.value = '';
@@ -165,21 +182,47 @@ export class DetalheProcessoComponent implements OnInit {
   }
 
   removerDocumento(id: number): void {
-    this.documentosService.remover(this.processoNumero, id);
+    const documento = this.documentos.find((item) => item.id === id);
+
+    if (!documento) {
+      return;
+    }
   }
 
   atualizarTipoDocumento(id: number, tipo: TipoDocumento): void {
+    const documento = this.documentos.find((item) => item.id === id);
+
+    if (!documento || documento.tipo === tipo) {
+      return;
+    }
+
     this.documentosService.atualizarTipo(this.processoNumero, id, tipo);
+    this.historicoProcessoService.registrar(
+      this.processoNumero,
+      'Tipo do documento ' + documento.nome + ' alterado de ' +
+      documento.tipo + ' para ' + tipo,
+    );
   }
 
   atualizarStatusDocumento(
     id: number,
     status: DocumentoProcesso['status'],
   ): void {
+    const documento = this.documentos.find((item) => item.id === id);
+
+    if (!documento || documento.status === status) {
+      return;
+    }
+
     this.documentosService.atualizarStatus(
       this.processoNumero,
       id,
-      status
+      status,
+    );
+
+    this.historicoProcessoService.registrar(
+      this.processoNumero,
+      'Conferência de ' + documento.nome + ': ' + status,
     );
   }
 

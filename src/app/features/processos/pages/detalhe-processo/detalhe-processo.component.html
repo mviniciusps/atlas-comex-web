@@ -214,13 +214,20 @@
   </section>
 
   <section class="cartao" id="historico">
-    <h2>Etapas do processo</h2>
+    <h2>Histórico do processo</h2>
+
+    @if (eventosHistorico.length > 0) {
     <ol class="etapas">
-      <li class="concluida">Cadastro do embarque</li>
-      <li class="atual">{{ processo.etapa }}</li>
-      <li>Acompanhamento da carga</li>
-      <li>Preenchimento e conferência da DUIMP</li>
+      @for (evento of eventosHistorico; track evento.id) {
+      <li>
+        <strong>{{ evento.descricao }}</strong>
+        <span>{{ evento.data | date:'dd/MM/yyyy HH:mm' }}</span>
+      </li>
+      }
     </ol>
+    } @else {
+    <p class="texto-apoio">Nenhuma atividade registrada ainda.</p>
+    }
   </section>
   } @else {
   <section class="cartao nao-encontrado">
