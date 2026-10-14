@@ -53,6 +53,22 @@ export class DetalheProcessoComponent implements OnInit {
     return this.documentosService.listar(this.processoNumero);
   }
 
+  get documentosAguardandoConferencia(): number {
+    return this.documentos.filter((documento) => documento.status === 'Aguardando conferência').length;
+  }
+
+  get documentosConferidos(): number {
+    return this.documentos.filter(
+      (documento) => documento.status === 'Conferido'
+    ).length;
+  }
+
+  get documentosComDivergencia(): number {
+    return this.documentos.filter(
+      (documento) => documento.status === 'Com divergência'
+    ).length;
+  }
+
   get documentosPendentes(): TipoDocumento[] {
     const documentosObrigatorios: TipoDocumento[] = [
       'Invoice',

@@ -56,6 +56,12 @@
       para conferência.
     </p>
 
+    <div class="resumo-conferencia">
+      <span>Aguardando: {{ documentosAguardandoConferencia }}</span>
+      <span>Conferidos: {{ documentosConferidos }}</span>
+      <span>Com divergência: {{ documentosComDivergencia }}</span>
+    </div>
+
     <div class="resumo-documentacao" [class.completo]="documentosPendentes.length === 0">
       @if (documentosPendentes.length > 0) {
       <strong>Documentos a incluir:</strong>
