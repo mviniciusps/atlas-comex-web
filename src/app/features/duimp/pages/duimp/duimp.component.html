@@ -1,0 +1,171 @@
+<main class="pagina">
+  @if (processo) {
+    <a class="voltar" [routerLink]="['/processos', processo.numero]">
+      Voltar ao processo
+    </a>
+
+    <header class="cabecalho">
+      <div>
+        <p class="sobretitulo">MÓDULO DUIMP</p>
+        <h1>{{ processo.numero }}</h1>
+        <p class="descricao">{{ processo.importador }}</p>
+      </div>
+
+      <span class="situacao">{{ processo.situacaoDuimp }}</span>
+    </header>
+
+    <section class="cartao">
+      <h2>Dados da DUIMP</h2>
+
+      <div class="campos-carga">
+        <label>
+          Número da DUIMP
+          <input
+            type="text"
+            [(ngModel)]="processo.numeroDuimp"
+            (ngModelChange)="atualizarDadosDuimp()"
+            placeholder="Informe o número da DUIMP"
+          />
+        </label>
+
+        <label>
+          Situação
+          <select
+            [(ngModel)]="processo.situacaoDuimp"
+            (ngModelChange)="atualizarDadosDuimp()"
+          >
+            <option value="Não iniciada">Não iniciada</option>
+            <option value="Em preenchimento">Em preenchimento</option>
+            <option value="Pronta para revisão">Pronta para revisão</option>
+          </select>
+        </label>
+
+        <label>
+          Unidade de despacho
+          <input
+            type="text"
+            [(ngModel)]="processo.unidadeDespacho"
+            (ngModelChange)="atualizarDadosDuimp()"
+            placeholder="Ex.: Santos"
+          />
+        </label>
+
+        <label>
+          Moeda da negociação
+          <select
+            [(ngModel)]="processo.moedaNegociacao"
+            (ngModelChange)="atualizarDadosDuimp()"
+          >
+            <option value="">Selecione a moeda</option>
+            <option value="USD">Dólar americano (USD)</option>
+            <option value="EUR">Euro (EUR)</option>
+            <option value="CNY">Yuan chinês (CNY)</option>
+            <option value="BRL">Real (BRL)</option>
+          </select>
+        </label>
+
+        <label>
+          Valor aduaneiro
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="processo.valorAduaneiro"
+            (ngModelChange)="atualizarDadosDuimp()"
+            placeholder="0,00"
+          />
+        </label>
+      </div>
+    </section>
+
+    <section class="cartao">
+      <h2>Itens da DUIMP</h2>
+
+      <div class="campos-carga">
+        <label>
+          Descrição da mercadoria
+          <input
+            type="text"
+            [(ngModel)]="novoItemDuimp.descricaoMercadoria"
+            placeholder="Descreva a mercadoria"
+          />
+        </label>
+
+        <label>
+          NCM
+          <input
+            type="text"
+            [(ngModel)]="novoItemDuimp.ncm"
+            placeholder="Ex.: 12345678"
+          />
+        </label>
+
+        <label>
+          Quantidade
+          <input
+            type="number"
+            min="0"
+            [(ngModel)]="novoItemDuimp.quantidade"
+            placeholder="0"
+          />
+        </label>
+
+        <label>
+          Unidade de medida
+          <input
+            type="text"
+            [(ngModel)]="novoItemDuimp.unidadeMedida"
+            placeholder="Ex.: UN"
+          />
+        </label>
+
+        <label>
+          Valor unitário
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="novoItemDuimp.valorUnitario"
+            placeholder="0,00"
+          />
+        </label>
+      </div>
+
+      <button class="botao-primario" type="button" (click)="adicionarItemDuimp()">
+        Adicionar item
+      </button>
+
+      @if (processo.itensDuimp.length > 0) {
+        <ul class="lista-itens">
+          @for (item of processo.itensDuimp; track item.id) {
+            <li class="item-duimp">
+              <div>
+                <strong>{{ item.descricaoMercadoria }}</strong>
+                <span>NCM {{ item.ncm }}</span>
+                <span>
+                  {{ item.quantidade ?? '—' }} {{ item.unidadeMedida }}
+                  · Valor unitário: {{ item.valorUnitario ?? '—' }}
+                </span>
+              </div>
+
+              <button
+                class="botao-remover"
+                type="button"
+                (click)="removerItemDuimp(item.id)"
+              >
+                Remover
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="texto-apoio">Nenhum item cadastrado.</p>
+      }
+    </section>
+  } @else {
+    <section class="cartao nao-encontrado">
+      <h1>Processo não encontrado</h1>
+      <a routerLink="/">Voltar aos processos</a>
+    </section>
+  }
+</main>
