@@ -14,6 +14,7 @@ import { HistoricoProcessoService } from '../../services/historico-processo.serv
 
 export class ListaProcessosComponent {
 
+  mensagemErro = '';
   termoBusca = '';
   formularioAberto = false;
 
@@ -49,6 +50,13 @@ export class ListaProcessosComponent {
     const { numero, importador, conhecimento, chegada, modalidade } = this.novoProcesso;
 
     if (!numero.trim() || !importador.trim()) {
+      return;
+    }
+
+    this.mensagemErro = '';
+
+    if (this.processosService.buscarPorNumero(numero.trim())) {
+      this.mensagemErro = 'Já existe um processo com esse número.';
       return;
     }
 

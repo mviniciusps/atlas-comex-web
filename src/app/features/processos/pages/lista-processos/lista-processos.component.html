@@ -51,6 +51,10 @@
 
     <p class="nota-formulario">Os campos com * são obrigatórios.</p>
 
+    @if (mensagemErro) {
+    <p class="erro-formulario" role="alert">{{ mensagemErro }}</p>
+    }
+
     <div class="acoes-formulario">
       <button class="botao-secundario" type="button" (click)="cancelarFormulario()">
         Cancelar
@@ -127,22 +131,17 @@
             <td>{{ processo.chegada }}</td>
             <td>{{ processo.etapa }}</td>
             <td>
-              <span class="status" 
-                [class.status-pendente]="processo.presencaCarga === 'Pendente'"
+              <span class="status" [class.status-pendente]="processo.presencaCarga === 'Pendente'"
                 [class.status-divergente]="processo.presencaCarga === 'Divergente'"
-                [class.status-confirmada]="processo.presencaCarga ==='Confirmada'"
-                >
+                [class.status-confirmada]="processo.presencaCarga ==='Confirmada'">
                 {{processo.presencaCarga}}
               </span>
             </td>
             <td>
               <div class="duimp-lista">
-                <span
-                  class="status"
-                  [class.status-duimp-pendente]="processo.situacaoDuimp === 'Não iniciada'"
+                <span class="status" [class.status-duimp-pendente]="processo.situacaoDuimp === 'Não iniciada'"
                   [class.status-duimp-andamento]="processo.situacaoDuimp === 'Em preenchimento'"
-                  [class.status-duimp-revisao]="processo.situacaoDuimp === 'Pronta para revisão'"
-                >
+                  [class.status-duimp-revisao]="processo.situacaoDuimp === 'Pronta para revisão'">
                   {{ processo.situacaoDuimp }}
                 </span>
                 <small>
