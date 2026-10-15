@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Processo, ProcessosService } from '../../services/processos.service';
+import { HistoricoProcessoService } from '../../services/historico-processo.service';
 
 @Component({
   selector: 'app-lista-processos',
@@ -10,6 +11,7 @@ import { Processo, ProcessosService } from '../../services/processos.service';
   templateUrl: './lista-processos.component.html',
   styleUrl: './lista-processos.component.scss'
 })
+
 export class ListaProcessosComponent {
 
   termoBusca = '';
@@ -23,7 +25,10 @@ export class ListaProcessosComponent {
     chegada: '',
   }
 
-  constructor(private processosService: ProcessosService) { }
+  constructor(
+    private processosService: ProcessosService,
+    private historicoProcessoService: HistoricoProcessoService,
+  ) { }
 
   abrirFormulario(): void {
     this.formularioAberto = true;
@@ -67,6 +72,11 @@ export class ListaProcessosComponent {
         moedaNegociacao: '',
         valorAduaneiro: null,
       });
+
+    this.historicoProcessoService.registrar(
+      numero.trim(),
+      'Processo criado: ' + numero.trim(),
+    );
 
     this.cancelarFormulario();
   }
