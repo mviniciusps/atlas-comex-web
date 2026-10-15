@@ -211,6 +211,81 @@
           (ngModelChange)="atualizarDadosDuimp()" placeholder="0,00" />
       </label>
     </div>
+
+    <h3>Itens da DUIMP</h3>
+
+    <div class="campos-carga">
+      <label>
+        Descrição da mercadoria
+        <input
+          type="text"
+          [(ngModel)]="novoItemDuimp.descricaoMercadoria"
+          placeholder="Descreva a mercadoria"
+        />
+      </label>
+
+      <label>
+        NCM
+        <input
+          type="text"
+          [(ngModel)]="novoItemDuimp.ncm"
+          placeholder="Ex.: 12345678"
+        />
+      </label>
+
+      <label>
+        Quantidade
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="novoItemDuimp.quantidade"
+          placeholder="0"
+        />
+      </label>
+
+      <label>
+        Unidade de medida
+        <input
+          type="text"
+          [(ngModel)]="novoItemDuimp.unidadeMedida"
+          placeholder="Ex.: UN"
+        />
+      </label>
+
+      <label>
+        Valor unitário
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="novoItemDuimp.valorUnitario"
+          placeholder="0,00"
+        />
+      </label>
+    </div>
+
+    <button type="button" (click)="adicionarItemDuimp()">
+      Adicionar item
+    </button>
+
+    @if (processo.itensDuimp.length > 0) {
+    <ul>
+      @for (item of processo.itensDuimp; track item.id) {
+      <li>
+        <strong>{{ item.descricaoMercadoria }}</strong>
+        — NCM {{ item.ncm }}
+        — {{ item.quantidade ?? '—' }} {{ item.unidadeMedida }}
+        — {{ item.valorUnitario ?? '—' }}
+
+        <button type="button" (click)="removerItemDuimp(item.id)">
+          Remover
+        </button>
+      </li>
+      }
+    </ul>
+    } @else {
+    <p class="texto-apoio">Nenhum item cadastrado.</p>
+    }
   </section>
 
   <section class="cartao" id="historico">

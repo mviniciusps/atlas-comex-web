@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
 
+export interface ItemDuimp {
+  id: number;
+  descricaoMercadoria: string;
+  ncm: string;
+  quantidade: number | null;
+  unidadeMedida: string;
+  valorUnitario: number | null;
+}
+
 export interface Processo {
   numero: string;
   importador: string;
@@ -18,6 +27,7 @@ export interface Processo {
   unidadeDespacho: string;
   moedaNegociacao: string;
   valorAduaneiro: number | null;
+  itensDuimp: ItemDuimp[];
 }
 
 @Injectable({
@@ -43,6 +53,7 @@ export class ProcessosService {
       unidadeDespacho: '',
       moedaNegociacao: '',
       valorAduaneiro: null,
+      itensDuimp: []
     },
     {
       numero: 'IMP-2026-002',
@@ -62,6 +73,7 @@ export class ProcessosService {
       unidadeDespacho: '',
       moedaNegociacao: '',
       valorAduaneiro: null,
+      itensDuimp: []
     },
     {
       numero: 'IMP-2026-003',
@@ -81,6 +93,7 @@ export class ProcessosService {
       unidadeDespacho: '',
       moedaNegociacao: '',
       valorAduaneiro: null,
+      itensDuimp: []
     },
   ];
 
@@ -124,6 +137,14 @@ export class ProcessosService {
     this.processos = this.processos.map((processo) =>
       processo.numero === numero
         ? { ...processo, ...dados }
+        : processo,
+    );
+  }
+
+  atualizarItensDuimp(numero: string, itens: ItemDuimp[]): void {
+    this.processos = this.processos.map((processo) =>
+      processo.numero === numero
+        ? { ...processo, itensDuimp: itens }
         : processo,
     );
   }

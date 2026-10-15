@@ -8,6 +8,7 @@ import {
   TipoDocumento,
 } from '../../services/documentos.service';
 import {
+  ItemDuimp,
   Processo,
   ProcessosService,
 } from '../../services/processos.service';
@@ -27,6 +28,13 @@ export class DetalheProcessoComponent implements OnInit {
   processo?: Processo;
   processoNumero = '';
   mensagensUpload: string[] = [];
+  novoItemDuimp: Omit<ItemDuimp, 'id'> = {
+    descricaoMercadoria: '',
+    ncm: '',
+    quantidade: null,
+    unidadeMedida: '',
+    valorUnitario: null,
+  };
 
   tiposDocumento: TipoDocumento[] = [
     'Invoice',
@@ -254,6 +262,50 @@ export class DetalheProcessoComponent implements OnInit {
       moedaNegociacao: this.processo.moedaNegociacao,
       valorAduaneiro: this.processo.valorAduaneiro,
     })
+  }
+
+  adicionarItemDuimp(): void {
+    if (!this.processo) {
+      return;
+    }
+
+    const descricao = this.novoItemDuimp.descricaoMercadoria.trim();
+    const ncm = this.novoItemDuimp.ncm.trim();
+
+    if (!descricao || !ncm) {
+      return;
+    }
+
+    const novoItem: ItemDuimp = {
+      ...this.novoItemDuimp,
+      id: Date.now(),
+      descricaoMercadoria: descricao,
+      ncm,
+    };
+
+    const itens = [...this.processo.itensDuimp, novoItem];
+
+    this.processosService.atualizarItensDuimp(this.processoNumero, itens);
+    this.processo = this.processosService.buscarPorNumero(this.processoNumero);
+
+    this.novoItemDuimp = {
+      descricaoMercadoria: '',
+      ncm: '',
+      quantidade: null,
+      unidadeMedida: '',
+      valorUnitario: null,
+    };
+  }
+
+  removerItemDuimp(id: number): void {
+    if (!this.processo) {
+      return;
+    }
+
+    const itens = this.processo.itensDuimp.filter((item) => item.id !== id);
+
+    this.processosService.atualizarItensDuimp(this.processoNumero, itens);
+    this.processo = this.processosService.buscarPorNumero(this.processoNumero);
   }
 
 }

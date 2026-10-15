@@ -79,6 +79,7 @@ export class ListaProcessosComponent {
         unidadeDespacho: '',
         moedaNegociacao: '',
         valorAduaneiro: null,
+        itensDuimp: []
       });
 
     this.historicoProcessoService.registrar(
