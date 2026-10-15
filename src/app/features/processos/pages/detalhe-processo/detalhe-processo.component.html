@@ -15,11 +15,11 @@
   </header>
 
   <nav class="abas-processo" aria-label="Seções do processo">
-    <a class="aba ativa" href="#resumo">Resumo</a>
-    <a class="aba" href="#documentos">Documentos</a>
-    <a class="aba" href="#carga">Carga</a>
-    <a class="aba" href="#duimp">DUIMP</a>
-    <a class="aba" href="#historico">Histórico</a>
+    <a class="aba ativa" [routerLink]="['/processos', processoNumero]" fragment="resumo">Resumo</a>
+    <a class="aba" [routerLink]="['/processos', processoNumero]" fragment="documentos">Documentos</a>
+    <a class="aba" [routerLink]="['/processos', processoNumero]" fragment="carga">Carga</a>
+    <a class="aba" [routerLink]="['/processos', processoNumero]" fragment="duimp">DUIMP</a>
+    <a class="aba" [routerLink]="['/processos', processoNumero]" fragment="historico">Histórico</a>
   </nav>
 
   <section class="cartao" id="resumo">
