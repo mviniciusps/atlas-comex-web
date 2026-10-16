@@ -81,6 +81,71 @@
     <section class="cartao">
       <h2>Itens da DUIMP</h2>
 
+      <div class="importacao-excel">
+        <p>
+          Colunas necessárias: DescricaoMercadoria, NCM, Quantidade,
+          UnidadeMedida e ValorUnitario.
+        </p>
+
+        <button
+          class="botao-primario"
+          type="button"
+          (click)="baixarModeloItensExcel()"
+          >
+
+        </button>
+
+        <label>
+          Importar itens do Excel
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            (change)="carregarItensExcel($event)"
+          />
+        </label>
+      </div>
+
+      @if (errosImportacaoExcel.length > 0) {
+        <ul class="avisos-importacao" role="alert">
+          @for (erro of errosImportacaoExcel; track erro) {
+            <li>{{ erro }}</li>
+          }
+        </ul>
+      }
+
+      @if (mensagemImportacaoExcel) {
+        <p class="mensagem-importacao" role="status">
+          {{ mensagemImportacaoExcel }}
+        </p>
+      }
+
+      @if (itensExcelPreview.length > 0) {
+        <h3>Prévia dos itens válidos</h3>
+
+        <ul class="lista-itens">
+          @for (item of itensExcelPreview; track $index) {
+            <li class="item-duimp">
+              <div>
+                <strong>{{ item.descricaoMercadoria }}</strong>
+                <span>NCM {{ item.ncm }}</span>
+                <span>
+                  {{ item.quantidade }} {{ item.unidadeMedida }}
+                  · Valor unitário: {{ item.valorUnitario }}
+                </span>
+              </div>
+            </li>
+          }
+        </ul>
+
+        <button
+          class="botao-primario"
+          type="button"
+          (click)="confirmarImportacaoExcel()"
+        >
+          Confirmar importação
+        </button>
+      }
+
       <div class="campos-carga">
         <label>
           Descrição da mercadoria
