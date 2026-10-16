@@ -1,13 +1,8 @@
 import { Injectable } from '@angular/core';
-
-export interface ItemDuimp {
-  id: number;
-  descricaoMercadoria: string;
-  ncm: string;
-  quantidade: number | null;
-  unidadeMedida: string;
-  valorUnitario: number | null;
-}
+import {
+  ItemDuimp,
+  SituacaoDuimp,
+} from '../../duimp/models/duimp.model';
 
 export interface Processo {
   numero: string;
@@ -23,7 +18,7 @@ export interface Processo {
   numeroMercante: string;
   presencaCarga: 'Pendente' | 'Confirmada' | 'Divergente';
   numeroDuimp: string;
-  situacaoDuimp: 'Não iniciada' | 'Em preenchimento' | 'Pronta para revisão';
+  situacaoDuimp: SituacaoDuimp;
   unidadeDespacho: string;
   moedaNegociacao: string;
   valorAduaneiro: number | null;
@@ -49,7 +44,7 @@ export class ProcessosService {
       numeroMercante: '',
       presencaCarga: 'Pendente',
       numeroDuimp: '',
-      situacaoDuimp: 'Não iniciada',
+  situacaoDuimp: 'Não iniciada',
       unidadeDespacho: '',
       moedaNegociacao: '',
       valorAduaneiro: null,
@@ -69,7 +64,7 @@ export class ProcessosService {
       numeroMercante: '',
       presencaCarga: 'Pendente',
       numeroDuimp: '',
-      situacaoDuimp: 'Não iniciada',
+  situacaoDuimp: 'Não iniciada',
       unidadeDespacho: '',
       moedaNegociacao: '',
       valorAduaneiro: null,
@@ -89,7 +84,7 @@ export class ProcessosService {
       numeroMercante: '',
       presencaCarga: 'Pendente',
       numeroDuimp: '',
-      situacaoDuimp: 'Não iniciada',
+  situacaoDuimp: 'Não iniciada',
       unidadeDespacho: '',
       moedaNegociacao: '',
       valorAduaneiro: null,

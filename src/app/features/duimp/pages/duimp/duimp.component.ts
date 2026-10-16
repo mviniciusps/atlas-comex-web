@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { read, utils, writeFileXLSX } from 'xlsx';
+import { ItemDuimp } from '../../models/duimp.model';
 import {
-  ItemDuimp,
   Processo,
   ProcessosService,
 } from '../../../processos/services/processos.service';
