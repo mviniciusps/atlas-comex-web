@@ -7,10 +7,8 @@ import {
   DocumentosService,
   TipoDocumento,
 } from '../../services/documentos.service';
-import {
-  Processo,
-  ProcessosService,
-} from '../../services/processos.service';
+import { Processo } from '../../models/processo.model';
+import { ProcessosService } from '../../services/processos.service';
 import {
   EventoProcesso,
   HistoricoProcessoService,

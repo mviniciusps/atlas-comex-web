@@ -3,10 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { read, utils, writeFileXLSX } from 'xlsx';
 import { ItemDuimp } from '../../models/duimp.model';
-import {
-  Processo,
-  ProcessosService,
-} from '../../../processos/services/processos.service';
+import type { Duimp } from '../../models/duimp.model';
+import { DuimpService } from '../../services/duimp.service';
+import type { Processo } from '../../../processos/models/processo.model';
+import { ProcessosService } from '../../../processos/services/processos.service';
 
 @Component({
   selector: 'app-duimp',
@@ -17,6 +17,7 @@ import {
 })
 export class DuimpComponent implements OnInit {
   processo?: Processo;
+  duimp?: Duimp;
   processoNumero = '';
   itensExcelPreview: Omit<ItemDuimp, 'id'>[] = [];
   errosImportacaoExcel: string[] = [];
@@ -33,6 +34,7 @@ export class DuimpComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private processosService: ProcessosService,
+    private duimpService: DuimpService,
   ) { }
 
   ngOnInit(): void {
@@ -41,25 +43,23 @@ export class DuimpComponent implements OnInit {
     if (numeroProcesso) {
       this.processoNumero = numeroProcesso;
       this.processo = this.processosService.buscarPorNumero(numeroProcesso);
+
+      if (this.processo) {
+        this.duimp = this.duimpService.obterOuCriar(numeroProcesso);
+      }
     }
   }
 
   atualizarDadosDuimp(): void {
-    if (!this.processo) {
+    if (!this.duimp) {
       return;
     }
 
-    this.processosService.atualizarDadosDuimp(this.processoNumero, {
-      numeroDuimp: this.processo.numeroDuimp,
-      situacaoDuimp: this.processo.situacaoDuimp,
-      unidadeDespacho: this.processo.unidadeDespacho,
-      moedaNegociacao: this.processo.moedaNegociacao,
-      valorAduaneiro: this.processo.valorAduaneiro,
-    });
+    this.duimpService.salvar(this.duimp);
   }
 
   adicionarItemDuimp(): void {
-    if (!this.processo) {
+    if (!this.duimp) {
       return;
     }
 
@@ -77,10 +77,10 @@ export class DuimpComponent implements OnInit {
       ncm,
     };
 
-    const itens = [...this.processo.itensDuimp, novoItem];
+    const itens = [...this.duimp.itens, novoItem];
 
-    this.processosService.atualizarItensDuimp(this.processoNumero, itens);
-    this.processo = this.processosService.buscarPorNumero(this.processoNumero);
+    this.duimpService.atualizarItens(this.processoNumero, itens);
+    this.duimp = this.duimpService.buscarPorProcesso(this.processoNumero);
 
     this.novoItemDuimp = {
       descricaoMercadoria: '',
@@ -92,14 +92,14 @@ export class DuimpComponent implements OnInit {
   }
 
   removerItemDuimp(id: number): void {
-    if (!this.processo) {
+    if (!this.duimp) {
       return;
     }
 
-    const itens = this.processo.itensDuimp.filter((item) => item.id !== id);
+    const itens = this.duimp.itens.filter((item) => item.id !== id);
 
-    this.processosService.atualizarItensDuimp(this.processoNumero, itens);
-    this.processo = this.processosService.buscarPorNumero(this.processoNumero);
+    this.duimpService.atualizarItens(this.processoNumero, itens);
+    this.duimp = this.duimpService.buscarPorProcesso(this.processoNumero);
   }
 
   async carregarItensExcel(event: Event): Promise<void> {
@@ -226,7 +226,7 @@ export class DuimpComponent implements OnInit {
   }
 
   confirmarImportacaoExcel(): void {
-    if (!this.processo || this.itensExcelPreview.length === 0) {
+    if (!this.duimp || this.itensExcelPreview.length === 0) {
       return;
     }
 
@@ -236,10 +236,10 @@ export class DuimpComponent implements OnInit {
         id: Date.now() + indice,
       }),
     );
-    const itens = [...this.processo.itensDuimp, ...itensImportados];
+    const itens = [...this.duimp.itens, ...itensImportados];
 
-    this.processosService.atualizarItensDuimp(this.processoNumero, itens);
-    this.processo = this.processosService.buscarPorNumero(this.processoNumero);
+    this.duimpService.atualizarItens(this.processoNumero, itens);
+    this.duimp = this.duimpService.buscarPorProcesso(this.processoNumero);
     this.mensagemImportacaoExcel = `${itensImportados.length} item(ns) importado(s).`;
     this.itensExcelPreview = [];
   }

@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Processo, ProcessosService } from '../../services/processos.service';
+import type { Processo } from '../../models/processo.model';
+import { ProcessosService } from '../../services/processos.service';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
 
 @Component({
@@ -76,10 +77,6 @@ export class ListaProcessosComponent {
         presencaCarga: 'Pendente',
         numeroDuimp: '',
         situacaoDuimp: 'Não iniciada',
-        unidadeDespacho: '',
-        moedaNegociacao: '',
-        valorAduaneiro: null,
-        itensDuimp: []
       });
 
     this.historicoProcessoService.registrar(
@@ -116,9 +113,6 @@ export class ListaProcessosComponent {
         processo.presencaCarga,
         processo.numeroDuimp,
         processo.situacaoDuimp,
-        processo.unidadeDespacho,
-        processo.moedaNegociacao,
-        processo.valorAduaneiro
       ]
         .join(' ')
         .toLowerCase()

@@ -1,29 +1,6 @@
 import { Injectable } from '@angular/core';
-import {
-  ItemDuimp,
-  SituacaoDuimp,
-} from '../../duimp/models/duimp.model';
-
-export interface Processo {
-  numero: string;
-  importador: string;
-  modalidade: string;
-  conhecimento: string;
-  chegada: string;
-  etapa: string;
-  status: string;
-  statusClass: string;
-  portoOrigem: string;
-  portoDestino: string;
-  numeroMercante: string;
-  presencaCarga: 'Pendente' | 'Confirmada' | 'Divergente';
-  numeroDuimp: string;
-  situacaoDuimp: SituacaoDuimp;
-  unidadeDespacho: string;
-  moedaNegociacao: string;
-  valorAduaneiro: number | null;
-  itensDuimp: ItemDuimp[];
-}
+import type { SituacaoDuimp } from '../../duimp/models/duimp.model';
+import type { Processo } from '../models/processo.model';
 
 @Injectable({
   providedIn: 'root'
@@ -44,11 +21,7 @@ export class ProcessosService {
       numeroMercante: '',
       presencaCarga: 'Pendente',
       numeroDuimp: '',
-  situacaoDuimp: 'Não iniciada',
-      unidadeDespacho: '',
-      moedaNegociacao: '',
-      valorAduaneiro: null,
-      itensDuimp: []
+      situacaoDuimp: 'Não iniciada',
     },
     {
       numero: 'IMP-2026-002',
@@ -64,11 +37,7 @@ export class ProcessosService {
       numeroMercante: '',
       presencaCarga: 'Pendente',
       numeroDuimp: '',
-  situacaoDuimp: 'Não iniciada',
-      unidadeDespacho: '',
-      moedaNegociacao: '',
-      valorAduaneiro: null,
-      itensDuimp: []
+      situacaoDuimp: 'Não iniciada',
     },
     {
       numero: 'IMP-2026-003',
@@ -84,11 +53,7 @@ export class ProcessosService {
       numeroMercante: '',
       presencaCarga: 'Pendente',
       numeroDuimp: '',
-  situacaoDuimp: 'Não iniciada',
-      unidadeDespacho: '',
-      moedaNegociacao: '',
-      valorAduaneiro: null,
-      itensDuimp: []
+      situacaoDuimp: 'Não iniciada',
     },
   ];
 
@@ -118,28 +83,14 @@ export class ProcessosService {
     );
   }
 
-  atualizarDadosDuimp(
+  atualizarResumoDuimp(
     numero: string,
-    dados: Pick<
-      Processo,
-      | 'numeroDuimp'
-      | 'situacaoDuimp'
-      | 'unidadeDespacho'
-      | 'moedaNegociacao'
-      | 'valorAduaneiro'
-    >,
+    numeroDuimp: string,
+    situacaoDuimp: SituacaoDuimp,
   ): void {
     this.processos = this.processos.map((processo) =>
       processo.numero === numero
-        ? { ...processo, ...dados }
-        : processo,
-    );
-  }
-
-  atualizarItensDuimp(numero: string, itens: ItemDuimp[]): void {
-    this.processos = this.processos.map((processo) =>
-      processo.numero === numero
-        ? { ...processo, itensDuimp: itens }
+        ? { ...processo, numeroDuimp, situacaoDuimp }
         : processo,
     );
   }

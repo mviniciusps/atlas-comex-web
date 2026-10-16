@@ -1,5 +1,5 @@
 <main class="pagina">
-  @if (processo) {
+  @if (processo && duimp) {
     <a class="voltar" [routerLink]="['/processos', processo.numero]">
       Voltar ao processo
     </a>
@@ -11,7 +11,7 @@
         <p class="descricao">{{ processo.importador }}</p>
       </div>
 
-      <span class="situacao">{{ processo.situacaoDuimp }}</span>
+      <span class="situacao">{{ duimp.situacaoDuimp }}</span>
     </header>
 
     <section class="cartao">
@@ -22,7 +22,7 @@
           Número da DUIMP
           <input
             type="text"
-            [(ngModel)]="processo.numeroDuimp"
+            [(ngModel)]="duimp.numeroDuimp"
             (ngModelChange)="atualizarDadosDuimp()"
             placeholder="Informe o número da DUIMP"
           />
@@ -31,7 +31,7 @@
         <label>
           Situação
           <select
-            [(ngModel)]="processo.situacaoDuimp"
+            [(ngModel)]="duimp.situacaoDuimp"
             (ngModelChange)="atualizarDadosDuimp()"
           >
             <option value="Não iniciada">Não iniciada</option>
@@ -44,7 +44,7 @@
           Unidade de despacho
           <input
             type="text"
-            [(ngModel)]="processo.unidadeDespacho"
+            [(ngModel)]="duimp.unidadeDespacho"
             (ngModelChange)="atualizarDadosDuimp()"
             placeholder="Ex.: Santos"
           />
@@ -53,7 +53,7 @@
         <label>
           Moeda da negociação
           <select
-            [(ngModel)]="processo.moedaNegociacao"
+            [(ngModel)]="duimp.moedaNegociacao"
             (ngModelChange)="atualizarDadosDuimp()"
           >
             <option value="">Selecione a moeda</option>
@@ -70,7 +70,7 @@
             type="number"
             min="0"
             step="0.01"
-            [(ngModel)]="processo.valorAduaneiro"
+            [(ngModel)]="duimp.valorAduaneiro"
             (ngModelChange)="atualizarDadosDuimp()"
             placeholder="0,00"
           />
@@ -200,9 +200,9 @@
         Adicionar item
       </button>
 
-      @if (processo.itensDuimp.length > 0) {
+      @if (duimp.itens.length > 0) {
         <ul class="lista-itens">
-          @for (item of processo.itensDuimp; track item.id) {
+          @for (item of duimp.itens; track item.id) {
             <li class="item-duimp">
               <div>
                 <strong>{{ item.descricaoMercadoria }}</strong>
