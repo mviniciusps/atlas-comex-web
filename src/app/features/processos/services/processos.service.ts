@@ -6,6 +6,7 @@ import type { Processo } from '../models/processo.model';
   providedIn: 'root'
 })
 export class ProcessosService {
+
   private processos: Processo[] = [
     {
       numero: 'IMP-2026-001',
@@ -22,6 +23,17 @@ export class ProcessosService {
       presencaCarga: 'Pendente',
       numeroDuimp: '',
       situacaoDuimp: 'Não iniciada',
+      referenciaCliente: 'EXP-4582',
+      previsaoChegada: '22/10/2026',
+      exportador: 'Northstar Equipment Co.',
+      observacoes: 'Aguardando validação documental',
+      cnpjImportador: '12.345.678/0001-90',
+      conhecimentoMaster: 'MSCU1234567',
+      conhecimentoHouse: 'MSCUH2026044',
+      ceMercanteRuc: '202612345678901',
+      dataRegistroDuimp: '',
+      dataDesembaraco: '',
+      recintoAlfandegado: '',
     },
     {
       numero: 'IMP-2026-002',
@@ -38,6 +50,17 @@ export class ProcessosService {
       presencaCarga: 'Pendente',
       numeroDuimp: '',
       situacaoDuimp: 'Não iniciada',
+      referenciaCliente: 'EXP-4600',
+      previsaoChegada: '20/10/2026',
+      exportador: '',
+      observacoes: 'Cobrar invoice atualizada',
+      cnpjImportador: '23.450.789/0001-01',
+      conhecimentoMaster: 'MAWB 123-45678901',
+      conhecimentoHouse: 'HAWB 88765432',
+      ceMercanteRuc: '',
+      dataRegistroDuimp: '',
+      dataDesembaraco: '',
+      recintoAlfandegado: '',
     },
     {
       numero: 'IMP-2026-003',
@@ -54,6 +77,17 @@ export class ProcessosService {
       presencaCarga: 'Pendente',
       numeroDuimp: '',
       situacaoDuimp: 'Não iniciada',
+      referenciaCliente: 'EXP-4617',
+      previsaoChegada: '25/10/2026',
+      exportador: '',
+      observacoes: 'Confirmar entrega no terminal',
+      cnpjImportador: '34.567.890/0001-12',
+      conhecimentoMaster: 'HLCU7654321',
+      conhecimentoHouse: 'HLCU7654321-01',
+      ceMercanteRuc: '',
+      dataRegistroDuimp: '',
+      dataDesembaraco: '',
+      recintoAlfandegado: '',
     },
   ];
 

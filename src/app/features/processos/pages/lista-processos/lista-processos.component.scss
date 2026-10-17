@@ -303,3 +303,14 @@ td {
     color: #687572;
     font-size: 12px;
 }
+
+.acoes-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.acoes-cabecalho button :disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}

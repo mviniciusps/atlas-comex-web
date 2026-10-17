@@ -1,5 +1,7 @@
 import type { SituacaoDuimp } from '../../duimp/models/duimp.model';
 
+
+//Colunas do grid principal
 export interface Processo {
   numero: string;
   importador: string;
@@ -15,4 +17,15 @@ export interface Processo {
   presencaCarga: 'Pendente' | 'Confirmada' | 'Divergente';
   numeroDuimp: string;
   situacaoDuimp: SituacaoDuimp;
+  referenciaCliente?: string;
+  previsaoChegada?: string;
+  exportador?: string;
+  observacoes?: string;
+  cnpjImportador?: string;
+  conhecimentoMaster?: string;
+  conhecimentoHouse?: string;
+  ceMercanteRuc?: string;
+  dataRegistroDuimp?: string;
+  dataDesembaraco?: string;
+  recintoAlfandegado?: string;
 }

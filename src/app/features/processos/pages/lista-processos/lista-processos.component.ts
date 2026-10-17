@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import type { Processo } from '../../models/processo.model';
 import { ProcessosService } from '../../services/processos.service';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
@@ -17,6 +17,7 @@ export class ListaProcessosComponent {
 
   mensagemErro = '';
   termoBusca = '';
+  processoSelecionado: string | null = null;
   formularioAberto = false;
 
   novoProcesso = {
@@ -30,10 +31,16 @@ export class ListaProcessosComponent {
   constructor(
     private processosService: ProcessosService,
     private historicoProcessoService: HistoricoProcessoService,
+    private router: Router
   ) { }
 
   abrirFormulario(): void {
     this.formularioAberto = true;
+  }
+
+  //Se o processo clicado já estava selecionado, ele é desmarcado e vice e versa
+  selecionarProcesso(numero: string): void {
+    this.processoSelecionado = this.processoSelecionado === numero ? null : numero;
   }
 
   cancelarFormulario(): void {
@@ -45,6 +52,29 @@ export class ListaProcessosComponent {
       conhecimento: '',
       chegada: '',
     }
+  }
+
+  anrirUploadProcesso(): void {
+    if (!this.processoSelecionado) {
+      return;
+    }
+
+    void this.router.navigate(
+      ['/processos', this.processoSelecionado],
+      { fragment: 'documentos' },
+    )
+  }
+
+  abrirDuimpProcesso(): void {
+    if (!this.processoSelecionado) {
+      return;
+    }
+
+    void this.router.navigate([
+      '/processos',
+      this.processoSelecionado,
+      'duimp',
+    ]);
   }
 
   adicionarProcesso(): void {
@@ -91,32 +121,38 @@ export class ListaProcessosComponent {
     return this.processosService.listar();
   }
 
+
   get processosFiltrados() {
     const termo = this.termoBusca.trim().toLowerCase();
 
+    //Se o campo busca estiver vazio, retorne todos processos
     if (!termo) {
       return this.processos;
     }
 
+    //Se estiver preechido, pequise nas propriedades o valor digitado
     return this.processos.filter((processo) =>
       [
         processo.numero,
-        processo.importador,
-        processo.modalidade,
-        processo.conhecimento,
+        processo.referenciaCliente,
+        processo.previsaoChegada,
         processo.chegada,
-        processo.etapa,
-        processo.status,
-        processo.portoOrigem,
-        processo.portoDestino,
-        processo.numeroMercante,
-        processo.presencaCarga,
+        processo.exportador,
+        processo.observacoes,
+        processo.cnpjImportador,
+        processo.conhecimentoMaster,
+        processo.conhecimentoHouse,
+        processo.modalidade,
+        processo.ceMercanteRuc,
         processo.numeroDuimp,
-        processo.situacaoDuimp,
+        processo.dataRegistroDuimp,
+        processo.dataDesembaraco,
+        processo.recintoAlfandegado,
+        processo.importador,
       ]
-        .join(' ')
-        .toLowerCase()
-        .includes(termo),
+        .join(' ') //transforma toda propriedade em linha unica
+        .toLowerCase() //tudo em letra minuscula
+        .includes(termo), //O termo que o usuário digitou está contido em algum lugar desse texto
     );
   }
 
