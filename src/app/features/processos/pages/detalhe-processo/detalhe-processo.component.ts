@@ -128,7 +128,10 @@ export class DetalheProcessoComponent implements OnInit {
       arquivosValidos.push(arquivo);
     }
 
-    const novosDocumentos: Omit<DocumentoProcesso, 'id'>[] =
+    const novosDocumentos: Omit<
+      DocumentoProcesso,
+      'id' | 'incluirNaDuimp'
+    >[] =
       arquivosValidos.map((arquivo) => ({
         nome: arquivo.name,
         tamanho:

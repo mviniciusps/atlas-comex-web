@@ -14,6 +14,7 @@ export interface DocumentoProcesso {
   tipo: TipoDocumento;
   status: 'Aguardando conferência' | 'Conferido' | 'Com divergência';
   arquivo: File;
+  incluirNaDuimp: boolean;
 }
 
 @Injectable({
@@ -33,12 +34,13 @@ export class DocumentosService {
 
   adicionar(
     numeroProcesso: string,
-    documentos: Omit<DocumentoProcesso, 'id'>[],
+    documentos: Omit<DocumentoProcesso, 'id' | 'incluirNaDuimp'>[],
   ): void {
     const documentosAtuais = this.listar(numeroProcesso);
     const novosDocumentos = documentos.map((documento) => ({
       ...documento,
       id: this.proximoId++,
+      incluirNaDuimp: false,
     }));
 
     this.documentosPorProcesso.set(numeroProcesso, [
@@ -76,6 +78,19 @@ export class DocumentosService {
     const documentosAtualizados = this.listar(numeroProcesso).map(
       (documento) =>
         documento.id === id ? { ...documento, status } : documento,
+    );
+
+    this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
+  }
+
+  atualizarInclusaoDuimp(
+    numeroProcesso: string,
+    id: number,
+    incluirNaDuimp: boolean,
+  ): void {
+    const documentosAtualizados = this.listar(numeroProcesso).map(
+      (documento) =>
+        documento.id === id ? { ...documento, incluirNaDuimp } : documento,
     );
 
     this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);

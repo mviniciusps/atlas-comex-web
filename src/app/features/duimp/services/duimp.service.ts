@@ -8,7 +8,7 @@ import { ProcessosService } from '../../processos/services/processos.service';
 export class DuimpService {
   private duimps: Duimp[] = [];
 
-  constructor(private processosService: ProcessosService) {}
+  constructor(private processosService: ProcessosService) { }
 
   buscarPorProcesso(processoNumero: string): Duimp | undefined {
     return this.duimps.find(
@@ -33,6 +33,39 @@ export class DuimpService {
       moedaNegociacao: '',
       valorAduaneiro: null,
       itens: [],
+      tipoPessoaImportador: 'Pessoa Jurídica',
+      cpfCnpjImportador: processo?.cnpjImportador ?? '',
+      nomeImportador: processo?.importador ?? '',
+      enderecoImportador: '',
+      municipioImportador: '',
+      ufImportador: '',
+      complementoEnderecoImportador: '',
+      informacoesComplementaresVariaveis: '',
+      usarTextoPadrao: false,
+      textoPadrao: '',
+      carga: {
+        unidadesDespacho: processo?.recintoAlfandegado
+          ? [processo.recintoAlfandegado]
+          : [],
+        numeroCe: processo?.ceMercanteRuc ?? '',
+        numeroRuc: processo?.ceMercanteRuc ?? '',
+        localEmbarque: '',
+        dataConhecimento: '',
+        paisProcedencia: '',
+        pesoBruto: null,
+        pesoLiquido: null,
+        componentesFrete: [],
+        moedaFrete: '',
+        valorFreteMoeda: null,
+        valorFreteReais: null,
+        valorAfrmmTum: null,
+        afrmmTumPago: null,
+        moedaSeguro: '',
+        valorSeguroMoeda: null,
+        valorSeguroReais: null,
+        embalagens: [],
+      },
+      contaDebito: '',
     };
 
     this.duimps = [...this.duimps, novaDuimp];
