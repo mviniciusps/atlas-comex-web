@@ -5,10 +5,10 @@ import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZoneChangeDetection({ eventCoalescing: true }), //monitora mudanças
     provideRouter(
       routes,
-      withInMemoryScrolling({ anchorScrolling: 'enabled' }),
+      withInMemoryScrolling({ anchorScrolling: 'enabled' }), //navega até o link da pagina
     ),
   ],
 };

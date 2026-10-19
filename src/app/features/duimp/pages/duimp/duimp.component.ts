@@ -38,6 +38,7 @@ export class DuimpComponent implements OnInit {
   itensExcelPreview: ItemPlanilha[] = [];
   errosImportacaoExcel: string[] = [];
   mensagemImportacaoExcel = '';
+  mensagemUploadInvoice = '';
   inconsistencias: string[] = [];
   mensagemAnalise = '';
   novoItemDuimp: ItemPlanilha = this.criarItemVazio();
@@ -142,12 +143,44 @@ export class DuimpComponent implements OnInit {
   }
 
   selecionarInvoice(event: Event): void {
-    const arquivo = (event.target as HTMLInputElement).files?.[0];
-    if (arquivo) {
-      this.mensagemImportacaoExcel =
-        `Invoice selecionada: ${arquivo.name}. A leitura automática será conectada à IA em uma próxima etapa.`;
+    const input = event.target as HTMLInputElement; //elemento é um campo de entrada, podendo acessar as propriedades do arquivo
+    const arquivo = input.files?.[0];
+
+    this.mensagemUploadInvoice = '';
+
+    if (!arquivo) return;
+
+    const documentosAtuais = this.documentosService.listar(this.processoNumero);
+
+    const arquivoJaAnexado = documentosAtuais.some(
+      (documento) =>
+        documento.tipo === 'Invoice' &&
+        documento.nome.toLocaleLowerCase() === arquivo.name.toLocaleLowerCase() &&
+        documento.arquivo.size === arquivo.size,
+    );
+
+    if (arquivoJaAnexado) {
+      this.mensagemUploadInvoice = 'Esta invoice já está anexada ao processo';
+      input.value = '';
+      return;
     }
-    (event.target as HTMLInputElement).value = '';
+
+    const tamanho = arquivo.size < 1024 * 1024 ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB` : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`
+
+    this.documentosService.adicionar(this.processoNumero, [
+      {
+        nome: arquivo.name,
+        tamanho,
+        tipo: 'Invoice',
+        status: 'Aguardando conferência',
+        arquivo,
+      },
+    ]);
+
+    this.atualizarDocumentos();
+    this.mensagemUploadInvoice = 'Invoice anexada ao processo. Confira-a na aba Documentos e marque se deseja incluí-la na DUIMP. A leitura automática ainda não está integrada.';
+    input.value = '';
+    
   }
 
   adicionarComponenteFrete(): void {
@@ -403,7 +436,8 @@ export class DuimpComponent implements OnInit {
     const planilha = utils.json_to_sheet(linhas);
 
     utils.book_append_sheet(workbook, planilha, 'Itens DUIMP');
-    writeFileXLSX(workbook, `itens-duimp-${this.processoNumero}.xlsx`);
+    writeFileXLSX(workbook, `itens-duimp-${this.processoNumero
+      }.xlsx`);
   }
 
   baixarRascunho(): void {
@@ -416,31 +450,151 @@ export class DuimpComponent implements OnInit {
     const url = URL.createObjectURL(new Blob([conteudo], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = `rascunho-duimp-${this.processoNumero}.json`;
+    link.download = `rascunho - duimp - ${this.processoNumero}.json`;
     link.click();
     URL.revokeObjectURL(url);
   }
 
   analisarInconsistencias(): void {
-    if (!this.duimp) return;
+    if (!this.duimp) {
+      return;
+    }
+
     const avisos: string[] = [];
-    const documentoIdentificacao = this.duimp.tipoPessoaImportador === 'Pessoa Jurídica'
-      ? this.duimp.cpfCnpjImportador.replace(/\D/g, '').length === 14
-      : this.duimp.cpfCnpjImportador.replace(/\D/g, '').length === 11;
-    if (!documentoIdentificacao) avisos.push('Confira o CPF/CNPJ do importador.');
-    if (!this.duimp.nomeImportador.trim()) avisos.push('Informe o nome/razão social do importador.');
-    if (!this.duimp.enderecoImportador.trim()) avisos.push('Informe o endereço do importador.');
-    if (!this.duimp.itens.length) avisos.push('Inclua ao menos um item da DUIMP.');
-    this.duimp.itens.forEach((item, indice) => {
-      if (!/^\d{8}$/.test(item.ncm)) avisos.push(`Item ${indice + 1}: NCM deve ter 8 dígitos.`);
-      if (!item.quantidade || item.quantidade <= 0) avisos.push(`Item ${indice + 1}: informe uma quantidade válida.`);
-      if (!item.unidadeMedida.trim()) avisos.push(`Item ${indice + 1}: informe a unidade de medida.`);
-      if (!item.incoterm) avisos.push(`Item ${indice + 1}: selecione o Incoterm.`);
+    const duimp = this.duimp;
+    const carga = duimp.carga;
+    const documentoImportador = duimp.cpfCnpjImportador.replace(/\D/g, '');
+    const tamanhoDocumento = duimp.tipoPessoaImportador === 'Pessoa Jurídica'
+      ? 14
+      : 11;
+
+    if (documentoImportador.length !== tamanhoDocumento) {
+      avisos.push(
+        `Identificação: confira o ${duimp.tipoPessoaImportador === 'Pessoa Jurídica' ? 'CNPJ' : 'CPF'
+        } do importador.`,
+      );
+    }
+
+    if (!duimp.nomeImportador.trim()) {
+      avisos.push('Identificação: informe o nome ou a razão social do importador.');
+    }
+
+    if (!duimp.enderecoImportador.trim()) {
+      avisos.push('Identificação: informe o endereço do importador.');
+    }
+
+    if (!duimp.municipioImportador.trim() || !duimp.ufImportador.trim()) {
+      avisos.push('Identificação: confira município e UF do importador.');
+    }
+
+    if (!carga.unidadesDespacho.some((unidade) => unidade.trim())) {
+      avisos.push('Carga: informe ao menos uma unidade de despacho.');
+    }
+
+    if (this.modalidadeAerea) {
+      if (!carga.numeroRuc.trim()) {
+        avisos.push('Carga aérea: informe o número RUC.');
+      }
+
+      if (!carga.moedaFrete || carga.valorFreteMoeda === null) {
+        avisos.push('Carga aérea: confira moeda e valor do frete.');
+      }
+    } else {
+      if (!carga.numeroCe.trim()) {
+        avisos.push('Carga marítima: informe o número do CE.');
+      }
+
+      if (!carga.localEmbarque.trim()) {
+        avisos.push('Carga marítima: informe o local de embarque.');
+      }
+
+      if (!carga.dataConhecimento) {
+        avisos.push('Carga marítima: informe a data do conhecimento.');
+      }
+
+      if (!carga.paisProcedencia.trim()) {
+        avisos.push('Carga marítima: informe o país de procedência.');
+      }
+
+      if (carga.pesoBruto === null || carga.pesoBruto <= 0) {
+        avisos.push('Carga marítima: confira o peso bruto.');
+      }
+
+      if (carga.pesoLiquido === null || carga.pesoLiquido <= 0) {
+        avisos.push('Carga marítima: confira o peso líquido.');
+      }
+
+      carga.componentesFrete.forEach((componente, indice) => {
+        const linhaIncompleta =
+          !componente.pagamento.trim() ||
+          !componente.tipo.trim() ||
+          !componente.moeda ||
+          componente.valor === null;
+
+        if (linhaIncompleta) {
+          avisos.push(
+            `Frete: confira o preenchimento do componente ${indice + 1}.`,
+          );
+        }
+      });
+    }
+
+    if (this.documentos.length > 0 && this.documentosIncluidos.length === 0) {
+      avisos.push(
+        'Documentos: nenhum dos arquivos do processo foi marcado para inclusão na DUIMP.',
+      );
+    }
+
+    if (duimp.itens.length === 0) {
+      avisos.push('Itens: inclua ao menos um item na declaração.');
+    }
+
+    duimp.itens.forEach((item, indice) => {
+      const numeroItem = indice + 1;
+
+      if (!/^\d{8}$/.test(item.ncm)) {
+        avisos.push(`Item ${numeroItem}: o NCM deve conter 8 dígitos.`);
+      }
+
+      if (item.quantidade === null || item.quantidade <= 0) {
+        avisos.push(`Item ${numeroItem}: informe uma quantidade maior que zero.`);
+      }
+
+      if (!item.unidadeMedida.trim()) {
+        avisos.push(`Item ${numeroItem}: informe a unidade comercializada.`);
+      }
+
+      if (item.valorUnitario === null || item.valorUnitario < 0) {
+        avisos.push(`Item ${numeroItem}: confira o valor unitário.`);
+      }
+
+      if (!item.incoterm) {
+        avisos.push(`Item ${numeroItem}: selecione o Incoterm.`);
+      }
+
+      if (!item.paisOrigemFabricante?.trim()) {
+        avisos.push(`Item ${numeroItem}: informe o país de origem do fabricante.`);
+      }
+
+      if (!item.codigoNomeFabricante?.trim()) {
+        avisos.push(`Item ${numeroItem}: informe o fabricante.`);
+      }
+
+      if (
+        item.exportadorEhFabricante === false &&
+        (!item.paisOrigemExportador?.trim() ||
+          !item.codigoNomeExportador?.trim())
+      ) {
+        avisos.push(
+          `Item ${numeroItem}: complete os dados do exportador, pois ele difere do fabricante.`,
+        );
+      }
     });
+
     this.inconsistencias = avisos;
     this.mensagemAnalise = avisos.length
-      ? 'Verificação local concluída. Revise os pontos abaixo; esta análise ainda não usa IA nem valida regras oficiais do Portal Único.'
-      : 'Verificação local concluída sem alertas básicos. A validação oficial e a integração com IA serão implementadas depois.';
+      ? `Conferência local concluída: ${avisos.length} ponto(s) para revisar.Esta análise não usa IA nem valida regras oficiais do Portal Único.`
+      : 'Conferência local concluída sem alertas básicos. A validação oficial e a análise por IA ainda serão integradas.';
   }
 
   private mapearLinhaExcel(

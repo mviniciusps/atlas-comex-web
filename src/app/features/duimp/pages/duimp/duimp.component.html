@@ -1,1213 +1,1267 @@
-<main class="pagina">
-  @if (processo && duimp) {
-    <a class="voltar" [routerLink]="['/processos', processo.numero]">
-      ← Voltar ao processo
-    </a>
-    <header class="cabecalho">
+<main class="pagina"> <!--  Abrange pagina inteira -->
+
+  @if (processo && duimp) { <!--  Se PROCESSO e DUIMP forem verdadeiros -->
+
+  <a class="voltar" [routerLink]="['/processos', processo.numero]">
+    ← Voltar ao processo
+  </a>
+  <header class="cabecalho">
+    <div>
+      <p class="sobretitulo">
+        MÓDULO DUIMP
+      </p>
+      <h1>
+        DUIMP do processo {{ processo.numero }}
+      </h1>
+      <p class="descricao">
+        {{ processo.importador }}
+        <span>
+          ·
+        </span>
+        {{ processo.modalidade }}
+      </p>
+    </div>
+    <label class="situacao-controle">
+      Situação
+      <select [(ngModel)]="duimp.situacaoDuimp" (ngModelChange)="atualizarDadosDuimp()">
+        <option value="Não iniciada">
+          Não iniciada
+        </option>
+        <option value="Em preenchimento">
+          Em preenchimento
+        </option>
+        <option value="Pronta para revisão">
+          Pronta para revisão
+        </option>
+      </select>
+    </label>
+  </header>
+  <section class="barra-acoes" aria-label="Ações da DUIMP">
+    <div class="acoes-download">
+      <button class="botao-secundario" type="button" (click)="baixarRascunho()">
+        ↓ Baixar rascunho
+      </button>
+      <button class="botao-secundario" type="button" (click)="baixarItens()">
+        ↓ Baixar itens
+      </button>
+    </div>
+    <button class="botao-primario" type="button" (click)="analisarInconsistencias()">
+      ✦ Analisar inconsistências com IA
+    </button>
+  </section>
+  @if (mensagemAnalise) {
+  <section class="painel-analise" aria-live="polite">
+    <strong>
+      {{ mensagemAnalise }}
+    </strong>
+    @if (inconsistencias.length) {
+    <ul>
+      @for (inconsistencia of inconsistencias; track $index) {
+      <li>
+        {{ inconsistencia }}
+      </li>
+      }
+    </ul>
+    }
+  </section>
+  }
+  <nav class="abas-duimp" aria-label="Etapas da DUIMP">
+    <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'identificacao'"
+      (click)="abaAtiva = 'identificacao'">
+      1. Identificação
+    </button>
+    <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'carga'" (click)="abaAtiva = 'carga'">
+      2. Carga
+    </button>
+    <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'documentos'" (click)="abaAtiva = 'documentos'">
+      3. Documentos
+    </button>
+    <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'item'" (click)="abaAtiva = 'item'">
+      4. Itens
+    </button>
+    <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'tratamento-administrativo'"
+      (click)="abaAtiva = 'tratamento-administrativo'">
+      5. Tratamento administrativo
+    </button>
+    <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'resumo'" (click)="abaAtiva = 'resumo'">
+      6. Resumo
+    </button>
+  </nav>
+  @if (abaAtiva === 'identificacao') {
+  <section class="cartao">
+    <div class="titulo-secao">
       <div>
         <p class="sobretitulo">
-          MÓDULO DUIMP
+          DADOS DO IMPORTADOR
         </p>
-        <h1>
-          DUIMP do processo {{ processo.numero }}
-        </h1>
-        <p class="descricao">
-          {{ processo.importador }}
-          <span>
-            ·
-          </span>
-          {{ processo.modalidade }}
-        </p>
+        <h2>
+          Identificação
+        </h2>
       </div>
-      <label class="situacao-controle">
-        Situação
-        <select [(ngModel)]="duimp.situacaoDuimp" (ngModelChange)="atualizarDadosDuimp()">
-          <option value="Não iniciada">
-            Não iniciada
+    </div>
+    <div class="grade-campos">
+      <label>
+        Tipo de pessoa
+        <select [(ngModel)]="duimp.tipoPessoaImportador" (ngModelChange)="atualizarDadosDuimp()">
+          <option value="Pessoa Jurídica">
+            Pessoa Jurídica
           </option>
-          <option value="Em preenchimento">
-            Em preenchimento
-          </option>
-          <option value="Pronta para revisão">
-            Pronta para revisão
+          <option value="Pessoa Física">
+            Pessoa Física
           </option>
         </select>
       </label>
-    </header>
-    <section class="barra-acoes" aria-label="Ações da DUIMP">
-      <div class="acoes-download">
-        <button class="botao-secundario" type="button" (click)="baixarRascunho()">
-          ↓ Baixar rascunho
-        </button>
-        <button class="botao-secundario" type="button" (click)="baixarItens()">
-          ↓ Baixar itens
-        </button>
+      <label>
+        {{ duimp.tipoPessoaImportador === 'Pessoa Jurídica' ? 'CNPJ do importador' : 'CPF do importador' }}
+        <input [(ngModel)]="duimp.cpfCnpjImportador" (ngModelChange)="atualizarDadosDuimp()"
+          [placeholder]="duimp.tipoPessoaImportador === 'Pessoa Jurídica' ? '00.000.000/0000-00' : '000.000.000-00'" />
+      </label>
+      <label>
+        Nome / razão social
+        <input [(ngModel)]="duimp.nomeImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Nome do importador" />
+      </label>
+      <label>
+        Endereço
+        <input [(ngModel)]="duimp.enderecoImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Logradouro, número e bairro" />
+      </label>
+      <label>
+        Município
+        <input [(ngModel)]="duimp.municipioImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Município" />
+      </label>
+      <label>
+        UF
+        <input maxlength="2" [(ngModel)]="duimp.ufImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="UF" />
+      </label>
+      <label class="campo-largo">
+        Complemento do endereço
+        <input [(ngModel)]="duimp.complementoEnderecoImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Complemento (opcional)" />
+      </label>
+    </div>
+  </section>
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          INFORMAÇÕES DA DECLARAÇÃO
+        </p>
+        <h2>
+          Informações complementares
+        </h2>
       </div>
-      <button class="botao-primario" type="button" (click)="analisarInconsistencias()">
-        ✦ Analisar inconsistências com IA
-      </button>
-    </section>
-    @if (mensagemAnalise) {
-      <section class="painel-analise" aria-live="polite">
-        <strong>
-          {{ mensagemAnalise }}
-        </strong>
-        @if (inconsistencias.length) {
-          <ul>
-            @for (inconsistencia of inconsistencias; track $index) {
-              <li>
-                {{ inconsistencia }}
-              </li>
-            }
-          </ul>
-        }
-      </section>
-    }
-    <nav class="abas-duimp" aria-label="Etapas da DUIMP">
-      <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'identificacao'" (click)="abaAtiva = 'identificacao'">
-        1. Identificação
-      </button>
-      <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'carga'" (click)="abaAtiva = 'carga'">
-        2. Carga
-      </button>
-      <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'documentos'" (click)="abaAtiva = 'documentos'">
-        3. Documentos
-      </button>
-      <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'item'" (click)="abaAtiva = 'item'">
-        4. Itens
-      </button>
-      <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'tratamento-administrativo'" (click)="abaAtiva = 'tratamento-administrativo'">
-        5. Tratamento administrativo
-      </button>
-      <button type="button" class="aba-duimp" [class.ativa]="abaAtiva === 'resumo'" (click)="abaAtiva = 'resumo'">
-        6. Resumo
-      </button>
-    </nav>
-    @if (abaAtiva === 'identificacao') {
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              DADOS DO IMPORTADOR
-            </p>
-            <h2>
-              Identificação
-            </h2>
-          </div>
-        </div>
-        <div class="grade-campos">
-          <label>
-            Tipo de pessoa
-            <select [(ngModel)]="duimp.tipoPessoaImportador" (ngModelChange)="atualizarDadosDuimp()">
-              <option value="Pessoa Jurídica">
-                Pessoa Jurídica
-              </option>
-              <option value="Pessoa Física">
-                Pessoa Física
-              </option>
-            </select>
-          </label>
-          <label>
-            {{ duimp.tipoPessoaImportador === 'Pessoa Jurídica' ? 'CNPJ do importador' : 'CPF do importador' }}
-            <input [(ngModel)]="duimp.cpfCnpjImportador" (ngModelChange)="atualizarDadosDuimp()" [placeholder]="duimp.tipoPessoaImportador === 'Pessoa Jurídica' ? '00.000.000/0000-00' : '000.000.000-00'" />
-          </label>
-          <label>
-            Nome / razão social
-            <input [(ngModel)]="duimp.nomeImportador" (ngModelChange)="atualizarDadosDuimp()" placeholder="Nome do importador" />
-          </label>
-          <label>
-            Endereço
-            <input [(ngModel)]="duimp.enderecoImportador" (ngModelChange)="atualizarDadosDuimp()" placeholder="Logradouro, número e bairro" />
-          </label>
-          <label>
-            Município
-            <input [(ngModel)]="duimp.municipioImportador" (ngModelChange)="atualizarDadosDuimp()" placeholder="Município" />
-          </label>
-          <label>
-            UF
-            <input maxlength="2" [(ngModel)]="duimp.ufImportador" (ngModelChange)="atualizarDadosDuimp()" placeholder="UF" />
-          </label>
-          <label class="campo-largo">
-            Complemento do endereço
-            <input [(ngModel)]="duimp.complementoEnderecoImportador" (ngModelChange)="atualizarDadosDuimp()" placeholder="Complemento (opcional)" />
-          </label>
-        </div>
-      </section>
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              INFORMAÇÕES DA DECLARAÇÃO
-            </p>
-            <h2>
-              Informações complementares
-            </h2>
-          </div>
-        </div>
-        <label class="campo-bloco">
-          Dados complementares variáveis
-          <textarea rows="4" [(ngModel)]="duimp.informacoesComplementaresVariaveis" (ngModelChange)="atualizarDadosDuimp()" placeholder="Informações relacionadas aos dados deste processo">
+    </div>
+    <label class="campo-bloco">
+      Dados complementares variáveis
+      <textarea rows="4" [(ngModel)]="duimp.informacoesComplementaresVariaveis" (ngModelChange)="atualizarDadosDuimp()"
+        placeholder="Informações relacionadas aos dados deste processo">
           </textarea>
-          <span class="ajuda">
-            Campo destinado aos dados variáveis que serão preparados a partir do processo e dos documentos.
-          </span>
-        </label>
-        <label class="controle-flag">
-          <input type="checkbox" [(ngModel)]="duimp.usarTextoPadrao" (ngModelChange)="atualizarDadosDuimp()" />
-          Incluir texto padrão opcional
-        </label>
-        @if (duimp.usarTextoPadrao) {
-          <label class="campo-bloco">
-            Texto padrão salvo
-            <textarea rows="4" [(ngModel)]="duimp.textoPadrao" (ngModelChange)="atualizarDadosDuimp()" placeholder="Selecione ou informe o texto padrão">
+      <span class="ajuda">
+        Campo destinado aos dados variáveis que serão preparados a partir do processo e dos documentos.
+      </span>
+    </label>
+    <label class="controle-flag">
+      <input type="checkbox" [(ngModel)]="duimp.usarTextoPadrao" (ngModelChange)="atualizarDadosDuimp()" />
+      Incluir texto padrão opcional
+    </label>
+    @if (duimp.usarTextoPadrao) {
+    <label class="campo-bloco">
+      Texto padrão salvo
+      <textarea rows="4" [(ngModel)]="duimp.textoPadrao" (ngModelChange)="atualizarDadosDuimp()"
+        placeholder="Selecione ou informe o texto padrão">
             </textarea>
-          </label>
-        }
-      </section>
+    </label>
     }
-    @if (abaAtiva === 'carga') {
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              TRANSPORTE INTERNACIONAL
-            </p>
-            <h2>
-              Dados da carga
-            </h2>
-          </div>
-          <span class="etiqueta">
-            {{ modalidadeAerea ? 'Aéreo · RUC' : 'Marítimo · CE Mercante' }}
-          </span>
-        </div>
-        <div class="grade-campos">
-          <label class="campo-largo">
-            Unidades de despacho
-            <span class="ajuda">
-              Informe uma ou mais unidades, separadas por vírgula.
-            </span>
-            <input [ngModel]="duimp.carga.unidadesDespacho.join(', ')" (ngModelChange)="atualizarUnidadesDespacho($event)" placeholder="Ex.: recinto, unidade de despacho" />
-          </label>
-          @if (modalidadeAerea) {
-            <label>
-              Número RUC
-              <input [(ngModel)]="duimp.carga.numeroRuc" (ngModelChange)="atualizarDadosDuimp()" placeholder="RUC da carga aérea" />
-            </label>
-          } @else {
-            <label>
-              Número do CE
-              <input [(ngModel)]="duimp.carga.numeroCe" (ngModelChange)="atualizarDadosDuimp()" placeholder="CE Mercante" />
-            </label>
-          }
-          <label>
-            Modal
-            <input [value]="processo.modalidade" readonly />
-          </label>
-          <label>
-            Local de embarque
-            <input [(ngModel)]="duimp.carga.localEmbarque" (ngModelChange)="atualizarDadosDuimp()" placeholder="Porto ou aeroporto" />
-          </label>
-          <label>
-            Data do conhecimento de carga
-            <input type="date" [(ngModel)]="duimp.carga.dataConhecimento" (ngModelChange)="atualizarDadosDuimp()" />
-          </label>
-          <label>
-            País de procedência
-            <input [(ngModel)]="duimp.carga.paisProcedencia" (ngModelChange)="atualizarDadosDuimp()" placeholder="País" />
-          </label>
-          <label>
-            Peso bruto (kg)
-            <input type="number" min="0" step="0.001" [(ngModel)]="duimp.carga.pesoBruto" (ngModelChange)="atualizarDadosDuimp()" />
-          </label>
-          <label>
-            Peso líquido (kg)
-            <input type="number" min="0" step="0.001" [(ngModel)]="duimp.carga.pesoLiquido" (ngModelChange)="atualizarDadosDuimp()" />
-          </label>
-        </div>
-      </section>
-      @if (!modalidadeAerea) {
-        <section class="cartao">
-          <div class="titulo-secao">
-            <div>
-              <p class="sobretitulo">
-                CE MERCANTE
-              </p>
-              <h2>
-                Componentes do frete
-              </h2>
-            </div>
-            <button class="botao-secundario" type="button" (click)="adicionarComponenteFrete()">
-              ＋ Componente
-            </button>
-          </div>
-          <div class="tabela-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>
-                    Pagamento
-                  </th>
-                  <th>
-                    Tipo
-                  </th>
-                  <th>
-                    Moeda
-                  </th>
-                  <th>
-                    Valor moeda
-                  </th>
-                  <th>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (componente of duimp.carga.componentesFrete; track componente.id) {
-                  <tr>
-                    <td>
-                      <input aria-label="Pagamento" [(ngModel)]="componente.pagamento" (ngModelChange)="atualizarDadosDuimp()" />
-                    </td>
-                    <td>
-                      <input aria-label="Tipo" [(ngModel)]="componente.tipo" (ngModelChange)="atualizarDadosDuimp()" placeholder="Ex.: THC" />
-                    </td>
-                    <td>
-                      <select aria-label="Moeda" [(ngModel)]="componente.moeda" (ngModelChange)="atualizarDadosDuimp()">
-                        <option value="">
-                          —
-                        </option>
-                        @for (moeda of moedas; track moeda) {
-                          <option [value]="moeda">
-                            {{ moeda }}
-                          </option>
-                        }
-                      </select>
-                    </td>
-                    <td>
-                      <input aria-label="Valor na moeda" type="number" min="0" step="0.01" [(ngModel)]="componente.valor" (ngModelChange)="atualizarDadosDuimp()" />
-                    </td>
-                    <td>
-                      <button class="botao-texto perigo" type="button" (click)="removerComponenteFrete(componente.id)">
-                        Remover
-                      </button>
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="5" class="vazio-tabela">
-                      Nenhum componente informado.
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-          <div class="grade-campos campos-resumo-carga">
-            <label>
-              Moeda do frete
-              <select [(ngModel)]="duimp.carga.moedaFrete" (ngModelChange)="atualizarDadosDuimp()">
-                <option value="">
-                  Selecione
-                </option>
-                @for (moeda of moedas; track moeda) {
-                  <option [value]="moeda">
-                    {{ moeda }}
-                  </option>
-                }
-              </select>
-            </label>
-            <label>
-              Valor total na moeda
-              <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteMoeda" (ngModelChange)="atualizarDadosDuimp()" />
-            </label>
-            <label>
-              Valor total em R$
-              <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteReais" (ngModelChange)="atualizarDadosDuimp()" />
-            </label>
-            <label>
-              AFRMM / TUM
-              <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorAfrmmTum" (ngModelChange)="atualizarDadosDuimp()" />
-            </label>
-            <label>
-              AFRMM / TUM pago?
-              <select [ngModel]="duimp.carga.afrmmTumPago === null ? '' : duimp.carga.afrmmTumPago" (ngModelChange)="duimp.carga.afrmmTumPago = $event === '' ? null : $event; atualizarDadosDuimp()">
-                <option value="">
-                  Não informado
-                </option>
-                <option [ngValue]="true">
-                  Sim
-                </option>
-                <option [ngValue]="false">
-                  Não
-                </option>
-              </select>
-            </label>
-          </div>
-        </section>
+  </section>
+  }
+  @if (abaAtiva === 'carga') {
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          TRANSPORTE INTERNACIONAL
+        </p>
+        <h2>
+          Dados da carga
+        </h2>
+      </div>
+      <span class="etiqueta">
+        {{ modalidadeAerea ? 'Aéreo · RUC' : 'Marítimo · CE Mercante' }}
+      </span>
+    </div>
+    <div class="grade-campos">
+      <label class="campo-largo">
+        Unidades de despacho
+        <span class="ajuda">
+          Informe uma ou mais unidades, separadas por vírgula.
+        </span>
+        <input [ngModel]="duimp.carga.unidadesDespacho.join(', ')" (ngModelChange)="atualizarUnidadesDespacho($event)"
+          placeholder="Ex.: recinto, unidade de despacho" />
+      </label>
+      @if (modalidadeAerea) {
+      <label>
+        Número RUC
+        <input [(ngModel)]="duimp.carga.numeroRuc" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="RUC da carga aérea" />
+      </label>
       } @else {
-        <section class="cartao">
-          <div class="titulo-secao">
-            <div>
-              <p class="sobretitulo">
-                RUC
-              </p>
-              <h2>
-                Frete aéreo
-              </h2>
-            </div>
-          </div>
-          <div class="grade-campos">
-            <label>
-              Frete total
-              <select [(ngModel)]="duimp.carga.moedaFrete" (ngModelChange)="atualizarDadosDuimp()">
+      <label>
+        Número do CE
+        <input [(ngModel)]="duimp.carga.numeroCe" (ngModelChange)="atualizarDadosDuimp()" placeholder="CE Mercante" />
+      </label>
+      }
+      <label>
+        Modal
+        <input [value]="processo.modalidade" readonly />
+      </label>
+      <label>
+        Local de embarque
+        <input [(ngModel)]="duimp.carga.localEmbarque" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Porto ou aeroporto" />
+      </label>
+      <label>
+        Data do conhecimento de carga
+        <input type="date" [(ngModel)]="duimp.carga.dataConhecimento" (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+      <label>
+        País de procedência
+        <input [(ngModel)]="duimp.carga.paisProcedencia" (ngModelChange)="atualizarDadosDuimp()" placeholder="País" />
+      </label>
+      <label>
+        Peso bruto (kg)
+        <input type="number" min="0" step="0.001" [(ngModel)]="duimp.carga.pesoBruto"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+      <label>
+        Peso líquido (kg)
+        <input type="number" min="0" step="0.001" [(ngModel)]="duimp.carga.pesoLiquido"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+    </div>
+  </section>
+  @if (!modalidadeAerea) {
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          CE MERCANTE
+        </p>
+        <h2>
+          Componentes do frete
+        </h2>
+      </div>
+      <button class="botao-secundario" type="button" (click)="adicionarComponenteFrete()">
+        ＋ Componente
+      </button>
+    </div>
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Pagamento
+            </th>
+            <th>
+              Tipo
+            </th>
+            <th>
+              Moeda
+            </th>
+            <th>
+              Valor moeda
+            </th>
+            <th>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (componente of duimp.carga.componentesFrete; track componente.id) {
+          <tr>
+            <td>
+              <input aria-label="Pagamento" [(ngModel)]="componente.pagamento"
+                (ngModelChange)="atualizarDadosDuimp()" />
+            </td>
+            <td>
+              <input aria-label="Tipo" [(ngModel)]="componente.tipo" (ngModelChange)="atualizarDadosDuimp()"
+                placeholder="Ex.: THC" />
+            </td>
+            <td>
+              <select aria-label="Moeda" [(ngModel)]="componente.moeda" (ngModelChange)="atualizarDadosDuimp()">
                 <option value="">
-                  Moeda
+                  —
                 </option>
                 @for (moeda of moedas; track moeda) {
-                  <option [value]="moeda">
-                    {{ moeda }}
-                  </option>
-                }
-              </select>
-            </label>
-            <label>
-              Valor na moeda
-              <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteMoeda" (ngModelChange)="atualizarDadosDuimp()" />
-            </label>
-            <label>
-              Frete em R$
-              <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteReais" (ngModelChange)="atualizarDadosDuimp()" />
-            </label>
-          </div>
-        </section>
-      }
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              CUSTOS E VOLUMES
-            </p>
-            <h2>
-              Seguro e embalagem
-            </h2>
-          </div>
-        </div>
-        <div class="grade-campos">
-          <label>
-            Moeda do seguro
-            <select [(ngModel)]="duimp.carga.moedaSeguro" (ngModelChange)="atualizarDadosDuimp()">
-              <option value="">
-                Selecione
-              </option>
-              @for (moeda of moedas; track moeda) {
                 <option [value]="moeda">
                   {{ moeda }}
                 </option>
-              }
-            </select>
-          </label>
-          <label>
-            Seguro na moeda
-            <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorSeguroMoeda" (ngModelChange)="atualizarDadosDuimp()" />
-          </label>
-          <label>
-            Seguro em R$
-            <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorSeguroReais" (ngModelChange)="atualizarDadosDuimp()" />
-          </label>
-        </div>
-        <div class="titulo-secao subtitulo-tabela">
-          <h3>
-            Embalagens
-          </h3>
-          <button class="botao-secundario" type="button" (click)="adicionarEmbalagem()">
-            ＋ Embalagem
-          </button>
-        </div>
-        <div class="tabela-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>
-                  Item
-                </th>
-                <th>
-                  Tipo
-                </th>
-                <th>
-                  Quantidade
-                </th>
-                <th>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (embalagem of duimp.carga.embalagens; track embalagem.id) {
-                <tr>
-                  <td>
-                    <input aria-label="Item" [(ngModel)]="embalagem.item" (ngModelChange)="atualizarDadosDuimp()" />
-                  </td>
-                  <td>
-                    <input aria-label="Tipo de embalagem" [(ngModel)]="embalagem.tipo" (ngModelChange)="atualizarDadosDuimp()" placeholder="Ex.: caixa" />
-                  </td>
-                  <td>
-                    <input aria-label="Quantidade" type="number" min="0" [(ngModel)]="embalagem.quantidade" (ngModelChange)="atualizarDadosDuimp()" />
-                  </td>
-                  <td>
-                    <button class="botao-texto perigo" type="button" (click)="removerEmbalagem(embalagem.id)">
-                      Remover
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="4" class="vazio-tabela">
-                    Nenhuma embalagem informada.
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
-    }
-    @if (abaAtiva === 'documentos') {
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              DOCUMENTOS DO PROCESSO
-            </p>
-            <h2>
-              Documentos da DUIMP
-            </h2>
-          </div>
-          <span class="etiqueta">
-            {{ documentosIncluidos.length }} incluído(s)
-          </span>
-        </div>
-        <p class="texto-apoio">
-          Marque os documentos que devem acompanhar a declaração. Os arquivos são os mesmos anexados ao processo.
-        </p>
-        @if (documentos.length) {
-          <div class="tabela-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>
-                    Incluir
-                  </th>
-                  <th>
-                    Documento
-                  </th>
-                  <th>
-                    Tipo
-                  </th>
-                  <th>
-                    Tamanho
-                  </th>
-                  <th>
-                    Conferência
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (documento of documentos; track documento.id) {
-                  <tr>
-                    <td>
-                      <input type="checkbox" [checked]="documento.incluirNaDuimp" [attr.aria-label]="'Incluir ' + documento.nome + ' na DUIMP'" (change)="definirInclusaoDocumento(documento, $any($event.target).checked)" />
-                    </td>
-                    <td>
-                      <strong>
-                        {{ documento.nome }}
-                      </strong>
-                    </td>
-                    <td>
-                      <select [ngModel]="documento.tipo" (ngModelChange)="documentosServiceAtualizarTipo(documento, $event)">
-                        <option value="Invoice">
-                          Invoice
-                        </option>
-                        <option value="Packing List">
-                          Packing List
-                        </option>
-                        <option value="Conhecimento de carga">
-                          Conhecimento de carga
-                        </option>
-                        <option value="Certificado">
-                          Certificado
-                        </option>
-                        <option value="Outro">
-                          Outro
-                        </option>
-                      </select>
-                    </td>
-                    <td>
-                      {{ documento.tamanho }}
-                    </td>
-                    <td>
-                      <span class="status-documento">
-                        {{ documento.status }}
-                      </span>
-                    </td>
-                  </tr>
                 }
-              </tbody>
-            </table>
-          </div>
-        } @else {
-          <div class="estado-vazio">
-            <strong>
-              Nenhum documento anexado ao processo
-            </strong>
-            <span>
-              Volte ao processo para enviar fatura, packing list e conhecimento de carga.
-            </span>
-          </div>
-        }
-      </section>
-    }
-    @if (abaAtiva === 'item') {
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              MERCADORIAS DA DECLARAÇÃO
-            </p>
-            <h2>
-              Itens da DUIMP
-            </h2>
-            <p class="texto-apoio">
-              Cadastre manualmente ou importe a planilha modelo.
-            </p>
-          </div>
-          <span class="etiqueta">
-            {{ duimp.itens.length }} item(ns)
-          </span>
-        </div>
-        <div class="barra-acoes itens-acoes">
-          <button class="botao-primario" type="button" (click)="novoItemDuimp = criarItemVazio()">
-            ＋ Adicionar item
-          </button>
-          <label class="botao-secundario arquivo-botao">
-            ↑ Upload da planilha Excel
-            <input type="file" accept=".xlsx,.xls" (change)="carregarItensExcel($event)" />
-          </label>
-          <button class="botao-secundario" type="button" (click)="baixarModeloItensExcel()">
-            ↓ Baixar modelo Excel
-          </button>
-          <label class="botao-secundario arquivo-botao">
-            ↑ Selecionar invoice
-            <input type="file" accept=".pdf,.png,.jpg,.jpeg" (change)="selecionarInvoice($event)" />
-          </label>
-        </div>
-        @if (mensagemImportacaoExcel) {
-          <p class="mensagem-sucesso" role="status">
-            {{ mensagemImportacaoExcel }}
-          </p>
-        }
-        @if (errosImportacaoExcel.length) {
-          <ul class="avisos-importacao" role="alert">
-            @for (erro of errosImportacaoExcel; track $index) {
-              <li>
-                {{ erro }}
-              </li>
-            }
-          </ul>
-        }
-        @if (itensExcelPreview.length) {
-          <div class="previa-planilha">
-            <strong>
-              Prévia: {{ itensExcelPreview.length }} item(ns) válido(s)
-            </strong>
-            <ul>
-              @for (item of itensExcelPreview; track $index) {
-                <li>
-                  {{ item.descricaoMercadoria }} · NCM {{ item.ncm }} · {{ item.quantidade }} {{ item.unidadeMedida }}
-                </li>
-              }
-            </ul>
-            <button class="botao-primario" type="button" (click)="confirmarImportacaoExcel()">
-              Confirmar importação
-            </button>
-          </div>
-        }
-        @if (duimp.itens.length) {
-          <div class="tabela-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>
-                    #
-                  </th>
-                  <th>
-                    Descrição
-                  </th>
-                  <th>
-                    NCM
-                  </th>
-                  <th>
-                    Quantidade
-                  </th>
-                  <th>
-                    Unidade
-                  </th>
-                  <th>
-                    Valor unitário
-                  </th>
-                  <th>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of duimp.itens; track item.id; let i = $index) {
-                  <tr>
-                    <td>
-                      {{ i + 1 }}
-                    </td>
-                    <td>
-                      {{ item.descricaoMercadoria }}
-                    </td>
-                    <td>
-                      {{ item.ncm }}
-                    </td>
-                    <td>
-                      {{ item.quantidade ?? '—' }}
-                    </td>
-                    <td>
-                      {{ item.unidadeMedida || '—' }}
-                    </td>
-                    <td>
-                      {{ item.valorUnitario ?? '—' }}
-                    </td>
-                    <td>
-                      <button class="botao-texto" type="button" (click)="editarItemDuimp(item.id)">
-                        Editar
-                      </button>
-                      <button class="botao-texto perigo" type="button" (click)="removerItemDuimp(item.id)">
-                        Remover
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        } @else {
-          <div class="estado-vazio">
-            <strong>
-              Nenhum item cadastrado
-            </strong>
-            <span>
-              Use o formulário abaixo, a planilha modelo ou adicione os itens manualmente.
-            </span>
-          </div>
-        }
-      </section>
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              PREENCHIMENTO MANUAL
-            </p>
-            <h2>
-              {{ itemEmEdicaoId === null ? 'Novo item' : 'Editar item' }}
-            </h2>
-          </div>
-        </div>
-        <nav class="abas-internas">
-          <button type="button" [class.ativa]="abaItemAtiva === 'mercadoria'" (click)="abaItemAtiva = 'mercadoria'">
-            Mercadoria
-          </button>
-          <button type="button" [class.ativa]="abaItemAtiva === 'tributos'" (click)="abaItemAtiva = 'tributos'">
-            Tributos
-          </button>
-        </nav>
-        @if (abaItemAtiva === 'mercadoria') {
-          <div class="grupo-formulario">
-            <h3>
-              Caracterização e produto
-            </h3>
-            <div class="grade-campos">
-              <label>
-                Caracterização da importação
-                <select [(ngModel)]="novoItemDuimp.caracterizacaoImportacao">
-                  <option value="">
-                    Selecione
-                  </option>
-                  <option>
-                    Importação direta
-                  </option>
-                  <option>
-                    Importação por conta e ordem
-                  </option>
-                  <option>
-                    Importação por encomenda
-                  </option>
-                </select>
-              </label>
-              <label>
-                Descrição / nome do produto
-                <input [(ngModel)]="novoItemDuimp.descricaoMercadoria" placeholder="Descrição comercial" />
-              </label>
-              <label>
-                Versão do produto
-                <input [(ngModel)]="novoItemDuimp.versaoProduto" />
-              </label>
-              <label>
-                NCM
-                <input maxlength="8" [(ngModel)]="novoItemDuimp.ncm" placeholder="8 dígitos" />
-              </label>
-            </div>
-          </div>
-          <div class="grupo-formulario">
-            <h3>
-              Fabricante e exportador
-            </h3>
-            <div class="grade-campos">
-              <label>
-                País de origem do fabricante
-                <input [(ngModel)]="novoItemDuimp.paisOrigemFabricante" />
-              </label>
-              <label>
-                Código e nome do fabricante
-                <input [(ngModel)]="novoItemDuimp.codigoNomeFabricante" />
-              </label>
-              <label>
-                Versão do fabricante
-                <input [(ngModel)]="novoItemDuimp.versaoFabricante" />
-              </label>
-              <label>
-                Endereço do fabricante
-                <input [(ngModel)]="novoItemDuimp.enderecoFabricante" />
-              </label>
-              <label>
-                Exportador é o fabricante?
-                <select [ngModel]="novoItemDuimp.exportadorEhFabricante === null ? '' : novoItemDuimp.exportadorEhFabricante" (ngModelChange)="novoItemDuimp.exportadorEhFabricante = $event === '' ? null : $event">
-                  <option value="">
-                    Selecione
-                  </option>
-                  <option [ngValue]="true">
-                    Sim
-                  </option>
-                  <option [ngValue]="false">
-                    Não
-                  </option>
-                </select>
-              </label>
-            </div>
-            @if (novoItemDuimp.exportadorEhFabricante === false) {
-              <div class="grade-campos campos-exportador">
-                <label>
-                  País de origem do exportador
-                  <input [(ngModel)]="novoItemDuimp.paisOrigemExportador" />
-                </label>
-                <label>
-                  Código e nome do exportador
-                  <input [(ngModel)]="novoItemDuimp.codigoNomeExportador" />
-                </label>
-                <label>
-                  Versão do exportador
-                  <input [(ngModel)]="novoItemDuimp.versaoExportador" />
-                </label>
-                <label>
-                  Endereço do exportador
-                  <input [(ngModel)]="novoItemDuimp.enderecoExportador" />
-                </label>
-              </div>
-            }
-          </div>
-          <div class="grupo-formulario">
-            <h3>
-              Consumo e dados da mercadoria
-            </h3>
-            <div class="grade-campos">
-              <label>
-                UF(s) de consumo
-                <span class="ajuda">
-                  Separe múltiplas UFs por vírgula.
-                </span>
-                <input [(ngModel)]="novoItemDuimp.ufsConsumo" placeholder="SP, RJ" />
-              </label>
-              <label>
-                Município(s) de consumo
-                <input [(ngModel)]="novoItemDuimp.municipiosConsumo" placeholder="Separe por vírgula" />
-              </label>
-              <label>
-                Aplicação
-                <select [(ngModel)]="novoItemDuimp.aplicacao">
-                  <option value="">
-                    Selecione
-                  </option>
-                  <option>
-                    Revenda
-                  </option>
-                  <option>
-                    Industrialização
-                  </option>
-                  <option>
-                    Uso e consumo
-                  </option>
-                  <option>
-                    Ativo imobilizado
-                  </option>
-                </select>
-              </label>
-              <label>
-                Condição
-                <select [(ngModel)]="novoItemDuimp.condicaoMercadoria">
-                  <option value="Nova">
-                    Nova
-                  </option>
-                  <option value="Usada">
-                    Usada
-                  </option>
-                </select>
-              </label>
-              <label>
-                Unidade na medida estatística
-                <input [(ngModel)]="novoItemDuimp.unidadeEstatistica" />
-              </label>
-              <label>
-                Quantidade na medida estatística
-                <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.quantidadeEstatistica" />
-              </label>
-              <label>
-                Peso líquido (kg)
-                <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.pesoLiquido" />
-              </label>
-              <label>
-                Unidade comercializada
-                <input [(ngModel)]="novoItemDuimp.unidadeComercializada" />
-              </label>
-              <label>
-                Quantidade comercializada
-                <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.quantidadeComercializada" />
-              </label>
-              <label>
-                Moeda negociada
-                <select [(ngModel)]="novoItemDuimp.moedaNegociada">
-                  <option value="">
-                    Selecione
-                  </option>
-                  @for (moeda of moedas; track moeda) {
-                    <option [value]="moeda">
-                      {{ moeda }}
-                    </option>
-                  }
-                </select>
-              </label>
-              <label>
-                Valor unitário na condição de venda
-                <input type="number" min="0" step="0.01" [(ngModel)]="novoItemDuimp.valorUnitarioCondicaoVenda" />
-              </label>
-            </div>
-          </div>
-          <div class="grupo-formulario">
-            <h3>
-              Informações complementares
-            </h3>
-            <div class="grade-campos">
-              <label>
-                Número de série
-                <input [(ngModel)]="novoItemDuimp.numeroSerie" />
-              </label>
-              <label class="campo-largo">
-                Detalhamento do produto
-                <textarea rows="3" [(ngModel)]="novoItemDuimp.detalhamentoProduto">
-                </textarea>
-              </label>
-            </div>
-          </div>
-          <div class="grupo-formulario">
-            <h3>
-              Condição de venda e dados cambiais
-            </h3>
-            <div class="grade-campos">
-              <label>
-                Método de valoração
-                <select [(ngModel)]="novoItemDuimp.metodoValoracao">
-                  <option value="">
-                    Selecione
-                  </option>
-                  <option>
-                    Valor de transação
-                  </option>
-                  <option>
-                    Outro método
-                  </option>
-                </select>
-              </label>
-              <label>
-                Incoterm
-                <select [(ngModel)]="novoItemDuimp.incoterm">
-                  <option value="">
-                    Selecione
-                  </option>
-                  @for (incoterm of incoterms; track incoterm) {
-                    <option [value]="incoterm">
-                      {{ incoterm }}
-                    </option>
-                  }
-                </select>
-              </label>
-              <label>
-                Cobertura cambial
-                <select [(ngModel)]="novoItemDuimp.coberturaCambial">
-                  <option value="">
-                    Selecione
-                  </option>
-                  <option>
-                    Até 180 dias
-                  </option>
-                  <option>
-                    De 181 até 360 dias
-                  </option>
-                  <option>
-                    Acima de 360 dias
-                  </option>
-                  <option>
-                    Sem cobertura
-                  </option>
-                </select>
-              </label>
-              <label>
-                Quantidade comercializada
-                <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.quantidade" />
-              </label>
-              <label>
-                Unidade comercializada
-                <input [(ngModel)]="novoItemDuimp.unidadeMedida" />
-              </label>
-              <label>
-                Valor unitário
-                <input type="number" min="0" step="0.01" [(ngModel)]="novoItemDuimp.valorUnitario" />
-              </label>
-            </div>
-            <p class="aviso-calculo">
-              Os valores aduaneiros e tributos ainda não são calculados por regras oficiais. Incoterm e rateios serão validados em etapa posterior.
-            </p>
-          </div>
-          <div class="acoes-formulario-item">
-            <button class="botao-primario" type="button" (click)="adicionarItemDuimp()">
-              {{ itemEmEdicaoId === null ? 'Salvar item' : 'Atualizar item' }}
-            </button>
-            @if (itemEmEdicaoId !== null) {
-              <button class="botao-secundario" type="button" (click)="cancelarEdicaoItem()">
-                Cancelar edição
+              </select>
+            </td>
+            <td>
+              <input aria-label="Valor na moeda" type="number" min="0" step="0.01" [(ngModel)]="componente.valor"
+                (ngModelChange)="atualizarDadosDuimp()" />
+            </td>
+            <td>
+              <button class="botao-texto perigo" type="button" (click)="removerComponenteFrete(componente.id)">
+                Remover
               </button>
-            }
-          </div>
-        } @else {
-          <div class="estado-vazio">
-            <strong>
-              Tributos do item
-            </strong>
-            <span>
-              Fundamentos legais, regimes especiais e cálculos tributários serão implementados em uma próxima etapa.
-            </span>
-          </div>
-        }
-      </section>
-    }
-    @if (abaAtiva === 'tratamento-administrativo') {
-      <section class="cartao tratamento-vazio">
-        <span class="icone-reservado">
-          ○
-        </span>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="vazio-tabela">
+              Nenhum componente informado.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="grade-campos campos-resumo-carga">
+      <label>
+        Moeda do frete
+        <select [(ngModel)]="duimp.carga.moedaFrete" (ngModelChange)="atualizarDadosDuimp()">
+          <option value="">
+            Selecione
+          </option>
+          @for (moeda of moedas; track moeda) {
+          <option [value]="moeda">
+            {{ moeda }}
+          </option>
+          }
+        </select>
+      </label>
+      <label>
+        Valor total na moeda
+        <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteMoeda"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+      <label>
+        Valor total em R$
+        <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteReais"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+      <label>
+        AFRMM / TUM
+        <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorAfrmmTum"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+      <label>
+        AFRMM / TUM pago?
+        <select [ngModel]="duimp.carga.afrmmTumPago === null ? '' : duimp.carga.afrmmTumPago"
+          (ngModelChange)="duimp.carga.afrmmTumPago = $event === '' ? null : $event; atualizarDadosDuimp()">
+          <option value="">
+            Não informado
+          </option>
+          <option [ngValue]="true">
+            Sim
+          </option>
+          <option [ngValue]="false">
+            Não
+          </option>
+        </select>
+      </label>
+    </div>
+  </section>
+  } @else {
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
         <p class="sobretitulo">
-          ETAPA RESERVADA
+          RUC
         </p>
         <h2>
-          Tratamento administrativo
+          Frete aéreo
+        </h2>
+      </div>
+    </div>
+    <div class="grade-campos">
+      <label>
+        Frete total
+        <select [(ngModel)]="duimp.carga.moedaFrete" (ngModelChange)="atualizarDadosDuimp()">
+          <option value="">
+            Moeda
+          </option>
+          @for (moeda of moedas; track moeda) {
+          <option [value]="moeda">
+            {{ moeda }}
+          </option>
+          }
+        </select>
+      </label>
+      <label>
+        Valor na moeda
+        <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteMoeda"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+      <label>
+        Frete em R$
+        <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorFreteReais"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+    </div>
+  </section>
+  }
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          CUSTOS E VOLUMES
+        </p>
+        <h2>
+          Seguro e embalagem
+        </h2>
+      </div>
+    </div>
+    <div class="grade-campos">
+      <label>
+        Moeda do seguro
+        <select [(ngModel)]="duimp.carga.moedaSeguro" (ngModelChange)="atualizarDadosDuimp()">
+          <option value="">
+            Selecione
+          </option>
+          @for (moeda of moedas; track moeda) {
+          <option [value]="moeda">
+            {{ moeda }}
+          </option>
+          }
+        </select>
+      </label>
+      <label>
+        Seguro na moeda
+        <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorSeguroMoeda"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+      <label>
+        Seguro em R$
+        <input type="number" min="0" step="0.01" [(ngModel)]="duimp.carga.valorSeguroReais"
+          (ngModelChange)="atualizarDadosDuimp()" />
+      </label>
+    </div>
+    <div class="titulo-secao subtitulo-tabela">
+      <h3>
+        Embalagens
+      </h3>
+      <button class="botao-secundario" type="button" (click)="adicionarEmbalagem()">
+        ＋ Embalagem
+      </button>
+    </div>
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Item
+            </th>
+            <th>
+              Tipo
+            </th>
+            <th>
+              Quantidade
+            </th>
+            <th>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (embalagem of duimp.carga.embalagens; track embalagem.id) {
+          <tr>
+            <td>
+              <input aria-label="Item" [(ngModel)]="embalagem.item" (ngModelChange)="atualizarDadosDuimp()" />
+            </td>
+            <td>
+              <input aria-label="Tipo de embalagem" [(ngModel)]="embalagem.tipo" (ngModelChange)="atualizarDadosDuimp()"
+                placeholder="Ex.: caixa" />
+            </td>
+            <td>
+              <input aria-label="Quantidade" type="number" min="0" [(ngModel)]="embalagem.quantidade"
+                (ngModelChange)="atualizarDadosDuimp()" />
+            </td>
+            <td>
+              <button class="botao-texto perigo" type="button" (click)="removerEmbalagem(embalagem.id)">
+                Remover
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="4" class="vazio-tabela">
+              Nenhuma embalagem informada.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+  @if (abaAtiva === 'documentos') {
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          DOCUMENTOS DO PROCESSO
+        </p>
+        <h2>
+          Documentos da DUIMP
+        </h2>
+      </div>
+      <span class="etiqueta">
+        {{ documentosIncluidos.length }} incluído(s)
+      </span>
+    </div>
+    <p class="texto-apoio">
+      Marque os documentos que devem acompanhar a declaração. Os arquivos são os mesmos anexados ao processo.
+    </p>
+    @if (documentos.length) {
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Incluir
+            </th>
+            <th>
+              Documento
+            </th>
+            <th>
+              Tipo
+            </th>
+            <th>
+              Tamanho
+            </th>
+            <th>
+              Conferência
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (documento of documentos; track documento.id) {
+          <tr>
+            <td>
+              <input type="checkbox" [checked]="documento.incluirNaDuimp"
+                [attr.aria-label]="'Incluir ' + documento.nome + ' na DUIMP'"
+                (change)="definirInclusaoDocumento(documento, $any($event.target).checked)" />
+            </td>
+            <td>
+              <strong>
+                {{ documento.nome }}
+              </strong>
+            </td>
+            <td>
+              <select [ngModel]="documento.tipo" (ngModelChange)="documentosServiceAtualizarTipo(documento, $event)">
+                <option value="Invoice">
+                  Invoice
+                </option>
+                <option value="Packing List">
+                  Packing List
+                </option>
+                <option value="Conhecimento de carga">
+                  Conhecimento de carga
+                </option>
+                <option value="Certificado">
+                  Certificado
+                </option>
+                <option value="Outro">
+                  Outro
+                </option>
+              </select>
+            </td>
+            <td>
+              {{ documento.tamanho }}
+            </td>
+            <td>
+              <span class="status-documento">
+                {{ documento.status }}
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div class="estado-vazio">
+      <strong>
+        Nenhum documento anexado ao processo
+      </strong>
+      <span>
+        Volte ao processo para enviar fatura, packing list e conhecimento de carga.
+      </span>
+    </div>
+    }
+  </section>
+  }
+  @if (abaAtiva === 'item') {
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          MERCADORIAS DA DECLARAÇÃO
+        </p>
+        <h2>
+          Itens da DUIMP
         </h2>
         <p class="texto-apoio">
-          Esta etapa ficará disponível quando forem definidos os dados e fluxos de licenciamento aplicáveis à operação.
+          Cadastre manualmente ou importe a planilha modelo.
         </p>
-      </section>
+      </div>
+      <span class="etiqueta">
+        {{ duimp.itens.length }} item(ns)
+      </span>
+    </div>
+    <div class="barra-acoes itens-acoes">
+      <button class="botao-primario" type="button" (click)="novoItemDuimp = criarItemVazio()">
+        ＋ Adicionar item
+      </button>
+      <label class="botao-secundario arquivo-botao">
+        ↑ Upload da planilha Excel
+        <input type="file" accept=".xlsx,.xls" (change)="carregarItensExcel($event)" />
+      </label>
+      <button class="botao-secundario" type="button" (click)="baixarModeloItensExcel()">
+        ↓ Baixar modelo Excel
+      </button>
+      <label class="botao-secundario arquivo-botao">
+        ↑ Selecionar invoice
+        <input type="file" accept=".pdf,.png,.jpg,.jpeg" (change)="selecionarInvoice($event)" />
+      </label>
+    </div>
+
+    @if (mensagemUploadInvoice) {
+
+    <p class="mensagem-sucesso" role="status">
+      {{mensagemUploadInvoice}}
+    </p>
+
     }
-    @if (abaAtiva === 'resumo') {
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              CONSOLIDAÇÃO
-            </p>
-            <h2>
-              Resumo da declaração
-            </h2>
-          </div>
-        </div>
-        <div class="indicadores-resumo">
-          <article>
-            <span>
-              Adições / itens
-            </span>
-            <strong>
-              {{ duimp.itens.length }} / {{ duimp.itens.length }}
-            </strong>
-          </article>
-          <article>
-            <span>
-              VMLE estimado
-            </span>
-            <strong>
-              {{ totalItens | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
-            </strong>
-          </article>
-          <article>
-            <span>
-              Itens incluídos
-            </span>
-            <strong>
-              {{ duimp.itens.length }}
-            </strong>
-          </article>
-        </div>
-        <div class="tabela-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>
-                  Número da adição
-                </th>
-                <th>
-                  Número de itens
-                </th>
-                <th>
-                  VMLE US$
-                </th>
-                <th>
-                  VMLE R$
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of duimp.itens; track item.id; let i = $index) {
-                <tr>
-                  <td>
-                    {{ i + 1 }}
-                  </td>
-                  <td>
-                    1
-                  </td>
-                  <td>
-                    {{ item.moedaNegociada === 'USD' ? ((item.valorUnitario ?? 0) * (item.quantidade ?? 0) | number:'1.2-2':'pt-BR') : '—' }}
-                  </td>
-                  <td>
-                    {{ ((item.valorUnitarioCondicaoVenda ?? item.valorUnitario ?? 0) * (item.quantidade ?? 0)) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="4" class="vazio-tabela">
-                    Cadastre itens para compor o resumo.
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section class="cartao">
-        <div class="titulo-secao">
-          <div>
-            <p class="sobretitulo">
-              VALORES A APURAR
-            </p>
-            <h2>
-              Tributos
-            </h2>
-          </div>
-        </div>
-        <p class="texto-apoio">
-          Os valores abaixo são exibidos como pendentes porque o cálculo depende da classificação, do regime tributário e das regras vigentes.
+
+    @if (mensagemImportacaoExcel) {
+    <p class="mensagem-sucesso" role="status">
+      {{ mensagemImportacaoExcel }}
+    </p>
+    }
+
+    @if (errosImportacaoExcel.length) {
+    <ul class="avisos-importacao" role="alert">
+      @for (erro of errosImportacaoExcel; track $index) {
+      <li>
+        {{ erro }}
+      </li>
+      }
+    </ul>
+    }
+
+    @if (itensExcelPreview.length) {
+    <div class="previa-planilha">
+      <strong>
+        Prévia: {{ itensExcelPreview.length }} item(ns) válido(s)
+      </strong>
+      <ul>
+        @for (item of itensExcelPreview; track $index) {
+        <li>
+          {{ item.descricaoMercadoria }} · NCM {{ item.ncm }} · {{ item.quantidade }} {{ item.unidadeMedida }}
+        </li>
+        }
+      </ul>
+      <button class="botao-primario" type="button" (click)="confirmarImportacaoExcel()">
+        Confirmar importação
+      </button>
+    </div>
+    }
+
+    @if (duimp.itens.length) {
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              #
+            </th>
+            <th>
+              Descrição
+            </th>
+            <th>
+              NCM
+            </th>
+            <th>
+              Quantidade
+            </th>
+            <th>
+              Unidade
+            </th>
+            <th>
+              Valor unitário
+            </th>
+            <th>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of duimp.itens; track item.id; let i = $index) {
+          <tr>
+            <td>
+              {{ i + 1 }}
+            </td>
+            <td>
+              {{ item.descricaoMercadoria }}
+            </td>
+            <td>
+              {{ item.ncm }}
+            </td>
+            <td>
+              {{ item.quantidade ?? '—' }}
+            </td>
+            <td>
+              {{ item.unidadeMedida || '—' }}
+            </td>
+            <td>
+              {{ item.valorUnitario ?? '—' }}
+            </td>
+            <td>
+              <button class="botao-texto" type="button" (click)="editarItemDuimp(item.id)">
+                Editar
+              </button>
+              <button class="botao-texto perigo" type="button" (click)="removerItemDuimp(item.id)">
+                Remover
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    } @else {
+
+    <div class="estado-vazio">
+      <strong>
+        Nenhum item cadastrado
+      </strong>
+      <span>
+        Use o formulário abaixo, a planilha modelo ou adicione os itens manualmente.
+      </span>
+    </div>
+
+    }
+
+  </section>
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          PREENCHIMENTO MANUAL
         </p>
-        <div class="tabela-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>
-                  Tributo
-                </th>
-                <th>
-                  Calculado
-                </th>
-                <th>
-                  A reduzir
-                </th>
-                <th>
-                  Devido
-                </th>
-                <th>
-                  Suspenso
-                </th>
-                <th>
-                  A recolher
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (tributo of tributos; track tributo) {
-                <tr>
-                  <td>
-                    <strong>
-                      {{ tributo }}
-                    </strong>
-                  </td>
-                  <td>
-                    —
-                  </td>
-                  <td>
-                    —
-                  </td>
-                  <td>
-                    —
-                  </td>
-                  <td>
-                    —
-                  </td>
-                  <td>
-                    <span class="pendente">
-                      A apurar
-                    </span>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-        <label class="conta-debito">
-          Conta para débito
-          <select [(ngModel)]="duimp.contaDebito" (ngModelChange)="atualizarDadosDuimp()">
+        <h2>
+          {{ itemEmEdicaoId === null ? 'Novo item' : 'Editar item' }}
+        </h2>
+      </div>
+    </div>
+    <nav class="abas-internas">
+      <button type="button" [class.ativa]="abaItemAtiva === 'mercadoria'" (click)="abaItemAtiva = 'mercadoria'">
+        Mercadoria
+      </button>
+      <button type="button" [class.ativa]="abaItemAtiva === 'tributos'" (click)="abaItemAtiva = 'tributos'">
+        Tributos
+      </button>
+    </nav>
+    @if (abaItemAtiva === 'mercadoria') {
+    <div class="grupo-formulario">
+      <h3>
+        Caracterização e produto
+      </h3>
+      <div class="grade-campos">
+        <label>
+          Caracterização da importação
+          <select [(ngModel)]="novoItemDuimp.caracterizacaoImportacao">
             <option value="">
-              Selecione a conta
+              Selecione
             </option>
             <option>
-              Conta cadastrada no Portal Único
+              Importação direta
             </option>
             <option>
-              Definir posteriormente
+              Importação por conta e ordem
+            </option>
+            <option>
+              Importação por encomenda
             </option>
           </select>
-          <span class="ajuda">
-            A conta deverá ser confirmada conforme o cadastro disponível no Portal Único.
-          </span>
         </label>
-      </section>
-    }
-    <footer class="rodape-pagina">
-      <span>
-        As informações são salvas em memória nesta versão.
-      </span>
-      <button class="botao-secundario" type="button" (click)="atualizarDadosDuimp()">
-        Salvar rascunho
+        <label>
+          Descrição / nome do produto
+          <input [(ngModel)]="novoItemDuimp.descricaoMercadoria" placeholder="Descrição comercial" />
+        </label>
+        <label>
+          Versão do produto
+          <input [(ngModel)]="novoItemDuimp.versaoProduto" />
+        </label>
+        <label>
+          NCM
+          <input maxlength="8" [(ngModel)]="novoItemDuimp.ncm" placeholder="8 dígitos" />
+        </label>
+      </div>
+    </div>
+    <div class="grupo-formulario">
+      <h3>
+        Fabricante e exportador
+      </h3>
+      <div class="grade-campos">
+        <label>
+          País de origem do fabricante
+          <input [(ngModel)]="novoItemDuimp.paisOrigemFabricante" />
+        </label>
+        <label>
+          Código e nome do fabricante
+          <input [(ngModel)]="novoItemDuimp.codigoNomeFabricante" />
+        </label>
+        <label>
+          Versão do fabricante
+          <input [(ngModel)]="novoItemDuimp.versaoFabricante" />
+        </label>
+        <label>
+          Endereço do fabricante
+          <input [(ngModel)]="novoItemDuimp.enderecoFabricante" />
+        </label>
+        <label>
+          Exportador é o fabricante?
+          <select [ngModel]="novoItemDuimp.exportadorEhFabricante === null ? '' : novoItemDuimp.exportadorEhFabricante"
+            (ngModelChange)="novoItemDuimp.exportadorEhFabricante = $event === '' ? null : $event">
+            <option value="">
+              Selecione
+            </option>
+            <option [ngValue]="true">
+              Sim
+            </option>
+            <option [ngValue]="false">
+              Não
+            </option>
+          </select>
+        </label>
+      </div>
+      @if (novoItemDuimp.exportadorEhFabricante === false) {
+      <div class="grade-campos campos-exportador">
+        <label>
+          País de origem do exportador
+          <input [(ngModel)]="novoItemDuimp.paisOrigemExportador" />
+        </label>
+        <label>
+          Código e nome do exportador
+          <input [(ngModel)]="novoItemDuimp.codigoNomeExportador" />
+        </label>
+        <label>
+          Versão do exportador
+          <input [(ngModel)]="novoItemDuimp.versaoExportador" />
+        </label>
+        <label>
+          Endereço do exportador
+          <input [(ngModel)]="novoItemDuimp.enderecoExportador" />
+        </label>
+      </div>
+      }
+    </div>
+    <div class="grupo-formulario">
+      <h3>
+        Consumo e dados da mercadoria
+      </h3>
+      <div class="grade-campos">
+        <label>
+          UF(s) de consumo
+          <span class="ajuda">
+            Separe múltiplas UFs por vírgula.
+          </span>
+          <input [(ngModel)]="novoItemDuimp.ufsConsumo" placeholder="SP, RJ" />
+        </label>
+        <label>
+          Município(s) de consumo
+          <input [(ngModel)]="novoItemDuimp.municipiosConsumo" placeholder="Separe por vírgula" />
+        </label>
+        <label>
+          Aplicação
+          <select [(ngModel)]="novoItemDuimp.aplicacao">
+            <option value="">
+              Selecione
+            </option>
+            <option>
+              Revenda
+            </option>
+            <option>
+              Industrialização
+            </option>
+            <option>
+              Uso e consumo
+            </option>
+            <option>
+              Ativo imobilizado
+            </option>
+          </select>
+        </label>
+        <label>
+          Condição
+          <select [(ngModel)]="novoItemDuimp.condicaoMercadoria">
+            <option value="Nova">
+              Nova
+            </option>
+            <option value="Usada">
+              Usada
+            </option>
+          </select>
+        </label>
+        <label>
+          Unidade na medida estatística
+          <input [(ngModel)]="novoItemDuimp.unidadeEstatistica" />
+        </label>
+        <label>
+          Quantidade na medida estatística
+          <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.quantidadeEstatistica" />
+        </label>
+        <label>
+          Peso líquido (kg)
+          <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.pesoLiquido" />
+        </label>
+        <label>
+          Unidade comercializada
+          <input [(ngModel)]="novoItemDuimp.unidadeComercializada" />
+        </label>
+        <label>
+          Quantidade comercializada
+          <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.quantidadeComercializada" />
+        </label>
+        <label>
+          Moeda negociada
+          <select [(ngModel)]="novoItemDuimp.moedaNegociada">
+            <option value="">
+              Selecione
+            </option>
+            @for (moeda of moedas; track moeda) {
+            <option [value]="moeda">
+              {{ moeda }}
+            </option>
+            }
+          </select>
+        </label>
+        <label>
+          Valor unitário na condição de venda
+          <input type="number" min="0" step="0.01" [(ngModel)]="novoItemDuimp.valorUnitarioCondicaoVenda" />
+        </label>
+      </div>
+    </div>
+    <div class="grupo-formulario">
+      <h3>
+        Informações complementares
+      </h3>
+      <div class="grade-campos">
+        <label>
+          Número de série
+          <input [(ngModel)]="novoItemDuimp.numeroSerie" />
+        </label>
+        <label class="campo-largo">
+          Detalhamento do produto
+          <textarea rows="3" [(ngModel)]="novoItemDuimp.detalhamentoProduto">
+                </textarea>
+        </label>
+      </div>
+    </div>
+    <div class="grupo-formulario">
+      <h3>
+        Condição de venda e dados cambiais
+      </h3>
+      <div class="grade-campos">
+        <label>
+          Método de valoração
+          <select [(ngModel)]="novoItemDuimp.metodoValoracao">
+            <option value="">
+              Selecione
+            </option>
+            <option>
+              Valor de transação
+            </option>
+            <option>
+              Outro método
+            </option>
+          </select>
+        </label>
+        <label>
+          Incoterm
+          <select [(ngModel)]="novoItemDuimp.incoterm">
+            <option value="">
+              Selecione
+            </option>
+            @for (incoterm of incoterms; track incoterm) {
+            <option [value]="incoterm">
+              {{ incoterm }}
+            </option>
+            }
+          </select>
+        </label>
+        <label>
+          Cobertura cambial
+          <select [(ngModel)]="novoItemDuimp.coberturaCambial">
+            <option value="">
+              Selecione
+            </option>
+            <option>
+              Até 180 dias
+            </option>
+            <option>
+              De 181 até 360 dias
+            </option>
+            <option>
+              Acima de 360 dias
+            </option>
+            <option>
+              Sem cobertura
+            </option>
+          </select>
+        </label>
+        <label>
+          Quantidade comercializada
+          <input type="number" min="0" step="0.001" [(ngModel)]="novoItemDuimp.quantidade" />
+        </label>
+        <label>
+          Unidade comercializada
+          <input [(ngModel)]="novoItemDuimp.unidadeMedida" />
+        </label>
+        <label>
+          Valor unitário
+          <input type="number" min="0" step="0.01" [(ngModel)]="novoItemDuimp.valorUnitario" />
+        </label>
+      </div>
+      <p class="aviso-calculo">
+        Os valores aduaneiros e tributos ainda não são calculados por regras oficiais. Incoterm e rateios serão
+        validados em etapa posterior.
+      </p>
+    </div>
+    <div class="acoes-formulario-item">
+      <button class="botao-primario" type="button" (click)="adicionarItemDuimp()">
+        {{ itemEmEdicaoId === null ? 'Salvar item' : 'Atualizar item' }}
       </button>
-    </footer>
-  } @else {
-    <section class="cartao nao-encontrado">
-      <h1>
-        Processo não encontrado
-      </h1>
-      <a routerLink="/processos">
-        Voltar aos processos
-      </a>
-    </section>
+      @if (itemEmEdicaoId !== null) {
+      <button class="botao-secundario" type="button" (click)="cancelarEdicaoItem()">
+        Cancelar edição
+      </button>
+      }
+    </div>
+    } @else {
+    <div class="estado-vazio">
+      <strong>
+        Tributos do item
+      </strong>
+      <span>
+        Fundamentos legais, regimes especiais e cálculos tributários serão implementados em uma próxima etapa.
+      </span>
+    </div>
+    }
+  </section>
   }
+  @if (abaAtiva === 'tratamento-administrativo') {
+  <section class="cartao tratamento-vazio">
+    <span class="icone-reservado">
+      ○
+    </span>
+    <p class="sobretitulo">
+      ETAPA RESERVADA
+    </p>
+    <h2>
+      Tratamento administrativo
+    </h2>
+    <p class="texto-apoio">
+      Esta etapa ficará disponível quando forem definidos os dados e fluxos de licenciamento aplicáveis à operação.
+    </p>
+  </section>
+  }
+  @if (abaAtiva === 'resumo') {
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          CONSOLIDAÇÃO
+        </p>
+        <h2>
+          Resumo da declaração
+        </h2>
+      </div>
+    </div>
+    <div class="indicadores-resumo">
+      <article>
+        <span>
+          Adições / itens
+        </span>
+        <strong>
+          {{ duimp.itens.length }} / {{ duimp.itens.length }}
+        </strong>
+      </article>
+      <article>
+        <span>
+          VMLE estimado
+        </span>
+        <strong>
+          {{ totalItens | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+        </strong>
+      </article>
+      <article>
+        <span>
+          Itens incluídos
+        </span>
+        <strong>
+          {{ duimp.itens.length }}
+        </strong>
+      </article>
+    </div>
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Número da adição
+            </th>
+            <th>
+              Número de itens
+            </th>
+            <th>
+              VMLE US$
+            </th>
+            <th>
+              VMLE R$
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of duimp.itens; track item.id; let i = $index) {
+          <tr>
+            <td>
+              {{ i + 1 }}
+            </td>
+            <td>
+              1
+            </td>
+            <td>
+              {{ item.moedaNegociada === 'USD' ? ((item.valorUnitario ?? 0) * (item.quantidade ?? 0) |
+              number:'1.2-2':'pt-BR') : '—' }}
+            </td>
+            <td>
+              {{ ((item.valorUnitarioCondicaoVenda ?? item.valorUnitario ?? 0) * (item.quantidade ?? 0)) |
+              currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="4" class="vazio-tabela">
+              Cadastre itens para compor o resumo.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="cartao">
+    <div class="titulo-secao">
+      <div>
+        <p class="sobretitulo">
+          VALORES A APURAR
+        </p>
+        <h2>
+          Tributos
+        </h2>
+      </div>
+    </div>
+    <p class="texto-apoio">
+      Os valores abaixo são exibidos como pendentes porque o cálculo depende da classificação, do regime tributário e
+      das regras vigentes.
+    </p>
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Tributo
+            </th>
+            <th>
+              Calculado
+            </th>
+            <th>
+              A reduzir
+            </th>
+            <th>
+              Devido
+            </th>
+            <th>
+              Suspenso
+            </th>
+            <th>
+              A recolher
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tributo of tributos; track tributo) {
+          <tr>
+            <td>
+              <strong>
+                {{ tributo }}
+              </strong>
+            </td>
+            <td>
+              —
+            </td>
+            <td>
+              —
+            </td>
+            <td>
+              —
+            </td>
+            <td>
+              —
+            </td>
+            <td>
+              <span class="pendente">
+                A apurar
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <label class="conta-debito">
+      Conta para débito
+      <select [(ngModel)]="duimp.contaDebito" (ngModelChange)="atualizarDadosDuimp()">
+        <option value="">
+          Selecione a conta
+        </option>
+        <option>
+          Conta cadastrada no Portal Único
+        </option>
+        <option>
+          Definir posteriormente
+        </option>
+      </select>
+      <span class="ajuda">
+        A conta deverá ser confirmada conforme o cadastro disponível no Portal Único.
+      </span>
+    </label>
+  </section>
+  }
+  <footer class="rodape-pagina">
+    <span>
+      As informações são salvas em memória nesta versão.
+    </span>
+    <button class="botao-secundario" type="button" (click)="atualizarDadosDuimp()">
+      Salvar rascunho
+    </button>
+  </footer>
+  } @else {
+  <section class="cartao nao-encontrado">
+    <h1>
+      Processo não encontrado
+    </h1>
+    <a routerLink="/processos">
+      Voltar aos processos
+    </a>
+  </section>
+  }
+
 </main>
