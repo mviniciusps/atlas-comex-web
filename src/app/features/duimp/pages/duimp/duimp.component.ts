@@ -68,6 +68,9 @@ export class DuimpComponent implements OnInit {
     'DDP',
   ];
 
+  tipoDocumentoUpload: DocumentoProcesso['tipo'] = 'Outro';
+  mensagemUploadDocumentos = '';
+
   constructor(
     private route: ActivatedRoute,
     private processosService: ProcessosService,
@@ -180,7 +183,7 @@ export class DuimpComponent implements OnInit {
     this.atualizarDocumentos();
     this.mensagemUploadInvoice = 'Invoice anexada ao processo. Confira-a na aba Documentos e marque se deseja incluí-la na DUIMP. A leitura automática ainda não está integrada.';
     input.value = '';
-    
+
   }
 
   adicionarComponenteFrete(): void {
@@ -752,6 +755,45 @@ export class DuimpComponent implements OnInit {
     this.itemEmEdicaoId = item.id;
     this.novoItemDuimp = { ...this.criarItemVazio(), ...item };
     this.abaItemAtiva = 'mercadoria';
+  }
+
+  anexarDocumentosProcesso(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const arquivos = Array.from(input.files ?? []);
+
+    this.mensagemUploadDocumentos = '';
+
+    if (arquivos.length === 0) return;
+
+    const documentosAtuais = this.documentosService.listar(this.processoNumero);
+
+    const novosDocumentos = arquivos.filter((arquivo) => !documentosAtuais.some((documento) => documento.nome.toLocaleLowerCase() === arquivo.name.toLocaleLowerCase() && documento.arquivo.size === arquivo.size))
+      .map((arquivo) => ({
+        nome: arquivo.name,
+        tamanho:
+          arquivo.size < 1024 * 1024
+            ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB`
+            : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`,
+        tipo: this.tipoDocumentoUpload,
+        status: 'Aguardando conferência' as const,
+        arquivo,
+      }));
+
+    const quantidadeDuplicada = arquivos.length - novosDocumentos.length;
+
+    if (novosDocumentos.length > 0 && quantidadeDuplicada > 0) {
+      this.mensagemUploadDocumentos =
+        `${novosDocumentos.length} documento(s) anexado(s); ` +
+        `${quantidadeDuplicada} duplicado(s) ignorado(s).`;
+    } else if (novosDocumentos.length > 0) {
+      this.mensagemUploadDocumentos =
+        `${novosDocumentos.length} documento(s) anexado(s) ao processo.`;
+    } else {
+      this.mensagemUploadDocumentos =
+        'Os arquivos selecionados já estão anexados ao processo.';
+    }
+
+    input.value = '';
   }
 
   private converterNumeroExcel(valor: unknown): number | null {

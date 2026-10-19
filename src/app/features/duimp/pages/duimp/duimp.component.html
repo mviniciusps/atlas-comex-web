@@ -516,6 +516,34 @@
     <p class="texto-apoio">
       Marque os documentos que devem acompanhar a declaração. Os arquivos são os mesmos anexados ao processo.
     </p>
+    <div class="barra-acoes itens-acoes">
+      <label class="campo-bloco">
+        Tipo do documento
+        <select [(ngModel)]="tipoDocumentoUpload">
+          <option value="Invoice">Invoice</option>
+          <option value="Packing List">Packing List</option>
+          <option value="Conhecimento de carga">
+            Conhecimento de carga
+          </option>
+          <option value="Certificado">Certificado</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </label>
+      <label class="botao-secundario arquivo-botao">
+        + Anexar documentos
+        <input
+          type="file"
+          multiple
+          accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx"
+          (change)="anexarDocumentosProcesso($event)"
+        />
+      </label>
+    </div>
+    @if (mensagemUploadDocumentos) {
+    <p class="mensagem-sucesso" role="status">
+      {{ mensagemUploadDocumentos }}
+    </p>
+    }
     @if (documentos.length) {
     <div class="tabela-wrapper">
       <table>
@@ -589,7 +617,7 @@
         Nenhum documento anexado ao processo
       </strong>
       <span>
-        Volte ao processo para enviar fatura, packing list e conhecimento de carga.
+        Use o botão acima para anexar fatura, packing list, conhecimento de carga e outros documentos.
       </span>
     </div>
     }
