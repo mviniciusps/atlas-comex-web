@@ -602,9 +602,22 @@
               {{ documento.tamanho }}
             </td>
             <td>
-              <span class="status-documento">
-                {{ documento.status }}
-              </span>
+              <select
+                class="status-documento"
+                [ngModel]="documento.status"
+                (ngModelChange)="atualizarStatusDocumento(documento, $event)"
+                [attr.aria-label]="'Status do documento ' + documento.nome"
+              >
+                <option value="Aguardando conferência">
+                  Aguardando conferência
+                </option>
+                <option value="Conferido">
+                  Conferido
+                </option>
+                <option value="Com divergência">
+                  Com divergência
+                </option>
+              </select>
             </td>
           </tr>
           }

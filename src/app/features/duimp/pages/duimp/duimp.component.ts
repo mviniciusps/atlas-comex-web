@@ -818,6 +818,20 @@ export class DuimpComponent implements OnInit {
     input.value = '';
   }
 
+  atualizarStatusDocumento(
+    documento: DocumentoProcesso,
+    status: DocumentoProcesso['status']
+  ): void {
+    this.documentosService.atualizarStatus(
+      this.processoNumero,
+      documento.id,
+      status
+    );
+
+    this.atualizarDocumentos();
+
+  }
+
   private criarChaveArquivo(nome: string, tamanho: number): string {
     return `${nome.trim().toLocaleLowerCase()}-${tamanho}`;
   }

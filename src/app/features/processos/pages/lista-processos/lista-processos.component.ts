@@ -18,6 +18,7 @@ export class ListaProcessosComponent {
   mensagemErro = '';
   termoBusca = '';
   processoSelecionado: string | null = null;
+  clienteSelecionado: string | null = null;
   formularioAberto = false;
 
   novoProcesso = {
@@ -109,6 +110,10 @@ export class ListaProcessosComponent {
         situacaoDuimp: 'Não iniciada',
       });
 
+    // Abre a aba do importador do processo recém-criado.
+    this.clienteSelecionado = importador.trim();
+    this.processoSelecionado = null;
+
     this.historicoProcessoService.registrar(
       numero.trim(),
       'Processo criado: ' + numero.trim(),
@@ -121,6 +126,33 @@ export class ListaProcessosComponent {
     return this.processosService.listar();
   }
 
+  get clientesImportadores(): string[] {
+    // Cria uma aba única para cada importador cadastrado.
+    return [
+      ...new Set(
+        this.processos
+          .map((processo) => processo.importador.trim())
+          .filter(Boolean),
+      ),
+    ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
+  get clienteAtivo(): string {
+    // Na primeira abertura, seleciona automaticamente o primeiro importador.
+    return this.clienteSelecionado ?? this.clientesImportadores[0] ?? 'Clientes';
+  }
+
+  get processosDoCliente(): Processo[] {
+    // Aplica a busca ao conjunto de processos do importador ativo.
+    return this.processosFiltrados.filter(
+      (processo) => processo.importador === this.clienteAtivo,
+    );
+  }
+
+  selecionarCliente(cliente: string): void {
+    this.clienteSelecionado = cliente;
+    this.processoSelecionado = null;
+  }
 
   get processosFiltrados() {
     const termo = this.termoBusca.trim().toLowerCase();

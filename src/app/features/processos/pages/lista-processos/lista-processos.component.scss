@@ -314,3 +314,52 @@ td {
     opacity: 0.45;
     cursor: not-allowed;
 }
+
+.coluna-selecao {
+    width: 48px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.coluna-selecao input[type='checkbox'] {
+    display: block;
+    margin: 0 auto;
+}
+
+.tabela-responsiva table.table>tbody>tr.linha-selecionada>* {
+    // O destaque também cobre as células quando o mouse passa pela linha.
+    background-color: #e8f5f0;
+    box-shadow: inset 0 0 0 9999px #e8f5f0;
+    color: #173c33;
+}
+
+.tabela-responsiva table.table>tbody>tr.linha-selecionada>td:first-child {
+    // A faixa verde marca visualmente o início da linha selecionada.
+    box-shadow:
+        inset 3px 0 0 #01886b,
+        inset 0 0 0 9999px #e8f5f0;
+}
+.campo-grade {
+    min-width: 125px;
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.campo-grade:hover,
+.campo-grade:focus {
+    border-color: #9bbdb4;
+    background-color: #fff;
+}
+
+th.coluna-observacoes,
+td.coluna-observacoes {
+    width: 360px;
+    min-width: 360px;
+    white-space: normal;
+}
+
+.campo-observacoes {
+    width: 100%;
+    min-width: 340px;
+    resize: vertical;
+}
