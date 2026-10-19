@@ -77,9 +77,7 @@ export class DuimpComponent implements OnInit {
   ngOnInit(): void {
     const numeroProcesso = this.route.snapshot.paramMap.get('id');
 
-    if (!numeroProcesso) {
-      return;
-    }
+    if (!numeroProcesso) return;
 
     this.processoNumero = numeroProcesso;
     this.processo = this.processosService.buscarPorNumero(numeroProcesso);
@@ -232,14 +230,17 @@ export class DuimpComponent implements OnInit {
   async carregarItensExcel(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const arquivo = input.files?.[0];
+
     this.itensExcelPreview = [];
     this.errosImportacaoExcel = [];
     this.mensagemImportacaoExcel = '';
+
     if (!arquivo) return;
 
     try {
       const workbook = read(await arquivo.arrayBuffer());
       const primeiraAba = workbook.SheetNames[0];
+
       if (!primeiraAba) {
         this.errosImportacaoExcel.push('A planilha não contém uma aba.');
         return;
@@ -249,6 +250,7 @@ export class DuimpComponent implements OnInit {
         workbook.Sheets[primeiraAba],
         { defval: '', raw: true },
       );
+
       if (linhas.length === 0) {
         this.errosImportacaoExcel.push('A planilha não contém itens.');
         return;
@@ -261,29 +263,28 @@ export class DuimpComponent implements OnInit {
         'UnidadeMedida',
         'ValorUnitario',
       ];
+
       const colunasAusentes = colunasObrigatorias.filter(
         (coluna) => !Object.keys(linhas[0]).includes(coluna),
       );
-      if (colunasAusentes.length) {
+
+      if (colunasAusentes.length > 0) {
         this.errosImportacaoExcel.push(
-          `Colunas ausentes: ${colunasAusentes.join(', ')}.`,
+          `Colunas obrigatórias ausentes: ${colunasAusentes.join(', ')}.`,
         );
         return;
       }
 
       linhas.forEach((linha, indice) => {
+        const numeroLinha = indice + 2;
+
         if (Object.values(linha).every((valor) => String(valor).trim() === '')) {
           return;
         }
-        const item: ItemPlanilha = {
-          ...this.criarItemVazio(),
-          descricaoMercadoria: String(linha['DescricaoMercadoria'] ?? '').trim(),
-          ncm: String(linha['NCM'] ?? '').trim(),
-          quantidade: this.converterNumeroExcel(linha['Quantidade']),
-          unidadeMedida: String(linha['UnidadeMedida'] ?? '').trim(),
-          valorUnitario: this.converterNumeroExcel(linha['ValorUnitario']),
-        };
+
+        const item = this.mapearLinhaExcel(linha);
         const erros: string[] = [];
+
         if (!item.descricaoMercadoria) erros.push('descrição vazia');
         if (!/^\d{8}$/.test(item.ncm)) erros.push('NCM deve conter 8 dígitos');
         if (!item.quantidade || item.quantidade <= 0) erros.push('quantidade inválida');
@@ -291,6 +292,22 @@ export class DuimpComponent implements OnInit {
         if (item.valorUnitario === null || item.valorUnitario < 0) {
           erros.push('valor unitário inválido');
         }
+
+        const incoterm = String(linha['Incoterm'] ?? '').trim();
+        if (incoterm && !this.incoterms.includes(incoterm)) {
+          erros.push('Incoterm inválido');
+        }
+
+        const relacaoExportadorFabricante = String(
+          linha['ExportadorEhFabricante'] ?? '',
+        ).trim();
+        if (
+          relacaoExportadorFabricante &&
+          this.converterBooleanExcel(relacaoExportadorFabricante) === null
+        ) {
+          erros.push('ExportadorEhFabricante deve ser Sim ou Não');
+        }
+
         if (erros.length) {
           this.errosImportacaoExcel.push(`Linha ${indice + 2}: ${erros.join(', ')}.`);
         } else {
@@ -324,9 +341,47 @@ export class DuimpComponent implements OnInit {
   }
 
   baixarModeloItensExcel(): void {
-    const planilha = utils.aoa_to_sheet([
-      ['DescricaoMercadoria', 'NCM', 'Quantidade', 'UnidadeMedida', 'ValorUnitario'],
-    ]);
+
+    const colunas = [
+      'DescricaoMercadoria',
+      'NCM',
+      'Quantidade',
+      'UnidadeMedida',
+      'ValorUnitario',
+      'CaracterizacaoImportacao',
+      'VersaoProduto',
+      'PaisOrigemFabricante',
+      'CodigoNomeFabricante',
+      'VersaoFabricante',
+      'EnderecoFabricante',
+      'ExportadorEhFabricante',
+      'PaisOrigemExportador',
+      'CodigoNomeExportador',
+      'VersaoExportador',
+      'EnderecoExportador',
+      'UfsConsumo',
+      'MunicipiosConsumo',
+      'Aplicacao',
+      'CondicaoMercadoria',
+      'UnidadeEstatistica',
+      'QuantidadeEstatistica',
+      'PesoLiquido',
+      'UnidadeComercializada',
+      'QuantidadeComercializada',
+      'MoedaNegociada',
+      'ValorUnitarioCondicaoVenda',
+      'NumeroSerie',
+      'DetalhamentoProduto',
+      'MetodoValoracao',
+      'Incoterm',
+      'CoberturaCambial',
+    ];
+
+    const planilha = utils.aoa_to_sheet([colunas]);
+    planilha['!cols'] = colunas.map((coluna) => ({
+      wch: Math.min(Math.max(coluna.length + 2, 18), 32),
+    }));
+
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, planilha, 'Itens');
     writeFileXLSX(workbook, 'modelo-itens-duimp.xlsx');
@@ -334,17 +389,20 @@ export class DuimpComponent implements OnInit {
 
   baixarItens(): void {
     if (!this.duimp) return;
-    const linhas = this.duimp.itens.map((item, indice) => ({
-      Numero: indice + 1,
-      DescricaoMercadoria: item.descricaoMercadoria,
-      NCM: item.ncm,
-      Quantidade: item.quantidade,
-      UnidadeMedida: item.unidadeMedida,
-      ValorUnitario: item.valorUnitario,
-      Incoterm: item.incoterm ?? '',
-    }));
+
+    const linhas = this.duimp.itens.map((item, indice) => {
+      const { id, ...dadosItem } = item;
+
+      return {
+        Numero: indice + 1,
+        ...dadosItem
+      };
+    });
+
     const workbook = utils.book_new();
-    utils.book_append_sheet(workbook, utils.json_to_sheet(linhas), 'Itens DUIMP');
+    const planilha = utils.json_to_sheet(linhas);
+
+    utils.book_append_sheet(workbook, planilha, 'Itens DUIMP');
     writeFileXLSX(workbook, `itens-duimp-${this.processoNumero}.xlsx`);
   }
 
@@ -385,6 +443,114 @@ export class DuimpComponent implements OnInit {
       : 'Verificação local concluída sem alertas básicos. A validação oficial e a integração com IA serão implementadas depois.';
   }
 
+  private mapearLinhaExcel(
+    linha: Record<string, unknown>,
+  ): ItemPlanilha {
+    const itemVazio = this.criarItemVazio();
+    const ncmOriginal = linha['NCM'];
+    let ncm = String(ncmOriginal ?? '').trim().replace(/\D/g, '');
+
+    // O Excel pode remover zeros à esquerda quando o NCM é tratado como número.
+    if (typeof ncmOriginal === 'number' && ncm.length < 8) {
+      ncm = ncm.padStart(8, '0');
+    }
+
+    return {
+      ...itemVazio,
+      descricaoMercadoria: String(
+        linha['DescricaoMercadoria'] ?? '',
+      ).trim(),
+      ncm,
+      quantidade: this.converterNumeroExcel(linha['Quantidade']),
+      unidadeMedida: String(linha['UnidadeMedida'] ?? '').trim(),
+      valorUnitario: this.converterNumeroExcel(linha['ValorUnitario']),
+      caracterizacaoImportacao: String(
+        linha['CaracterizacaoImportacao'] ?? '',
+      ).trim(),
+      versaoProduto: String(linha['VersaoProduto'] ?? '').trim(),
+      paisOrigemFabricante: String(
+        linha['PaisOrigemFabricante'] ?? '',
+      ).trim(),
+      codigoNomeFabricante: String(
+        linha['CodigoNomeFabricante'] ?? '',
+      ).trim(),
+      versaoFabricante: String(
+        linha['VersaoFabricante'] ?? '',
+      ).trim(),
+      enderecoFabricante: String(
+        linha['EnderecoFabricante'] ?? '',
+      ).trim(),
+      exportadorEhFabricante: this.converterBooleanExcel(
+        linha['ExportadorEhFabricante'],
+      ),
+      paisOrigemExportador: String(
+        linha['PaisOrigemExportador'] ?? '',
+      ).trim(),
+      codigoNomeExportador: String(
+        linha['CodigoNomeExportador'] ?? '',
+      ).trim(),
+      versaoExportador: String(
+        linha['VersaoExportador'] ?? '',
+      ).trim(),
+      enderecoExportador: String(
+        linha['EnderecoExportador'] ?? '',
+      ).trim(),
+      ufsConsumo: String(linha['UfsConsumo'] ?? '').trim(),
+      municipiosConsumo: String(
+        linha['MunicipiosConsumo'] ?? '',
+      ).trim(),
+      aplicacao: String(linha['Aplicacao'] ?? '').trim(),
+      condicaoMercadoria:
+        String(linha['CondicaoMercadoria'] ?? 'Nova').trim() === 'Usada'
+          ? 'Usada'
+          : 'Nova',
+      unidadeEstatistica: String(
+        linha['UnidadeEstatistica'] ?? '',
+      ).trim(),
+      quantidadeEstatistica: this.converterNumeroExcel(
+        linha['QuantidadeEstatistica'],
+      ),
+      pesoLiquido: this.converterNumeroExcel(linha['PesoLiquido']),
+      unidadeComercializada: String(
+        linha['UnidadeComercializada'] ?? '',
+      ).trim(),
+      quantidadeComercializada: this.converterNumeroExcel(
+        linha['QuantidadeComercializada'],
+      ),
+      moedaNegociada: String(linha['MoedaNegociada'] ?? '').trim(),
+      valorUnitarioCondicaoVenda: this.converterNumeroExcel(
+        linha['ValorUnitarioCondicaoVenda'],
+      ),
+      numeroSerie: String(linha['NumeroSerie'] ?? '').trim(),
+      detalhamentoProduto: String(
+        linha['DetalhamentoProduto'] ?? '',
+      ).trim(),
+      metodoValoracao: String(linha['MetodoValoracao'] ?? '').trim(),
+      incoterm: String(linha['Incoterm'] ?? '').trim(),
+      coberturaCambial: String(
+        linha['CoberturaCambial'] ?? '',
+      ).trim(),
+    };
+  }
+
+  private converterBooleanExcel(valor: unknown): boolean | null {
+    if (typeof valor === 'boolean') {
+      return valor;
+    }
+
+    const texto = String(valor ?? '').trim().toLocaleLowerCase();
+
+    if (['sim', 's', 'true', '1'].includes(texto)) {
+      return true;
+    }
+
+    if (['não', 'nao', 'n', 'false', '0'].includes(texto)) {
+      return false;
+    }
+
+    return null;
+  }
+
   criarItemVazio(): ItemPlanilha {
     return {
       descricaoMercadoria: '',
@@ -423,15 +589,11 @@ export class DuimpComponent implements OnInit {
   }
 
   editarItemDuimp(id: number): void {
-    if (!this.duimp) {
-      return;
-    }
+    if (!this.duimp) return;
 
     const item = this.duimp.itens.find((itemAtual) => itemAtual.id === id);
 
-    if (!item) {
-      return;
-    }
+    if (!item) return;
 
     this.itemEmEdicaoId = item.id;
     this.novoItemDuimp = { ...this.criarItemVazio(), ...item };
@@ -440,8 +602,19 @@ export class DuimpComponent implements OnInit {
 
   private converterNumeroExcel(valor: unknown): number | null {
     if (typeof valor === 'number') return Number.isFinite(valor) ? valor : null;
-    const texto = String(valor ?? '').trim().replace(',', '.');
+    let texto = String(valor ?? '').trim();
+
     if (!texto) return null;
+
+    if (texto.includes(',') && texto.includes('.')) {
+      texto =
+        texto.lastIndexOf(',') > texto.lastIndexOf('.')
+          ? texto.replace(/\./g, '').replace(',', '.')
+          : texto.replace(/,/g, '');
+    } else {
+      texto = texto.replace(',', '.');
+    }
+
     const numero = Number(texto);
     return Number.isFinite(numero) ? numero : null;
   }
