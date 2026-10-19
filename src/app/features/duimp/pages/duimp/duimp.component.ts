@@ -766,20 +766,42 @@ export class DuimpComponent implements OnInit {
     if (arquivos.length === 0) return;
 
     const documentosAtuais = this.documentosService.listar(this.processoNumero);
+    const chavesArquivos = new Set(
+      documentosAtuais.map((documento) =>
+        this.criarChaveArquivo(documento.nome, documento.arquivo.size),
+      ),
+    );
+    let quantidadeDuplicada = 0;
 
-    const novosDocumentos = arquivos.filter((arquivo) => !documentosAtuais.some((documento) => documento.nome.toLocaleLowerCase() === arquivo.name.toLocaleLowerCase() && documento.arquivo.size === arquivo.size))
-      .map((arquivo) => ({
+    const novosDocumentos = arquivos.reduce<
+      Omit<DocumentoProcesso, 'id' | 'incluirNaDuimp'>[]
+    >((novos, arquivo) => {
+      const chaveArquivo = this.criarChaveArquivo(arquivo.name, arquivo.size);
+
+      if (chavesArquivos.has(chaveArquivo)) {
+        quantidadeDuplicada++;
+        return novos;
+      }
+
+      chavesArquivos.add(chaveArquivo);
+      novos.push({
         nome: arquivo.name,
         tamanho:
           arquivo.size < 1024 * 1024
             ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB`
             : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`,
-        tipo: this.tipoDocumentoUpload,
-        status: 'Aguardando conferência' as const,
+        tipo: this.identificarTipoDocumento(arquivo.name),
+        status: 'Aguardando conferência',
         arquivo,
-      }));
+      });
 
-    const quantidadeDuplicada = arquivos.length - novosDocumentos.length;
+      return novos;
+    }, []);
+
+    if (novosDocumentos.length > 0) {
+      this.documentosService.adicionar(this.processoNumero, novosDocumentos);
+      this.atualizarDocumentos();
+    }
 
     if (novosDocumentos.length > 0 && quantidadeDuplicada > 0) {
       this.mensagemUploadDocumentos =
@@ -794,6 +816,43 @@ export class DuimpComponent implements OnInit {
     }
 
     input.value = '';
+  }
+
+  private criarChaveArquivo(nome: string, tamanho: number): string {
+    return `${nome.trim().toLocaleLowerCase()}-${tamanho}`;
+  }
+
+  private identificarTipoDocumento(
+    nomeArquivo: string,
+  ): DocumentoProcesso['tipo'] {
+    const nomeNormalizado = nomeArquivo
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase();
+
+    if (
+      /invoice|fatura|commercial.?invoice|nota.?fiscal/.test(nomeNormalizado)
+    ) {
+      return 'Invoice';
+    }
+
+    if (/packing.?list|romaneio/.test(nomeNormalizado)) {
+      return 'Packing List';
+    }
+
+    if (
+      /conhecimento|bill.?of.?lading|\b(bl|awb|hbl|mbl)\b|waybill/.test(
+        nomeNormalizado,
+      )
+    ) {
+      return 'Conhecimento de carga';
+    }
+
+    if (/certificado|certificate|certificado.?de.?origem/.test(nomeNormalizado)) {
+      return 'Certificado';
+    }
+
+    return this.tipoDocumentoUpload;
   }
 
   private converterNumeroExcel(valor: unknown): number | null {
