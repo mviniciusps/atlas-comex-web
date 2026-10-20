@@ -1,4 +1,5 @@
 <main class="pagina">
+  <!-- Cabeçalho da tela: nome do importador ativo e ações do processo selecionado. -->
   <header class="cabecalho">
     <div>
       <!-- <p class="sobretitulo">ATLAS COMEX</p> -->
@@ -23,6 +24,7 @@
 
   </header>
 
+  <!-- Formulário exibido somente quando o usuário escolhe criar um processo. -->
   @if (formularioAberto) {
   <section class="formulario-processo">
     <h2>Novo processo</h2>
@@ -76,20 +78,19 @@
   </section>
   }
 
+  <!-- Painel principal com abas de importadores, busca e grade de embarques. -->
   <section class="painel-processos">
+    <!-- Cada botão representa um importador; a aba ativa controla o grid abaixo. -->
     <nav class="nav nav-tabs px-4 pt-3" aria-label="Clientes importadores">
       @for (cliente of clientesImportadores; track cliente) {
-      <button
-        type="button"
-        class="nav-link"
-        [class.active]="cliente === clienteAtivo"
-        [attr.aria-selected]="cliente === clienteAtivo"
-        (click)="selecionarCliente(cliente)"
-      >
+      <button type="button" class="nav-link" [class.active]="cliente === clienteAtivo"
+        [attr.aria-selected]="cliente === clienteAtivo" (click)="selecionarCliente(cliente)">
         {{ cliente }}
       </button>
       }
     </nav>
+
+    <!-- Busca e título secundário do conteúdo da aba selecionada. -->
     <div class="painel-cabecalho">
       <div>
         <h2>Processos</h2>
@@ -97,10 +98,12 @@
 
       <label class="campo-busca">
         <span class="texto-acessivel">Buscar nos processos deste cliente</span>
-        <input type="search" class="form-control" placeholder="Buscar por processo, carga ou DUIMP" [(ngModel)]="termoBusca" />
+        <input type="search" class="form-control" placeholder="Buscar por processo, carga ou DUIMP"
+          [(ngModel)]="termoBusca" />
       </label>
     </div>
 
+    <!-- Tabela responsiva: em telas estreitas, permite rolagem horizontal. -->
     <div class="tabela-responsiva table-responsive">
       <table class="table table-hover table-sm align-middle mb-0">
         <thead class="table-light">
@@ -128,8 +131,10 @@
 
         <tbody>
 
+          <!-- Uma linha para cada processo do importador ativo que corresponde à busca. -->
           @for (processo of processosDoCliente; track processo.numero) {
           <tr [class.linha-selecionada]="processoSelecionado === processo.numero">
+            <!-- Checkbox que seleciona o processo para as ações do cabeçalho. -->
             <td class="coluna-selecao text-center align-middle">
               <!-- O checkbox fica centralizado dentro da primeira coluna. -->
               <input type="checkbox" [checked]="processoSelecionado === processo.numero"
@@ -138,55 +143,82 @@
             </td>
 
             <td>
+              <!-- O número abre a página de detalhes do processo. -->
               <a class="link-processo" [routerLink]="['/processos', processo.numero]">
                 {{ processo.numero }}
               </a>
             </td>
+            <!-- Campos editáveis: ngModel atualiza os dados em memória enquanto o app está aberto. -->
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.referenciaCliente" placeholder="Pendente" aria-label="Refer&#234;ncia do cliente" />
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [(ngModel)]="processo.referenciaCliente" placeholder="Pendente"
+                aria-label="Refer&#234;ncia do cliente" />
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.previsaoChegada" placeholder="Pendente" aria-label="Previs&#227;o de chegada" />
+              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.previsaoChegada"
+                placeholder="Pendente" aria-label="Previs&#227;o de chegada" />
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.chegada" placeholder="Pendente" aria-label="Chegada" />
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.chegada">
+                {{ processo.chegada || 'Pendente' }}
+              </span>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.exportador" placeholder="Pendente" aria-label="Exportador" />
+              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.exportador"
+                placeholder="Pendente" aria-label="Exportador" />
             </td>
+            <!-- Observações ocupa uma coluna mais larga para facilitar leitura e edição. -->
             <td class="coluna-observacoes">
-              <textarea class="form-control form-control-sm campo-grade campo-observacoes" [(ngModel)]="processo.observacoes" placeholder="Adicionar observa&#231;&#227;o" rows="1" aria-label="Observa&#231;&#245;es do processo"></textarea>
+              <textarea class="form-control form-control-sm campo-grade campo-observacoes"
+                [(ngModel)]="processo.observacoes" placeholder="Adicionar observa&#231;&#227;o" rows="1"
+                aria-label="Observa&#231;&#245;es do processo"></textarea>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.cnpjImportador" placeholder="Pendente" aria-label="CNPJ" />
+              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.cnpjImportador"
+                placeholder="Pendente" aria-label="CNPJ" />
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.conhecimentoMaster" placeholder="Pendente" aria-label="Conhecimento Master" />
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [(ngModel)]="processo.conhecimentoMaster" placeholder="Pendente" aria-label="Conhecimento Master" />
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.conhecimentoHouse" placeholder="Pendente" aria-label="Conhecimento House" />
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [(ngModel)]="processo.conhecimentoHouse" placeholder="Pendente" aria-label="Conhecimento House" />
             </td>
             <td>
-              <select class="form-select form-select-sm campo-grade" [(ngModel)]="processo.modalidade" aria-label="Modal">
+              <select class="form-select form-select-sm campo-grade" [(ngModel)]="processo.modalidade"
+                aria-label="Modal">
                 <option value="Mar&#237;timo">Mar&#237;timo</option>
                 <option value="A&#233;reo">A&#233;reo</option>
                 <option value="Rodovi&#225;rio">Rodovi&#225;rio</option>
               </select>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.ceMercanteRuc" placeholder="Pendente" aria-label="CE Mercante ou RUC" />
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.ceMercanteRuc">
+                {{ processo.ceMercanteRuc || 'Pendente' }}
+              </span>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.numeroDuimp" placeholder="Pendente" aria-label="DUIMP" />
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.numeroDuimp">
+                {{ processo.numeroDuimp || 'Pendente' }}
+              </span>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.dataRegistroDuimp" placeholder="Pendente" aria-label="Data de registro da DUIMP" />
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.dataRegistroDuimp">
+                {{ processo.dataRegistroDuimp || 'Pendente' }}
+              </span>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.dataDesembaraco" placeholder="Pendente" aria-label="Desembara&#231;o" />
+              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.dataDesembaraco"
+                placeholder="Pendente" aria-label="Desembara&#231;o" />
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.recintoAlfandegado" placeholder="Pendente" aria-label="Recinto alfandegado" />
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [(ngModel)]="processo.recintoAlfandegado" placeholder="Pendente" aria-label="Recinto alfandegado" />
             </td>
           </tr>
           } @empty {

@@ -3,13 +3,15 @@ import { Duimp, ItemDuimp } from '../models/duimp.model';
 import { ProcessosService } from '../../processos/services/processos.service';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root', //unica instancia desta classe será compartilhada por toda aplicação
 })
 export class DuimpService {
-  private duimps: Duimp[] = [];
+
+  private duimps: Duimp[] = []; //Array para utilizar os metodos
 
   constructor(private processosService: ProcessosService) { }
 
+  //Retorna Duimp ou undefined
   buscarPorProcesso(processoNumero: string): Duimp | undefined {
     return this.duimps.find(
       (duimp) => duimp.processoNumero === processoNumero,

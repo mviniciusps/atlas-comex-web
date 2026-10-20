@@ -15,12 +15,14 @@ import { HistoricoProcessoService } from '../../services/historico-processo.serv
 
 export class ListaProcessosComponent {
 
+  // Estado da tela: mensagens, busca, seleção, importador ativo e formulário.
   mensagemErro = '';
   termoBusca = '';
   processoSelecionado: string | null = null;
   clienteSelecionado: string | null = null;
   formularioAberto = false;
 
+  // Valores ligados ao formulário de cadastro; são limpos ao cancelar ou salvar.
   novoProcesso = {
     numero: '',
     importador: '',
@@ -35,6 +37,7 @@ export class ListaProcessosComponent {
     private router: Router
   ) { }
 
+  // Abre o formulário de cadastro de um novo processo.
   abrirFormulario(): void {
     this.formularioAberto = true;
   }
@@ -44,6 +47,7 @@ export class ListaProcessosComponent {
     this.processoSelecionado = this.processoSelecionado === numero ? null : numero;
   }
 
+  // Fecha o formulário e restaura os campos para um novo cadastro.
   cancelarFormulario(): void {
     this.formularioAberto = false;
     this.novoProcesso = {
@@ -55,6 +59,7 @@ export class ListaProcessosComponent {
     }
   }
 
+  // Abre a área de documentos do processo selecionado.
   anrirUploadProcesso(): void {
     if (!this.processoSelecionado) {
       return;
@@ -66,6 +71,7 @@ export class ListaProcessosComponent {
     )
   }
 
+  // Abre o módulo DUIMP do processo selecionado.
   abrirDuimpProcesso(): void {
     if (!this.processoSelecionado) {
       return;
@@ -78,6 +84,7 @@ export class ListaProcessosComponent {
     ]);
   }
 
+  // Valida e cadastra o processo, seleciona seu importador e registra o histórico.
   adicionarProcesso(): void {
     const { numero, importador, conhecimento, chegada, modalidade } = this.novoProcesso;
 
@@ -122,10 +129,12 @@ export class ListaProcessosComponent {
     this.cancelarFormulario();
   }
 
+  // Obtém a lista compartilhada mantida pelo serviço em memória.
   get processos(): Processo[] {
     return this.processosService.listar();
   }
 
+  // Gera uma aba única para cada importador que possui processos cadastrados.
   get clientesImportadores(): string[] {
     // Cria uma aba única para cada importador cadastrado.
     return [
@@ -137,11 +146,13 @@ export class ListaProcessosComponent {
     ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }
 
+  // Usa o importador selecionado ou, na primeira abertura, o primeiro da lista.
   get clienteAtivo(): string {
     // Na primeira abertura, seleciona automaticamente o primeiro importador.
     return this.clienteSelecionado ?? this.clientesImportadores[0] ?? 'Clientes';
   }
 
+  // Combina a busca textual com o importador ativo para montar o grid.
   get processosDoCliente(): Processo[] {
     // Aplica a busca ao conjunto de processos do importador ativo.
     return this.processosFiltrados.filter(
@@ -149,11 +160,13 @@ export class ListaProcessosComponent {
     );
   }
 
+  // Troca de cliente e limpa a seleção antiga para evitar ações no processo errado.
   selecionarCliente(cliente: string): void {
     this.clienteSelecionado = cliente;
     this.processoSelecionado = null;
   }
 
+  // Procura o termo digitado nas propriedades relevantes de cada processo.
   get processosFiltrados() {
     const termo = this.termoBusca.trim().toLowerCase();
 
@@ -188,6 +201,7 @@ export class ListaProcessosComponent {
     );
   }
 
+  // Indicadores auxiliares de quantidade e situação dos processos.
   get totalProcessos(): number {
     return this.processos.length;
   }
