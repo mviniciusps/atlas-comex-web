@@ -8,7 +8,7 @@
 
     <!-- Botoes lado superior direito -->
     <div class="acoes-cabecalho">
-      <button class="botao-secundario" type="button" [disabled]="!processoSelecionado" (click)="anrirUploadProcesso()">
+      <button class="botao-secundario" type="button" [disabled]="!processoSelecionado" (click)="abrirUploadProcesso()">
         Upload
       </button>
 
@@ -24,6 +24,18 @@
 
   </header>
 
+  @if (carregandoProcessos) {
+  <div class="alert alert-info mt-3" role="status">
+    Carregando processos...
+  </div>
+  }
+
+  @if (mensagemErroProcessos) {
+  <div class="alert alert-danger mt-3" role="alert">
+    {{ mensagemErroProcessos }}
+  </div>
+  }
+
   <!-- Formulário exibido somente quando o usuário escolhe criar um processo. -->
   @if (formularioAberto) {
   <section class="formulario-processo">
@@ -36,27 +48,48 @@
       </label>
 
       <label>
-        Importador *
-        <input type="text" [(ngModel)]="novoProcesso.importador" placeholder="Razão social" />
-      </label>
+        Estabelecimento importador *
+        <select
+          class="form-select"
+          [(ngModel)]="novoProcesso.idEstabelecimento"
+          [disabled]="carregandoImportadores || importadores.length === 0"
+        >
+          <option [ngValue]="null">Selecione um estabelecimento</option>
 
-      <label>
-        Modalidade
-        <select [(ngModel)]="novoProcesso.modalidade">
-          <option value="Marítimo">Marítimo</option>
-          <option value="Aéreo">Aéreo</option>
-          <option value="Rodoviário">Rodoviário</option>
+          @for (importador of importadores; track importador.idImportador) {
+            @for (
+              estabelecimento of importador.estabelecimentos;
+              track estabelecimento.idEstabelecimento
+            ) {
+              <option [ngValue]="estabelecimento.idEstabelecimento">
+                {{ importador.razaoSocial }} —
+                {{ estabelecimento.nomeEstabelecimento }}
+                ({{ estabelecimento.cnpj }})
+              </option>
+            }
+          }
         </select>
+        @if (carregandoImportadores) {
+          <small class="text-secondary">Carregando importadores...</small>
+        } @else if (mensagemErroImportadores) {
+          <small class="text-danger">{{ mensagemErroImportadores }}</small>
+        } @else if (importadores.length === 0) {
+          <small class="text-secondary">Nenhum importador cadastrado.</small>
+        }
       </label>
 
       <label>
-        Conhecimento de carga
-        <input type="text" [(ngModel)]="novoProcesso.conhecimento" placeholder="BL, MAWB ou documento" />
+        Referência do cliente
+        <input
+          type="text"
+          [(ngModel)]="novoProcesso.referenciaCliente"
+          placeholder="Referência do cliente"
+        />
       </label>
 
       <label>
         Chegada prevista
-        <input type="date" [(ngModel)]="novoProcesso.chegada" />
+        <input type="date" [(ngModel)]="novoProcesso.previsaoChegada" />
       </label>
     </div>
 
@@ -67,12 +100,12 @@
     }
 
     <div class="acoes-formulario">
-      <button class="botao-secundario" type="button" (click)="cancelarFormulario()">
+      <button class="botao-secundario" type="button" (click)="cancelarFormulario()" [disabled]="salvandoProcesso">
         Cancelar
       </button>
 
-      <button class="botao-principal" type="button" (click)="adicionarProcesso()">
-        Salvar processo
+      <button class="botao-principal" type="button" (click)="adicionarProcesso()" [disabled]="salvandoProcesso">
+        {{ salvandoProcesso ? 'Salvando...' : 'Salvar processo' }}
       </button>
     </div>
   </section>

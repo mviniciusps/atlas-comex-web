@@ -3,7 +3,10 @@ import { Injectable } from '@angular/core';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type { SituacaoDuimp } from '../../duimp/models/duimp.model';
-import type { ProcessoApiDto } from '../models/processo-api.model';
+import type {
+  ProcessoApiDto,
+  ProcessoCriacaoDto,
+} from '../models/processo-api.model';
 import type { Processo } from '../models/processo.model';
 
 @Injectable({
@@ -21,6 +24,17 @@ export class ProcessosService {
         this.processos = processos;
       }),
     );
+  }
+
+  criar(dados: ProcessoCriacaoDto): Observable<Processo> {
+    return this.http
+      .post<ProcessoApiDto>(`${environment.apiBaseUrl}/processos`, dados)
+      .pipe(
+        map((processoApi) => this.converterProcessoApi(processoApi)),
+        tap((processo) => {
+          this.processos = [processo, ...this.processos];
+        }),
+      );
   }
 
   listar(): Processo[] {
@@ -71,7 +85,8 @@ export class ProcessosService {
       idImportador: dado.idImportador,
       idEstabelecimento: dado.idEstabelecimento,
       numero: dado.numeroProcesso,
-      importador: dado.razaoSocialImportador,
+      importador:
+        dado.razaoSocialImportador?.trim() || 'Importador não identificado',
       modalidade: dado.modal ?? '',
       conhecimento: dado.conhecimentoHouse || dado.conhecimentoMaster || '',
       chegada: dado.chegada ?? '',
@@ -79,7 +94,7 @@ export class ProcessosService {
       status,
       statusClass:
         statusNormalizado.includes('pendente') ||
-        statusNormalizado.includes('aguardando')
+          statusNormalizado.includes('aguardando')
           ? 'pendente'
           : 'andamento',
       portoOrigem: '',

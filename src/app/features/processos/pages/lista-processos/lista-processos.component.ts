@@ -1,80 +1,100 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import type { ImportadorApiDto } from '../../models/importador-api.model';
 import type { Processo } from '../../models/processo.model';
-import { ProcessosService } from '../../services/processos.service';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
+import { ImportadoresService } from '../../services/importadores.service';
+import { ProcessosService } from '../../services/processos.service';
 
 @Component({
   selector: 'app-lista-processos',
   standalone: true,
   imports: [FormsModule, RouterLink],
   templateUrl: './lista-processos.component.html',
-  styleUrl: './lista-processos.component.scss'
+  styleUrl: './lista-processos.component.scss',
 })
-
 export class ListaProcessosComponent implements OnInit {
-
-  // Estado da tela: mensagens, busca, seleção, importador ativo e formulário.
   mensagemErro = '';
+  mensagemErroProcessos = '';
+  mensagemErroImportadores = '';
   termoBusca = '';
   processoSelecionado: string | null = null;
   clienteSelecionado: string | null = null;
   formularioAberto = false;
+  carregandoProcessos = false;
+  carregandoImportadores = false;
+  salvandoProcesso = false;
 
-  // Valores ligados ao formulário de cadastro; são limpos ao cancelar ou salvar.
+  importadores: ImportadorApiDto[] = [];
+
   novoProcesso = {
     numero: '',
-    importador: '',
-    modalidade: 'Marítimo',
-    conhecimento: '',
-    chegada: '',
-  }
+    idEstabelecimento: null as number | null,
+    referenciaCliente: '',
+    previsaoChegada: '',
+  };
 
   constructor(
-    private processosService: ProcessosService,
-    private historicoProcessoService: HistoricoProcessoService,
-    private router: Router
-  ) { }
+    private readonly processosService: ProcessosService,
+    private readonly historicoProcessoService: HistoricoProcessoService,
+    @Inject(ImportadoresService)
+    private readonly importadoresService: ImportadoresService,
+    private readonly router: Router,
+  ) {}
 
   ngOnInit(): void {
+    this.carregandoProcessos = true;
     this.processosService.carregar().subscribe({
       next: (processos) => {
-        // Seleciona inicialmente o importador do primeiro processo carregado.
         this.clienteSelecionado = processos[0]?.importador ?? null;
+        this.carregandoProcessos = false;
       },
       error: (erro: unknown) => {
         console.error('Erro ao carregar processos da API:', erro);
-        this.mensagemErro = 'Não foi possível carregar os processos. Verifique se a API está em execução.';
+        this.mensagemErroProcessos =
+          'Não foi possível carregar os processos. Verifique se a API está em execução.';
+        this.carregandoProcessos = false;
       },
     });
 
+    this.carregandoImportadores = true;
+    this.importadoresService.listar().subscribe({
+      next: (importadores) => {
+        this.importadores = importadores;
+        this.carregandoImportadores = false;
+      },
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar importadores:', erro);
+        this.mensagemErroImportadores =
+          'Não foi possível carregar os importadores. Verifique se a API está em execução.';
+        this.carregandoImportadores = false;
+      },
+    });
   }
 
-  // Abre o formulário de cadastro de um novo processo.
   abrirFormulario(): void {
+    this.mensagemErro = '';
     this.formularioAberto = true;
   }
 
-  //Se o processo clicado já estava selecionado, ele é desmarcado e vice e versa
   selecionarProcesso(numero: string): void {
-    this.processoSelecionado = this.processoSelecionado === numero ? null : numero;
+    this.processoSelecionado =
+      this.processoSelecionado === numero ? null : numero;
   }
 
-  // Fecha o formulário e restaura os campos para um novo cadastro.
   cancelarFormulario(): void {
     this.formularioAberto = false;
+    this.mensagemErro = '';
     this.novoProcesso = {
       numero: '',
-      importador: '',
-      modalidade: 'Marítimo',
-      conhecimento: '',
-      chegada: '',
-    }
+      idEstabelecimento: null,
+      referenciaCliente: '',
+      previsaoChegada: '',
+    };
   }
 
-  // Abre a área de documentos do processo selecionado.
-  anrirUploadProcesso(): void {
+  abrirUploadProcesso(): void {
     if (!this.processoSelecionado) {
       return;
     }
@@ -82,10 +102,9 @@ export class ListaProcessosComponent implements OnInit {
     void this.router.navigate(
       ['/processos', this.processoSelecionado],
       { fragment: 'documentos' },
-    )
+    );
   }
 
-  // Abre o módulo DUIMP do processo selecionado.
   abrirDuimpProcesso(): void {
     if (!this.processoSelecionado) {
       return;
@@ -98,98 +117,104 @@ export class ListaProcessosComponent implements OnInit {
     ]);
   }
 
-  // Valida e cadastra o processo, seleciona seu importador e registra o histórico.
   adicionarProcesso(): void {
-    const { numero, importador, conhecimento, chegada, modalidade } = this.novoProcesso;
-
-    if (!numero.trim() || !importador.trim()) {
+    if (this.salvandoProcesso) {
       return;
     }
 
-    this.mensagemErro = '';
+    const {
+      numero,
+      idEstabelecimento,
+      referenciaCliente,
+      previsaoChegada,
+    } = this.novoProcesso;
+    const numeroNormalizado = numero.trim();
 
-    if (this.processosService.buscarPorNumero(numero.trim())) {
+    if (!numeroNormalizado || idEstabelecimento === null) {
+      this.mensagemErro =
+        'Informe o número do processo e selecione um estabelecimento.';
+      return;
+    }
+
+    if (this.processosService.buscarPorNumero(numeroNormalizado)) {
       this.mensagemErro = 'Já existe um processo com esse número.';
       return;
     }
 
-    this.processosService.adicionar(
-      {
-        numero: numero.trim(),
-        importador: importador.trim(),
-        modalidade,
-        conhecimento: conhecimento.trim(),
-        chegada,
-        etapa: 'Cadastro inicial',
-        status: 'Em andamento',
-        statusClass: 'andamento',
-        portoOrigem: '',
-        portoDestino: '',
-        numeroMercante: '',
-        presencaCarga: 'Pendente',
-        numeroDuimp: '',
-        situacaoDuimp: 'Não iniciada',
+    this.mensagemErro = '';
+    this.salvandoProcesso = true;
+
+    this.processosService
+      .criar({
+        idEstabelecimento,
+        numeroProcesso: numeroNormalizado,
+        referenciaCliente: referenciaCliente.trim() || null,
+        previsaoChegada: previsaoChegada || null,
+        situacao: 'Aguardando documentos',
+      })
+      .subscribe({
+        next: (processo) => {
+          this.clienteSelecionado = processo.importador;
+          this.processoSelecionado = null;
+
+          this.historicoProcessoService.registrar(
+            processo.numero,
+            'Processo criado: ' + processo.numero,
+          );
+
+          this.salvandoProcesso = false;
+          this.cancelarFormulario();
+        },
+        error: (erro: unknown) => {
+          console.error('Erro ao salvar processo:', erro);
+          this.mensagemErro =
+            'Não foi possível salvar o processo. Confira os dados e tente novamente.';
+          this.salvandoProcesso = false;
+        },
       });
-
-    // Abre a aba do importador do processo recém-criado.
-    this.clienteSelecionado = importador.trim();
-    this.processoSelecionado = null;
-
-    this.historicoProcessoService.registrar(
-      numero.trim(),
-      'Processo criado: ' + numero.trim(),
-    );
-
-    this.cancelarFormulario();
   }
 
-  // Obtém a lista compartilhada mantida pelo serviço em memória.
   get processos(): Processo[] {
     return this.processosService.listar();
   }
 
-  // Gera uma aba única para cada importador que possui processos cadastrados.
   get clientesImportadores(): string[] {
-    // Cria uma aba única para cada importador cadastrado.
     return [
       ...new Set(
         this.processos
-          .map((processo) => processo.importador.trim())
+          .map(
+            (processo) =>
+              processo.importador?.trim() || 'Importador não identificado',
+          )
           .filter(Boolean),
       ),
     ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }
 
-  // Usa o importador selecionado ou, na primeira abertura, o primeiro da lista.
   get clienteAtivo(): string {
-    // Na primeira abertura, seleciona automaticamente o primeiro importador.
     return this.clienteSelecionado ?? this.clientesImportadores[0] ?? 'Clientes';
   }
 
-  // Combina a busca textual com o importador ativo para montar o grid.
   get processosDoCliente(): Processo[] {
-    // Aplica a busca ao conjunto de processos do importador ativo.
     return this.processosFiltrados.filter(
-      (processo) => processo.importador === this.clienteAtivo,
+      (processo) =>
+        (processo.importador?.trim() || 'Importador não identificado') ===
+        this.clienteAtivo,
     );
   }
 
-  // Troca de cliente e limpa a seleção antiga para evitar ações no processo errado.
   selecionarCliente(cliente: string): void {
     this.clienteSelecionado = cliente;
     this.processoSelecionado = null;
   }
 
-  // Procura o termo digitado nas propriedades relevantes de cada processo.
-  get processosFiltrados() {
+  get processosFiltrados(): Processo[] {
     const termo = this.termoBusca.trim().toLowerCase();
 
-    //Se o campo busca estiver vazio, retorne todos processos
     if (!termo) {
       return this.processos;
     }
 
-    //Se estiver preechido, pequise nas propriedades o valor digitado
     return this.processos.filter((processo) =>
       [
         processo.numero,
@@ -209,13 +234,12 @@ export class ListaProcessosComponent implements OnInit {
         processo.recintoAlfandegado,
         processo.importador,
       ]
-        .join(' ') //transforma toda propriedade em linha unica
-        .toLowerCase() //tudo em letra minuscula
-        .includes(termo), //O termo que o usuário digitou está contido em algum lugar desse texto
+        .join(' ')
+        .toLowerCase()
+        .includes(termo),
     );
   }
 
-  // Indicadores auxiliares de quantidade e situação dos processos.
   get totalProcessos(): number {
     return this.processos.length;
   }
@@ -229,5 +253,4 @@ export class ListaProcessosComponent implements OnInit {
   get chegadasPrevistas(): number {
     return this.processos.filter((processo) => processo.chegada !== '').length;
   }
-
 }
