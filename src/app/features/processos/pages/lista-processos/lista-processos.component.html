@@ -36,6 +36,12 @@
   </div>
   }
 
+  @if (mensagemErroAtualizacao) {
+  <div class="alert alert-danger mt-3" role="alert">
+    {{ mensagemErroAtualizacao }}
+  </div>
+  }
+
   <!-- Formulário exibido somente quando o usuário escolhe criar um processo. -->
   @if (formularioAberto) {
   <section class="formulario-processo">
@@ -185,11 +191,11 @@
             <td>
               <input type="text" class="form-control form-control-sm campo-grade"
                 [(ngModel)]="processo.referenciaCliente" placeholder="Pendente"
-                aria-label="Refer&#234;ncia do cliente" />
+                aria-label="Referência do cliente" (blur)="salvarAlteracoes(processo)" />
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.previsaoChegada"
-                placeholder="Pendente" aria-label="Previs&#227;o de chegada" />
+                placeholder="Pendente" aria-label="Previsão de chegada" (blur)="salvarAlteracoes(processo)" />
             </td>
             <td>
               <!-- Valor automático exibido como texto, sem campo para edição manual. -->
@@ -199,29 +205,32 @@
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.exportador"
-                placeholder="Pendente" aria-label="Exportador" />
+                placeholder="Pendente" aria-label="Exportador" (blur)="salvarAlteracoes(processo)" />
             </td>
             <!-- Observações ocupa uma coluna mais larga para facilitar leitura e edição. -->
             <td class="coluna-observacoes">
               <textarea class="form-control form-control-sm campo-grade campo-observacoes"
                 [(ngModel)]="processo.observacoes" placeholder="Adicionar observa&#231;&#227;o" rows="1"
-                aria-label="Observa&#231;&#245;es do processo"></textarea>
+                aria-label="Observações do processo" (blur)="salvarAlteracoes(processo)"></textarea>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.cnpjImportador"
-                placeholder="Pendente" aria-label="CNPJ" />
-            </td>
-            <td>
-              <input type="text" class="form-control form-control-sm campo-grade"
-                [(ngModel)]="processo.conhecimentoMaster" placeholder="Pendente" aria-label="Conhecimento Master" />
+              <span class="campo-automatico" [class.valor-pendente]="!processo.cnpjImportador">
+                {{ processo.cnpjImportador || 'Pendente' }}
+              </span>
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade"
-                [(ngModel)]="processo.conhecimentoHouse" placeholder="Pendente" aria-label="Conhecimento House" />
+                [(ngModel)]="processo.conhecimentoMaster" placeholder="Pendente" aria-label="Conhecimento Master"
+                (blur)="salvarAlteracoes(processo)" />
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [(ngModel)]="processo.conhecimentoHouse" placeholder="Pendente" aria-label="Conhecimento House"
+                (blur)="salvarAlteracoes(processo)" />
             </td>
             <td>
               <select class="form-select form-select-sm campo-grade" [(ngModel)]="processo.modalidade"
-                aria-label="Modal">
+                aria-label="Modal" (change)="salvarAlteracoes(processo)">
                 <option value="Mar&#237;timo">Mar&#237;timo</option>
                 <option value="A&#233;reo">A&#233;reo</option>
                 <option value="Rodovi&#225;rio">Rodovi&#225;rio</option>
@@ -247,11 +256,12 @@
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.dataDesembaraco"
-                placeholder="Pendente" aria-label="Desembara&#231;o" />
+                placeholder="Pendente" aria-label="Desembaraço" (blur)="salvarAlteracoes(processo)" />
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade"
-                [(ngModel)]="processo.recintoAlfandegado" placeholder="Pendente" aria-label="Recinto alfandegado" />
+                [(ngModel)]="processo.recintoAlfandegado" placeholder="Pendente" aria-label="Recinto alfandegado"
+                (blur)="salvarAlteracoes(processo)" />
             </td>
           </tr>
           } @empty {

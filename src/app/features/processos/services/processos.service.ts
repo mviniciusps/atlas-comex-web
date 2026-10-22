@@ -6,6 +6,8 @@ import type { SituacaoDuimp } from '../../duimp/models/duimp.model';
 import type {
   ProcessoApiDto,
   ProcessoCriacaoDto,
+  ProcessoAtualizacaoDto,
+  ProcessoAtualizacaoDadosDto,
 } from '../models/processo-api.model';
 import type { Processo } from '../models/processo.model';
 
@@ -35,6 +37,18 @@ export class ProcessosService {
           this.processos = [processo, ...this.processos];
         }),
       );
+  }
+
+  atualizar(
+    idProcesso: number,
+    dados: ProcessoAtualizacaoDadosDto,
+  ): Observable<void> {
+    const corpo: ProcessoAtualizacaoDto = { dados };
+
+    return this.http.put<void>(
+      `${environment.apiBaseUrl}/processos/${idProcesso}`,
+      corpo,
+    );
   }
 
   listar(): Processo[] {

@@ -2,6 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import type { ImportadorApiDto } from '../../models/importador-api.model';
+import type { ProcessoAtualizacaoDadosDto } from '../../models/processo-api.model';
 import type { Processo } from '../../models/processo.model';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
 import { ImportadoresService } from '../../services/importadores.service';
@@ -18,6 +19,7 @@ export class ListaProcessosComponent implements OnInit {
   mensagemErro = '';
   mensagemErroProcessos = '';
   mensagemErroImportadores = '';
+  mensagemErroAtualizacao = '';
   termoBusca = '';
   processoSelecionado: string | null = null;
   clienteSelecionado: string | null = null;
@@ -172,6 +174,36 @@ export class ListaProcessosComponent implements OnInit {
           this.salvandoProcesso = false;
         },
       });
+  }
+
+  salvarAlteracoes(processo: Processo): void {
+    if (processo.idProcesso == null) {
+      this.mensagemErroAtualizacao =
+        'Não foi possível identificar o processo para salvar as alterações.';
+      return;
+    }
+
+    const dados: ProcessoAtualizacaoDadosDto = {
+      referenciaCliente: processo.referenciaCliente?.trim() || null,
+      previsaoChegada: processo.previsaoChegada || null,
+      exportador: processo.exportador?.trim() || null,
+      observacoes: processo.observacoes?.trim() || null,
+      conhecimentoMaster: processo.conhecimentoMaster?.trim() || null,
+      conhecimentoHouse: processo.conhecimentoHouse?.trim() || null,
+      modal: processo.modalidade || null,
+      desembaraco: processo.dataDesembaraco || null,
+      recintoAlfandegado: processo.recintoAlfandegado?.trim() || null,
+    };
+
+    this.mensagemErroAtualizacao = '';
+
+    this.processosService.atualizar(processo.idProcesso, dados).subscribe({
+      error: (erro: unknown) => {
+        console.error('Erro ao atualizar processo:', erro);
+        this.mensagemErroAtualizacao =
+          `Não foi possível salvar as alterações do processo ${processo.numero}.`;
+      },
+    });
   }
 
   get processos(): Processo[] {
