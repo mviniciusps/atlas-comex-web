@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import type { Processo } from '../../models/processo.model';
@@ -13,7 +13,7 @@ import { HistoricoProcessoService } from '../../services/historico-processo.serv
   styleUrl: './lista-processos.component.scss'
 })
 
-export class ListaProcessosComponent {
+export class ListaProcessosComponent implements OnInit {
 
   // Estado da tela: mensagens, busca, seleção, importador ativo e formulário.
   mensagemErro = '';
@@ -36,6 +36,20 @@ export class ListaProcessosComponent {
     private historicoProcessoService: HistoricoProcessoService,
     private router: Router
   ) { }
+
+  ngOnInit(): void {
+    this.processosService.carregar().subscribe({
+      next: (processos) => {
+        // Seleciona inicialmente o importador do primeiro processo carregado.
+        this.clienteSelecionado = processos[0]?.importador ?? null;
+      },
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar processos da API:', erro);
+        this.mensagemErro = 'Não foi possível carregar os processos. Verifique se a API está em execução.';
+      },
+    });
+
+  }
 
   // Abre o formulário de cadastro de um novo processo.
   abrirFormulario(): void {

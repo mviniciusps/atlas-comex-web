@@ -28,4 +28,7 @@ export interface Processo {
   dataRegistroDuimp?: string;
   dataDesembaraco?: string;
   recintoAlfandegado?: string;
+  idProcesso?: number;
+  idImportador?: number;
+  idEstabelecimento?: number;
 }
