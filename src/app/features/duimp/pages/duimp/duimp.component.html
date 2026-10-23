@@ -534,7 +534,7 @@
         <input
           type="file"
           multiple
-          accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx"
+          accept=".pdf,.xml,.xlsx,.xls,.jpg,.jpeg,.png,.tif,.tiff"
           (change)="anexarDocumentosProcesso($event)"
         />
       </label>
@@ -543,6 +543,9 @@
     <p class="mensagem-sucesso" role="status">
       {{ mensagemUploadDocumentos }}
     </p>
+    }
+    @if (carregandoDocumentos) {
+    <p class="texto-apoio" role="status">Carregando ou enviando documentos...</p>
     }
     @if (documentos.length) {
     <div class="tabela-wrapper">
@@ -561,70 +564,34 @@
             <th>
               Tamanho
             </th>
-            <th>
-              Conferência
-            </th>
           </tr>
         </thead>
         <tbody>
-          @for (documento of documentos; track documento.id) {
+          @for (documento of documentos; track documento.idDocumento) {
           <tr>
             <td>
               <input type="checkbox" [checked]="documento.incluirNaDuimp"
-                [attr.aria-label]="'Incluir ' + documento.nome + ' na DUIMP'"
+                [disabled]="documentosEmAtualizacao.has(documento.idDocumento)"
+                [attr.aria-label]="'Incluir ' + documento.nomeArquivo + ' na DUIMP'"
                 (change)="definirInclusaoDocumento(documento, $any($event.target).checked)" />
             </td>
             <td>
               <strong>
-                {{ documento.nome }}
+                {{ documento.nomeArquivo }}
               </strong>
             </td>
             <td>
-              <select [ngModel]="documento.tipo" (ngModelChange)="documentosServiceAtualizarTipo(documento, $event)">
-                <option value="Invoice">
-                  Invoice
-                </option>
-                <option value="Packing List">
-                  Packing List
-                </option>
-                <option value="Conhecimento de carga">
-                  Conhecimento de carga
-                </option>
-                <option value="Certificado">
-                  Certificado
-                </option>
-                <option value="Outro">
-                  Outro
-                </option>
-              </select>
+              {{ documento.tipoDocumento }}
             </td>
             <td>
-              {{ documento.tamanho }}
-            </td>
-            <td>
-              <select
-                class="status-documento"
-                [ngModel]="documento.status"
-                (ngModelChange)="atualizarStatusDocumento(documento, $event)"
-                [attr.aria-label]="'Status do documento ' + documento.nome"
-              >
-                <option value="Aguardando conferência">
-                  Aguardando conferência
-                </option>
-                <option value="Conferido">
-                  Conferido
-                </option>
-                <option value="Com divergência">
-                  Com divergência
-                </option>
-              </select>
+              {{ formatarTamanhoArquivo(documento.tamanhoBytes) }}
             </td>
           </tr>
           }
         </tbody>
       </table>
     </div>
-    } @else {
+    } @else if (!carregandoDocumentos) {
     <div class="estado-vazio">
       <strong>
         Nenhum documento anexado ao processo

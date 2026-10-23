@@ -59,9 +59,8 @@
     </p>
 
     <div class="resumo-conferencia">
-      <span>Aguardando: {{ documentosAguardandoConferencia }}</span>
-      <span>Conferidos: {{ documentosConferidos }}</span>
-      <span>Com divergência: {{ documentosComDivergencia }}</span>
+      <span>Documentos anexados: {{ documentos.length }}</span>
+      <span>Marcados para DUIMP: {{ documentosIncluidosNaDuimp }}</span>
     </div>
 
     <div class="resumo-documentacao" [class.completo]="documentosPendentes.length === 0">
@@ -96,40 +95,20 @@
     </ul>
     }
 
+    @if (carregandoDocumentos) {
+    <p class="texto-apoio" role="status">Carregando ou enviando documentos...</p>
+    }
+
     @if (documentos.length > 0) {
     <ul class="lista-documentos">
-      @for (documento of documentos; track documento.id) {
+      @for (documento of documentos; track documento.idDocumento) {
       <li class="documento">
         <div>
-          <strong>{{ documento.nome }}</strong>
-          <label class="seletor-tipo">
-            Tipo do documento
-            <select [ngModel]="documento.tipo" (ngModelChange)="atualizarTipoDocumento(documento.id, $event)">
-              @for (tipo of tiposDocumento; track tipo) {
-              <option [ngValue]="tipo">{{ tipo }}</option>
-              }
-            </select>
-          </label>
-
-          <label class="seletor-tipo">
-            Conferência
-            <select
-              [ngModel]="documento.status"
-              (ngModelChange)="atualizarStatusDocumento(documento.id, $event)"
-            >
-              <option value="Aguardando conferência">Aguardando conferência</option>
-              <option value="Conferido">Conferido</option>
-              <option value="Com divergência">Com divergência</option>
-            </select>
-          </label>
-
-          <span>{{ documento.tamanho }}</span>
+          <strong>{{ documento.nomeArquivo }}</strong>
+          <span>{{ documento.tipoDocumento }}</span>
+          <span>{{ formatarTamanhoArquivo(documento.tamanhoBytes) }}</span>
+          <span>Enviado em {{ documento.dataUpload | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
-
-        <button class="botao-remover" type="button" aria-label="Remover documento"
-          (click)="removerDocumento(documento.id)">
-          Remover
-        </button>
       </li>
       }
     </ul>

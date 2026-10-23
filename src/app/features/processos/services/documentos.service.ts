@@ -1,98 +1,48 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-
-export type TipoDocumento =
-  | 'Invoice'
-  | 'Packing List'
-  | 'Conhecimento de carga'
-  | 'Certificado'
-  | 'Outro';
-
-export interface DocumentoProcesso {
-  id: number;
-  nome: string;
-  tamanho: string;
-  tipo: TipoDocumento;
-  status: 'Aguardando conferência' | 'Conferido' | 'Com divergência';
-  arquivo: File;
-  incluirNaDuimp: boolean;
-}
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import type { DocumentoProcesso, TipoDocumento } from '../models/documento-processo.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentosService {
-  private readonly documentosPorProcesso = new Map<
-    string,
-    DocumentoProcesso[]
-  >();
+  private readonly apiUrl = `${environment.apiBaseUrl}/processos`;
 
-  private proximoId = 1;
+  constructor(private readonly http: HttpClient) {}
 
-  listar(numeroProcesso: string): DocumentoProcesso[] {
-    return this.documentosPorProcesso.get(numeroProcesso) ?? [];
-  }
-
-  adicionar(
-    numeroProcesso: string,
-    documentos: Omit<DocumentoProcesso, 'id' | 'incluirNaDuimp'>[],
-  ): void {
-    const documentosAtuais = this.listar(numeroProcesso);
-    const novosDocumentos = documentos.map((documento) => ({
-      ...documento,
-      id: this.proximoId++,
-      incluirNaDuimp: false,
-    }));
-
-    this.documentosPorProcesso.set(numeroProcesso, [
-      ...documentosAtuais,
-      ...novosDocumentos,
-    ]);
-  }
-
-  remover(numeroProcesso: string, id: number): void {
-    const documentosAtualizados = this.listar(numeroProcesso).filter(
-      (documento) => documento.id !== id,
+  listar(idProcesso: number): Observable<DocumentoProcesso[]> {
+    return this.http.get<DocumentoProcesso[]>(
+      `${this.apiUrl}/${idProcesso}/documentos`,
     );
-
-    this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
   }
 
-  atualizarTipo(
-    numeroProcesso: string,
-    id: number,
-    tipo: TipoDocumento,
-  ): void {
-    const documentosAtualizados = this.listar(numeroProcesso).map(
-      (documento) =>
-        documento.id === id ? { ...documento, tipo } : documento,
+  enviar(
+    idProcesso: number,
+    arquivo: File,
+    tipoDocumento: TipoDocumento,
+    incluirNaDuimp = false,
+  ): Observable<DocumentoProcesso> {
+    const dados = new FormData();
+    dados.append('Arquivo', arquivo);
+    dados.append('TipoDocumento', tipoDocumento);
+    dados.append('IncluirNaDuimp', String(incluirNaDuimp));
+
+    return this.http.post<DocumentoProcesso>(
+      `${this.apiUrl}/${idProcesso}/documentos`,
+      dados,
     );
-
-    this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
-  }
-
-  atualizarStatus(
-    numeroProcesso: string,
-    id: number,
-    status: DocumentoProcesso['status'],
-  ): void {
-    const documentosAtualizados = this.listar(numeroProcesso).map(
-      (documento) =>
-        documento.id === id ? { ...documento, status } : documento,
-    );
-
-    this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
   }
 
   atualizarInclusaoDuimp(
-    numeroProcesso: string,
-    id: number,
+    idProcesso: number,
+    idDocumento: number,
     incluirNaDuimp: boolean,
-  ): void {
-    const documentosAtualizados = this.listar(numeroProcesso).map(
-      (documento) =>
-        documento.id === id ? { ...documento, incluirNaDuimp } : documento,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/${idProcesso}/documentos/${idDocumento}/inclusao-duimp`,
+      { incluirNaDuimp },
     );
-
-    this.documentosPorProcesso.set(numeroProcesso, documentosAtualizados);
   }
 }

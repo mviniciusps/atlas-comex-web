@@ -2,11 +2,15 @@ import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { catchError, forkJoin, of } from 'rxjs';
 import { read, utils, writeFileXLSX } from 'xlsx';
 import { ItemDuimp } from '../../models/duimp.model';
 import type { Duimp } from '../../models/duimp.model';
 import { DuimpService } from '../../services/duimp.service';
-import type { DocumentoProcesso } from '../../../processos/services/documentos.service';
+import type {
+  DocumentoProcesso,
+  TipoDocumento,
+} from '../../../processos/models/documento-processo.model';
 import { DocumentosService } from '../../../processos/services/documentos.service';
 import type { Processo } from '../../../processos/models/processo.model';
 import { ProcessosService } from '../../../processos/services/processos.service';
@@ -29,12 +33,26 @@ type ItemPlanilha = Omit<ItemDuimp, 'id'>;
   styleUrl: './duimp.component.scss',
 })
 export class DuimpComponent implements OnInit {
+  private readonly extensoesPermitidasDocumentos = [
+    '.pdf',
+    '.xml',
+    '.xlsx',
+    '.xls',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.tif',
+    '.tiff',
+  ];
+
   processo?: Processo;
   duimp?: Duimp;
   processoNumero = '';
   abaAtiva: AbaDuimp = 'identificacao';
   abaItemAtiva: 'mercadoria' | 'tributos' = 'mercadoria';
   documentos: DocumentoProcesso[] = [];
+  carregandoDocumentos = false;
+  readonly documentosEmAtualizacao = new Set<number>();
   itensExcelPreview: ItemPlanilha[] = [];
   errosImportacaoExcel: string[] = [];
   mensagemImportacaoExcel = '';
@@ -68,7 +86,7 @@ export class DuimpComponent implements OnInit {
     'DDP',
   ];
 
-  tipoDocumentoUpload: DocumentoProcesso['tipo'] = 'Outro';
+  tipoDocumentoUpload: TipoDocumento = 'Outro';
   mensagemUploadDocumentos = '';
 
   constructor(
@@ -125,24 +143,48 @@ export class DuimpComponent implements OnInit {
   }
 
   atualizarDocumentos(): void {
-    this.documentos = this.documentosService.listar(this.processoNumero);
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) {
+      this.documentos = [];
+      return;
+    }
+
+    this.carregandoDocumentos = true;
+    this.documentosService.listar(idProcesso).subscribe({
+      next: (documentos) => {
+        this.documentos = documentos;
+        this.carregandoDocumentos = false;
+      },
+      error: () => {
+        this.carregandoDocumentos = false;
+        this.mensagemUploadDocumentos =
+          'Não foi possível carregar os documentos do processo.';
+      },
+    });
   }
 
   definirInclusaoDocumento(documento: DocumentoProcesso, incluir: boolean): void {
-    this.documentosService.atualizarInclusaoDuimp(
-      this.processoNumero,
-      documento.id,
-      incluir,
-    );
-    this.atualizarDocumentos();
-  }
+    const idProcesso = this.processo?.idProcesso;
 
-  documentosServiceAtualizarTipo(
-    documento: DocumentoProcesso,
-    tipo: DocumentoProcesso['tipo'],
-  ): void {
-    this.documentosService.atualizarTipo(this.processoNumero, documento.id, tipo);
-    this.atualizarDocumentos();
+    if (idProcesso === undefined) return;
+
+    this.documentosEmAtualizacao.add(documento.idDocumento);
+    this.documentosService.atualizarInclusaoDuimp(
+      idProcesso,
+      documento.idDocumento,
+      incluir,
+    ).subscribe({
+      next: () => {
+        documento.incluirNaDuimp = incluir;
+        this.documentosEmAtualizacao.delete(documento.idDocumento);
+      },
+      error: () => {
+        this.documentosEmAtualizacao.delete(documento.idDocumento);
+        this.mensagemUploadDocumentos =
+          'Não foi possível atualizar a inclusão do documento na DUIMP.';
+      },
+    });
   }
 
   selecionarInvoice(event: Event): void {
@@ -153,37 +195,10 @@ export class DuimpComponent implements OnInit {
 
     if (!arquivo) return;
 
-    const documentosAtuais = this.documentosService.listar(this.processoNumero);
-
-    const arquivoJaAnexado = documentosAtuais.some(
-      (documento) =>
-        documento.tipo === 'Invoice' &&
-        documento.nome.toLocaleLowerCase() === arquivo.name.toLocaleLowerCase() &&
-        documento.arquivo.size === arquivo.size,
-    );
-
-    if (arquivoJaAnexado) {
-      this.mensagemUploadInvoice = 'Esta invoice já está anexada ao processo';
-      input.value = '';
-      return;
-    }
-
-    const tamanho = arquivo.size < 1024 * 1024 ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB` : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`
-
-    this.documentosService.adicionar(this.processoNumero, [
-      {
-        nome: arquivo.name,
-        tamanho,
-        tipo: 'Invoice',
-        status: 'Aguardando conferência',
-        arquivo,
-      },
-    ]);
-
-    this.atualizarDocumentos();
-    this.mensagemUploadInvoice = 'Invoice anexada ao processo. Confira-a na aba Documentos e marque se deseja incluí-la na DUIMP. A leitura automática ainda não está integrada.';
+    this.enviarArquivos([arquivo], () => 'Invoice', (mensagem) => {
+      this.mensagemUploadInvoice = mensagem;
+    });
     input.value = '';
-
   }
 
   adicionarComponenteFrete(): void {
@@ -446,7 +461,14 @@ export class DuimpComponent implements OnInit {
   baixarRascunho(): void {
     if (!this.duimp) return;
     const conteudo = JSON.stringify(
-      { processo: this.processo, duimp: this.duimp, documentosIncluidos: this.documentosIncluidos.map(({ nome, tipo }) => ({ nome, tipo })) },
+      {
+        processo: this.processo,
+        duimp: this.duimp,
+        documentosIncluidos: this.documentosIncluidos.map((documento) => ({
+          nome: documento.nomeArquivo,
+          tipo: documento.tipoDocumento,
+        })),
+      },
       null,
       2,
     );
@@ -765,80 +787,108 @@ export class DuimpComponent implements OnInit {
 
     if (arquivos.length === 0) return;
 
-    const documentosAtuais = this.documentosService.listar(this.processoNumero);
-    const chavesArquivos = new Set(
-      documentosAtuais.map((documento) =>
-        this.criarChaveArquivo(documento.nome, documento.arquivo.size),
-      ),
+    this.enviarArquivos(
+      arquivos,
+      (arquivo) => this.identificarTipoDocumento(arquivo.name),
+      (mensagem) => {
+        this.mensagemUploadDocumentos = mensagem;
+      },
     );
-    let quantidadeDuplicada = 0;
-
-    const novosDocumentos = arquivos.reduce<
-      Omit<DocumentoProcesso, 'id' | 'incluirNaDuimp'>[]
-    >((novos, arquivo) => {
-      const chaveArquivo = this.criarChaveArquivo(arquivo.name, arquivo.size);
-
-      if (chavesArquivos.has(chaveArquivo)) {
-        quantidadeDuplicada++;
-        return novos;
-      }
-
-      chavesArquivos.add(chaveArquivo);
-      novos.push({
-        nome: arquivo.name,
-        tamanho:
-          arquivo.size < 1024 * 1024
-            ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB`
-            : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`,
-        tipo: this.identificarTipoDocumento(arquivo.name),
-        status: 'Aguardando conferência',
-        arquivo,
-      });
-
-      return novos;
-    }, []);
-
-    if (novosDocumentos.length > 0) {
-      this.documentosService.adicionar(this.processoNumero, novosDocumentos);
-      this.atualizarDocumentos();
-    }
-
-    if (novosDocumentos.length > 0 && quantidadeDuplicada > 0) {
-      this.mensagemUploadDocumentos =
-        `${novosDocumentos.length} documento(s) anexado(s); ` +
-        `${quantidadeDuplicada} duplicado(s) ignorado(s).`;
-    } else if (novosDocumentos.length > 0) {
-      this.mensagemUploadDocumentos =
-        `${novosDocumentos.length} documento(s) anexado(s) ao processo.`;
-    } else {
-      this.mensagemUploadDocumentos =
-        'Os arquivos selecionados já estão anexados ao processo.';
-    }
 
     input.value = '';
   }
 
-  atualizarStatusDocumento(
-    documento: DocumentoProcesso,
-    status: DocumentoProcesso['status']
+  formatarTamanhoArquivo(tamanhoBytes: number): string {
+    if (tamanhoBytes < 1024 * 1024) {
+      return `${Math.max(1, Math.round(tamanhoBytes / 1024))} KB`;
+    }
+
+    return `${(tamanhoBytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  private enviarArquivos(
+    arquivos: File[],
+    obterTipo: (arquivo: File) => TipoDocumento,
+    definirMensagem: (mensagem: string) => void,
   ): void {
-    this.documentosService.atualizarStatus(
-      this.processoNumero,
-      documento.id,
-      status
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) {
+      definirMensagem('Não foi possível identificar o processo para o upload.');
+      return;
+    }
+
+    const chavesExistentes = new Set(
+      this.documentos.map((documento) =>
+        this.criarChaveArquivo(documento.nomeArquivo, documento.tamanhoBytes),
+      ),
+    );
+    const arquivosValidos: File[] = [];
+    const errosValidacao: string[] = [];
+    let duplicados = 0;
+
+    for (const arquivo of arquivos) {
+      const extensao = arquivo.name.slice(arquivo.name.lastIndexOf('.')).toLowerCase();
+      const chave = this.criarChaveArquivo(arquivo.name, arquivo.size);
+
+      if (!this.extensoesPermitidasDocumentos.includes(extensao)) {
+        errosValidacao.push(`${arquivo.name}: formato não permitido.`);
+        continue;
+      }
+
+      if (arquivo.size > 25 * 1024 * 1024) {
+        errosValidacao.push(`${arquivo.name}: excede o limite de 25 MB.`);
+        continue;
+      }
+
+      if (chavesExistentes.has(chave)) {
+        duplicados++;
+        continue;
+      }
+
+      chavesExistentes.add(chave);
+      arquivosValidos.push(arquivo);
+    }
+
+    if (arquivosValidos.length === 0) {
+      const mensagens = [...errosValidacao];
+      if (duplicados > 0) mensagens.push(`${duplicados} arquivo(s) já anexado(s).`);
+      definirMensagem(mensagens.join(' ') || 'Nenhum arquivo válido foi selecionado.');
+      return;
+    }
+
+    this.carregandoDocumentos = true;
+    const envios = arquivosValidos.map((arquivo) =>
+      this.documentosService
+        .enviar(idProcesso, arquivo, obterTipo(arquivo))
+        .pipe(catchError(() => of(null))),
     );
 
-    this.atualizarDocumentos();
+    forkJoin(envios).subscribe((resultados) => {
+      const enviados = resultados.filter(
+        (documento): documento is DocumentoProcesso => documento !== null,
+      );
+      const falhas = resultados.length - enviados.length;
 
+      this.documentos = [...enviados, ...this.documentos];
+      this.carregandoDocumentos = false;
+
+      const mensagens = [];
+      if (enviados.length > 0) {
+        mensagens.push(`${enviados.length} documento(s) enviado(s).`);
+      }
+      if (duplicados > 0) mensagens.push(`${duplicados} duplicado(s) ignorado(s).`);
+      if (falhas > 0) mensagens.push(`${falhas} envio(s) falharam.`);
+      mensagens.push(...errosValidacao);
+      definirMensagem(mensagens.join(' '));
+    });
   }
 
   private criarChaveArquivo(nome: string, tamanho: number): string {
     return `${nome.trim().toLocaleLowerCase()}-${tamanho}`;
   }
 
-  private identificarTipoDocumento(
-    nomeArquivo: string,
-  ): DocumentoProcesso['tipo'] {
+  private identificarTipoDocumento(nomeArquivo: string): TipoDocumento {
     const nomeNormalizado = nomeArquivo
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')

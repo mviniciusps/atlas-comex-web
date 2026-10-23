@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import {
+import { catchError, forkJoin, of } from 'rxjs';
+import type {
   DocumentoProcesso,
-  DocumentosService,
   TipoDocumento,
-} from '../../services/documentos.service';
+} from '../../models/documento-processo.model';
+import { DocumentosService } from '../../services/documentos.service';
 import { Processo } from '../../models/processo.model';
 import { ProcessosService } from '../../services/processos.service';
 import {
@@ -25,14 +26,8 @@ export class DetalheProcessoComponent implements OnInit {
   processo?: Processo;
   processoNumero = '';
   mensagensUpload: string[] = [];
-
-  tiposDocumento: TipoDocumento[] = [
-    'Invoice',
-    'Packing List',
-    'Conhecimento de carga',
-    'Certificado',
-    'Outro',
-  ];
+  documentos: DocumentoProcesso[] = [];
+  carregandoDocumentos = false;
 
   private readonly extensoesPermitidas = [
     '.pdf',
@@ -42,9 +37,11 @@ export class DetalheProcessoComponent implements OnInit {
     '.jpg',
     '.jpeg',
     '.png',
+    '.tif',
+    '.tiff',
   ];
 
-  private readonly tamanhoMaximoArquivo = 20 * 1024 * 1024;
+  private readonly tamanhoMaximoArquivo = 25 * 1024 * 1024;
 
   constructor(
     private route: ActivatedRoute,
@@ -53,28 +50,12 @@ export class DetalheProcessoComponent implements OnInit {
     private historicoProcessoService: HistoricoProcessoService,
   ) { }
 
-  get documentos(): DocumentoProcesso[] {
-    return this.documentosService.listar(this.processoNumero);
-  }
-
   get eventosHistorico(): EventoProcesso[] {
     return this.historicoProcessoService.listar(this.processoNumero);
   }
 
-  get documentosAguardandoConferencia(): number {
-    return this.documentos.filter((documento) => documento.status === 'Aguardando conferência').length;
-  }
-
-  get documentosConferidos(): number {
-    return this.documentos.filter(
-      (documento) => documento.status === 'Conferido'
-    ).length;
-  }
-
-  get documentosComDivergencia(): number {
-    return this.documentos.filter(
-      (documento) => documento.status === 'Com divergência'
-    ).length;
+  get documentosIncluidosNaDuimp(): number {
+    return this.documentos.filter((documento) => documento.incluirNaDuimp).length;
   }
 
   get documentosPendentes(): TipoDocumento[] {
@@ -85,7 +66,8 @@ export class DetalheProcessoComponent implements OnInit {
     ];
 
     return documentosObrigatorios.filter(
-      (tipo) => !this.documentos.some((documento) => documento.tipo === tipo),
+      (tipo) =>
+        !this.documentos.some((documento) => documento.tipoDocumento === tipo),
     );
   }
 
@@ -95,7 +77,31 @@ export class DetalheProcessoComponent implements OnInit {
     if (numero) {
       this.processoNumero = numero;
       this.processo = this.processosService.buscarPorNumero(numero);
+      this.atualizarDocumentos();
     }
+  }
+
+  atualizarDocumentos(): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) {
+      this.documentos = [];
+      return;
+    }
+
+    this.carregandoDocumentos = true;
+    this.documentosService.listar(idProcesso).subscribe({
+      next: (documentos) => {
+        this.documentos = documentos;
+        this.carregandoDocumentos = false;
+      },
+      error: () => {
+        this.mensagensUpload = [
+          'Não foi possível carregar os documentos do processo.',
+        ];
+        this.carregandoDocumentos = false;
+      },
+    });
   }
 
   adicionarDocumentos(event: Event): void {
@@ -128,36 +134,79 @@ export class DetalheProcessoComponent implements OnInit {
       arquivosValidos.push(arquivo);
     }
 
-    const novosDocumentos: Omit<
-      DocumentoProcesso,
-      'id' | 'incluirNaDuimp'
-    >[] =
-      arquivosValidos.map((arquivo) => ({
-        nome: arquivo.name,
-        tamanho:
-          arquivo.size < 1024 * 1024
-            ? `${Math.max(1, Math.round(arquivo.size / 1024))} KB`
-            : `${(arquivo.size / (1024 * 1024)).toFixed(1)} MB`,
-        tipo: this.identificarTipoDocumento(arquivo.name),
-        status: 'Aguardando conferência',
-        arquivo,
-      }));
-
-    if (novosDocumentos.length > 0) {
-      this.documentosService.adicionar(
-        this.processoNumero,
-        novosDocumentos,
-      );
-
-      for (const documento of novosDocumentos) {
-        this.historicoProcessoService.registrar(
-          this.processoNumero,
-          'Documento incluído: ' + documento.nome + ' (' + documento.tipo + ')',
-        );
-      }
-    }
+    this.enviarArquivos(arquivosValidos);
 
     input.value = '';
+  }
+
+  private enviarArquivos(arquivos: File[]): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined || arquivos.length === 0) return;
+
+    const chavesExistentes = new Set(
+      this.documentos.map((documento) =>
+        this.criarChaveArquivo(documento.nomeArquivo, documento.tamanhoBytes),
+      ),
+    );
+    const arquivosSemDuplicidade = arquivos.filter((arquivo) => {
+      const chave = this.criarChaveArquivo(arquivo.name, arquivo.size);
+
+      if (chavesExistentes.has(chave)) {
+        this.mensagensUpload.push(`${arquivo.name}: já anexado ao processo.`);
+        return false;
+      }
+
+      chavesExistentes.add(chave);
+      return true;
+    });
+
+    if (arquivosSemDuplicidade.length === 0) return;
+
+    this.carregandoDocumentos = true;
+    const envios = arquivosSemDuplicidade.map((arquivo) =>
+      this.documentosService
+        .enviar(idProcesso, arquivo, this.identificarTipoDocumento(arquivo.name))
+        .pipe(catchError(() => of(null))),
+    );
+
+    forkJoin(envios).subscribe((resultados) => {
+      const enviados = resultados.filter(
+        (documento): documento is DocumentoProcesso => documento !== null,
+      );
+      const falhas = resultados.length - enviados.length;
+
+      this.documentos = [...enviados, ...this.documentos];
+      this.carregandoDocumentos = false;
+
+      for (const documento of enviados) {
+        this.historicoProcessoService.registrar(
+          this.processoNumero,
+          `Documento incluído: ${documento.nomeArquivo} (${documento.tipoDocumento})`,
+        );
+      }
+
+      if (enviados.length > 0) {
+        this.mensagensUpload.push(
+          `${enviados.length} documento(s) enviado(s) ao processo.`,
+        );
+      }
+      if (falhas > 0) {
+        this.mensagensUpload.push(`${falhas} envio(s) falharam.`);
+      }
+    });
+  }
+
+  formatarTamanhoArquivo(tamanhoBytes: number): string {
+    if (tamanhoBytes < 1024 * 1024) {
+      return `${Math.max(1, Math.round(tamanhoBytes / 1024))} KB`;
+    }
+
+    return `${(tamanhoBytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  private criarChaveArquivo(nome: string, tamanho: number): string {
+    return `${nome.trim().toLocaleLowerCase()}-${tamanho}`;
   }
 
   identificarTipoDocumento(nomeArquivo: string): TipoDocumento {
@@ -180,51 +229,6 @@ export class DetalheProcessoComponent implements OnInit {
     }
 
     return 'Outro';
-  }
-
-  removerDocumento(id: number): void {
-    const documento = this.documentos.find((item) => item.id === id);
-
-    if (!documento) {
-      return;
-    }
-  }
-
-  atualizarTipoDocumento(id: number, tipo: TipoDocumento): void {
-    const documento = this.documentos.find((item) => item.id === id);
-
-    if (!documento || documento.tipo === tipo) {
-      return;
-    }
-
-    this.documentosService.atualizarTipo(this.processoNumero, id, tipo);
-    this.historicoProcessoService.registrar(
-      this.processoNumero,
-      'Tipo do documento ' + documento.nome + ' alterado de ' +
-      documento.tipo + ' para ' + tipo,
-    );
-  }
-
-  atualizarStatusDocumento(
-    id: number,
-    status: DocumentoProcesso['status'],
-  ): void {
-    const documento = this.documentos.find((item) => item.id === id);
-
-    if (!documento || documento.status === status) {
-      return;
-    }
-
-    this.documentosService.atualizarStatus(
-      this.processoNumero,
-      id,
-      status,
-    );
-
-    this.historicoProcessoService.registrar(
-      this.processoNumero,
-      'Conferência de ' + documento.nome + ': ' + status,
-    );
   }
 
   atualizarDadosCarga(): void {
