@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import type {
   DocumentoProcesso,
+  StatusConferenciaDocumento,
   TipoDocumento,
 } from '../../models/documento-processo.model';
 import { DocumentosService } from '../../services/documentos.service';
@@ -22,12 +23,27 @@ import {
   templateUrl: './detalhe-processo.component.html',
   styleUrl: './detalhe-processo.component.scss',
 })
+
 export class DetalheProcessoComponent implements OnInit {
   processo?: Processo;
   processoNumero = '';
   mensagensUpload: string[] = [];
   documentos: DocumentoProcesso[] = [];
   carregandoDocumentos = false;
+
+  readonly tiposDocumentoDisponiveis: TipoDocumento[] = [
+    'Invoice',
+    'Packing List',
+    'Conhecimento de carga',
+    'Certificado',
+    'Outro'
+  ];
+
+  readonly statusConferenciaDisponiveis: StatusConferenciaDocumento[] = [
+    'Aguardando conferência',
+    'Conferido',
+    'Com divergência'
+  ]
 
   private readonly extensoesPermitidas = [
     '.pdf',
@@ -229,6 +245,94 @@ export class DetalheProcessoComponent implements OnInit {
     }
 
     return 'Outro';
+  }
+
+  atualizarTipoDocumento(
+    documento: DocumentoProcesso,
+    tipoDocumento: TipoDocumento,
+  ): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) return;
+
+    this.documentosService
+      .atualizarTipo(idProcesso, documento.idDocumento, tipoDocumento)
+      .subscribe({
+        next: () => {
+          this.historicoProcessoService.registrar(
+            this.processoNumero,
+            `Tipo do documento atualizado: ${documento.nomeArquivo}`,
+          );
+        },
+        error: () => {
+          this.mensagensUpload = [
+            'Não foi possível atualizar o tipo do documento.',
+          ];
+          this.atualizarDocumentos();
+        },
+      });
+  }
+
+  atualizarStatusDocumento(
+    documento: DocumentoProcesso,
+    statusConferencia: StatusConferenciaDocumento,
+  ): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) return;
+
+    this.documentosService
+      .atualizarStatusConferencia(
+        idProcesso,
+        documento.idDocumento,
+        statusConferencia,
+      )
+      .subscribe({
+        next: () => {
+          this.historicoProcessoService.registrar(
+            this.processoNumero,
+            `Conferência atualizada: ${documento.nomeArquivo} — ${statusConferencia}`,
+          );
+        },
+        error: () => {
+          this.mensagensUpload = [
+            'Não foi possível atualizar a conferência do documento.',
+          ];
+          this.atualizarDocumentos();
+        },
+      });
+  }
+
+  excluirDocumento(documento: DocumentoProcesso): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) return;
+
+    const confirmou = window.confirm(
+      `Deseja excluir o documento "${documento.nomeArquivo}"?`,
+    );
+
+    if (!confirmou) return;
+
+    this.documentosService
+      .excluir(idProcesso, documento.idDocumento)
+      .subscribe({
+        next: () => {
+          this.documentos = this.documentos.filter(
+            (item) => item.idDocumento !== documento.idDocumento,
+          );
+
+          this.historicoProcessoService.registrar(
+            this.processoNumero,
+            `Documento excluído: ${documento.nomeArquivo}`,
+          );
+        },
+        error: () => {
+          this.mensagensUpload = [
+            'Não foi possível excluir o documento.',
+          ];
+        },
+      });
   }
 
   atualizarDadosCarga(): void {

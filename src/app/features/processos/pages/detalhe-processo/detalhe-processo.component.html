@@ -105,10 +105,36 @@
       <li class="documento">
         <div>
           <strong>{{ documento.nomeArquivo }}</strong>
-          <span>{{ documento.tipoDocumento }}</span>
+
+          <label class="seletor-tipo">
+            Tipo do documento
+            <select [(ngModel)]="documento.tipoDocumento" (ngModelChange)="atualizarTipoDocumento(documento, $event)">
+              @for (tipo of tiposDocumentoDisponiveis; track tipo) {
+              <option [ngValue]="tipo">{{ tipo }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="seletor-tipo">
+            Conferência
+            <select [(ngModel)]="documento.statusConferencia"
+              (ngModelChange)="atualizarStatusDocumento(documento, $event)">
+              @for (status of statusConferenciaDisponiveis; track status) {
+              <option [ngValue]="status">{{ status }}</option>
+              }
+            </select>
+          </label>
+
           <span>{{ formatarTamanhoArquivo(documento.tamanhoBytes) }}</span>
-          <span>Enviado em {{ documento.dataUpload | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>
+            Enviado em {{ documento.dataUpload | date:'dd/MM/yyyy HH:mm' }}
+          </span>
         </div>
+
+        <button class="botao-remover" type="button" [attr.aria-label]="'Excluir documento ' + documento.nomeArquivo"
+          (click)="excluirDocumento(documento)">
+          Excluir
+        </button>
       </li>
       }
     </ul>

@@ -5,6 +5,11 @@ export type TipoDocumento =
   | 'Certificado'
   | 'Outro';
 
+export type StatusConferenciaDocumento =
+  | 'Aguardando conferência'
+  | 'Conferido'
+  | 'Com divergência';
+
 export interface DocumentoProcesso {
   idDocumento: number;
   idProcesso: number;
@@ -14,4 +19,5 @@ export interface DocumentoProcesso {
   tamanhoBytes: number;
   incluirNaDuimp: boolean;
   dataUpload: string;
+  statusConferencia: StatusConferenciaDocumento;
 }
