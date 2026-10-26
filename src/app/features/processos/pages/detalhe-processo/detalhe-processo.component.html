@@ -106,6 +106,22 @@
         <div>
           <strong>{{ documento.nomeArquivo }}</strong>
 
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [id]="'incluir-duimp-' + documento.idDocumento"
+              [ngModel]="documento.incluirNaDuimp"
+              (ngModelChange)="atualizarInclusaoNaDuimp(documento, $event)"
+            />
+            <label
+              class="form-check-label"
+              [for]="'incluir-duimp-' + documento.idDocumento"
+            >
+              Incluir na DUIMP
+            </label>
+          </div>
+
           <label class="seletor-tipo">
             Tipo do documento
             <select [(ngModel)]="documento.tipoDocumento" (ngModelChange)="atualizarTipoDocumento(documento, $event)">
@@ -130,6 +146,15 @@
             Enviado em {{ documento.dataUpload | date:'dd/MM/yyyy HH:mm' }}
           </span>
         </div>
+
+        <button
+          class="btn btn-outline-secondary btn-sm"
+          type="button"
+          [attr.aria-label]="'Baixar documento ' + documento.nomeArquivo"
+          (click)="baixarDocumento(documento)"
+        >
+          Baixar
+        </button>
 
         <button class="botao-remover" type="button" [attr.aria-label]="'Excluir documento ' + documento.nomeArquivo"
           (click)="excluirDocumento(documento)">

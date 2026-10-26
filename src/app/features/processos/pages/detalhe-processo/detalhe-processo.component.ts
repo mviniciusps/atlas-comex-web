@@ -335,6 +335,34 @@ export class DetalheProcessoComponent implements OnInit {
       });
   }
 
+  baixarDocumento(documento: DocumentoProcesso): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) return;
+
+    this.documentosService
+      .baixar(idProcesso, documento.idDocumento)
+      .subscribe({
+        next: (arquivo) => {
+          const url = URL.createObjectURL(arquivo);
+          const link = document.createElement('a');
+
+          link.href = url;
+          link.download = documento.nomeArquivo;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        },
+        error: () => {
+          this.mensagensUpload = [
+            'Não foi possível baixar o documento.'
+          ];
+        }
+      })
+  }
+
   atualizarDadosCarga(): void {
     if (!this.processo) {
       return;
@@ -349,6 +377,33 @@ export class DetalheProcessoComponent implements OnInit {
         presencaCarga: this.processo.presencaCarga,
       },
     );
+  }
+
+  atualizarInclusaoNaDuimp(
+    documento: DocumentoProcesso,
+    incluirNaDuimp: boolean
+  ): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined) return;
+
+    this.documentosService
+      .atualizarInclusaoDuimp(
+        idProcesso,
+        documento.idDocumento,
+        incluirNaDuimp,
+      )
+      .subscribe({
+        next: () => {
+          documento.incluirNaDuimp = incluirNaDuimp;
+        },
+        error: () => {
+          this.mensagensUpload = [
+            'Não foi possível atualizar a inclusão na DUIMP.',
+          ];
+          this.atualizarDocumentos();
+        },
+      });
   }
 
 }

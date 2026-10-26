@@ -18,6 +18,13 @@ export class DocumentosService {
     );
   }
 
+  baixar(idProcesso: number, idDocumento: number): Observable<Blob> {
+  return this.http.get(
+    `${this.apiUrl}/${idProcesso}/documentos/${idDocumento}/arquivo`,
+    { responseType: 'blob' }, //Blob representa os bytes do arquivo recebidos da API
+  );
+}
+
   enviar(
     idProcesso: number,
     arquivo: File,
