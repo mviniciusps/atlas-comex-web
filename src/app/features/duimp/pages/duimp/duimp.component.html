@@ -1254,12 +1254,19 @@
   </section>
   }
   <footer class="rodape-pagina">
-    <span>
-      As informações são salvas em memória nesta versão.
+    <span aria-live="polite">
+      {{ carregandoRascunho ? 'Carregando carga...' : mensagemRascunho }}
     </span>
-    <button class="botao-secundario" type="button" (click)="atualizarDadosDuimp()">
-      Salvar rascunho
-    </button>
+    @if (abaAtiva === 'carga') {
+      <button
+        class="botao-secundario"
+        type="button"
+        [disabled]="carregandoRascunho || salvandoRascunho"
+        (click)="salvarCargaNaApi()"
+      >
+        {{ salvandoRascunho ? 'Salvando...' : 'Salvar dados da carga' }}
+      </button>
+    }
   </footer>
   } @else {
   <section class="cartao nao-encontrado">

@@ -1,11 +1,11 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { ItemDuimp } from '../../models/duimp.model';
-import type { Duimp } from '../../models/duimp.model';
+import type { DadosCargaDuimp, Duimp, ItemDuimp } from '../../models/duimp.model';
 import { DuimpService } from '../../services/duimp.service';
 import type {
   DocumentoProcesso,
@@ -14,6 +14,10 @@ import type {
 import { DocumentosService } from '../../../processos/services/documentos.service';
 import type { Processo } from '../../../processos/models/processo.model';
 import { ProcessosService } from '../../../processos/services/processos.service';
+import type {
+  CargaDuimpApiDto,
+  DuimpRascunhoApiDto,
+} from '../../models/duimp-rascunho-api';
 
 type AbaDuimp =
   | 'identificacao'
@@ -61,6 +65,12 @@ export class DuimpComponent implements OnInit {
   mensagemAnalise = '';
   novoItemDuimp: ItemPlanilha = this.criarItemVazio();
   itemEmEdicaoId: number | null = null;
+  carregandoRascunho = false;
+  salvandoRascunho = false;
+  mensagemRascunho = '';
+
+  private rascunhoApi?: DuimpRascunhoApiDto;
+
   readonly tributos = [
     'II',
     'IPI',
@@ -106,6 +116,7 @@ export class DuimpComponent implements OnInit {
     this.duimp = this.processo
       ? this.duimpService.obterOuCriar(numeroProcesso)
       : undefined;
+    this.carregarRascunhoApi();
     this.atualizarDocumentos();
   }
 
@@ -131,6 +142,175 @@ export class DuimpComponent implements OnInit {
     if (this.duimp) {
       this.duimpService.salvar(this.duimp);
     }
+  }
+
+  private carregarRascunhoApi(): void {
+    const idProcesso = this.processo?.idProcesso;
+
+    if (idProcesso === undefined || !this.duimp) {
+      return;
+    }
+
+    this.carregandoRascunho = true;
+    this.mensagemRascunho = '';
+
+    this.duimpService.obterRascunho(idProcesso).subscribe({
+      next: (rascunho) => {
+        this.rascunhoApi = rascunho;
+        this.aplicarCargaApi(rascunho.carga);
+        this.carregandoRascunho = false;
+      },
+      error: (erro: HttpErrorResponse) => {
+        if (erro.status === 404) {
+          this.rascunhoApi = this.criarRascunhoVazio();
+          this.mensagemRascunho = 'Ainda não há dados de carga salvos.';
+        } else {
+          this.mensagemRascunho = 'Não foi possível carregar os dados da carga.';
+        }
+
+        this.carregandoRascunho = false;
+      },
+    });
+  }
+
+  private aplicarCargaApi(carga: CargaDuimpApiDto | null): void {
+    if (!carga || !this.duimp) {
+      return;
+    }
+
+    this.duimp.carga = {
+      ...this.duimp.carga,
+      unidadesDespacho: carga.unidadesDespacho,
+      numeroCe:
+        carga.tipoIdentificacaoCarga === 'CE'
+          ? carga.identificacaoCarga ?? ''
+          : '',
+      numeroRuc:
+        carga.tipoIdentificacaoCarga === 'RUC'
+          ? carga.identificacaoCarga ?? ''
+          : '',
+      localEmbarque: carga.localEmbarque ?? '',
+      dataConhecimento: carga.dataConhecimento ?? '',
+      paisProcedencia: carga.paisProcedencia ?? '',
+      pesoBruto: carga.pesoBruto,
+      pesoLiquido: carga.pesoLiquido,
+      moedaFrete: carga.codigoMoedaFrete ?? '',
+      valorFreteMoeda: carga.valorFreteMoeda,
+      valorFreteReais: carga.valorFreteReais,
+      valorAfrmmTum: carga.valorAfrmmTum,
+      afrmmTumPago: carga.afrmmTumPago,
+      moedaSeguro: carga.codigoMoedaSeguro ?? '',
+      valorSeguroMoeda: carga.valorSeguroMoeda,
+      valorSeguroReais: carga.valorSeguroReais,
+      componentesFrete: carga.componentesFrete.map((componente, indice) => ({
+        id: indice + 1,
+        pagamento: componente.pagamento ?? '',
+        tipo: componente.tipo ?? '',
+        moeda: componente.moeda ?? '',
+        valor: componente.valorMoeda,
+      })),
+      embalagens: carga.embalagens.map((embalagem, indice) => ({
+        id: indice + 1,
+        item: embalagem.item ?? '',
+        tipo: embalagem.tipo ?? '',
+        quantidade: embalagem.quantidade,
+      })),
+    };
+  }
+
+  private criarRascunhoVazio(): DuimpRascunhoApiDto {
+    return {
+      tipoPessoaImportador: null,
+      documentoImportador: null,
+      nomeImportador: null,
+      logradouroImportador: null,
+      numeroEnderecoImportador: null,
+      complementoEnderecoImportador: null,
+      bairroImportador: null,
+      codigoMunicipioImportador: null,
+      municipioImportador: null,
+      ufImportador: null,
+      cepImportador: null,
+      paisImportador: null,
+      informacoesComplementaresGeradas: null,
+      informacoesComplementaresAdicionais: null,
+      carga: null,
+      itens: [],
+    };
+  }
+
+  private montarCargaApi(carga: DadosCargaDuimp): CargaDuimpApiDto {
+    const tipoIdentificacaoCarga: 'CE' | 'RUC' = this.modalidadeAerea
+      ? 'RUC'
+      : 'CE';
+
+    return {
+      tipoIdentificacaoCarga,
+      identificacaoCarga:
+        tipoIdentificacaoCarga === 'RUC'
+          ? carga.numeroRuc || null
+          : carga.numeroCe || null,
+      localEmbarque: carga.localEmbarque || null,
+      dataConhecimento: carga.dataConhecimento || null,
+      paisProcedencia: carga.paisProcedencia || null,
+      pesoBruto: carga.pesoBruto,
+      pesoLiquido: carga.pesoLiquido,
+      codigoMoedaFrete: carga.moedaFrete || null,
+      valorFreteMoeda: carga.valorFreteMoeda,
+      valorFreteReais: carga.valorFreteReais,
+      valorAfrmmTum: carga.valorAfrmmTum,
+      afrmmTumPago: carga.afrmmTumPago,
+      codigoMoedaSeguro: carga.moedaSeguro || null,
+      valorSeguroMoeda: carga.valorSeguroMoeda,
+      valorSeguroReais: carga.valorSeguroReais,
+      unidadesDespacho: carga.unidadesDespacho,
+      componentesFrete: carga.componentesFrete.map((componente) => ({
+        pagamento: componente.pagamento || null,
+        tipo: componente.tipo || null,
+        moeda: componente.moeda || null,
+        valorMoeda: componente.valor,
+      })),
+      embalagens: carga.embalagens.map((embalagem) => ({
+        item: embalagem.item || null,
+        tipo: embalagem.tipo || null,
+        quantidade: embalagem.quantidade,
+      })),
+    };
+  }
+
+  salvarCargaNaApi(): void {
+    const idProcesso = this.processo?.idProcesso;
+    const duimp = this.duimp;
+
+    if (
+      idProcesso === undefined ||
+      !duimp ||
+      this.salvandoRascunho ||
+      this.carregandoRascunho
+    ) {
+      return;
+    }
+
+    const dados: DuimpRascunhoApiDto = {
+      ...(this.rascunhoApi ?? this.criarRascunhoVazio()),
+      carga: this.montarCargaApi(duimp.carga),
+    };
+
+    this.salvandoRascunho = true;
+    this.mensagemRascunho = '';
+
+    this.duimpService.salvarRascunho(idProcesso, dados).subscribe({
+      next: () => {
+        this.rascunhoApi = dados;
+        this.atualizarDadosDuimp();
+        this.mensagemRascunho = 'Dados da carga salvos.';
+        this.salvandoRascunho = false;
+      },
+      error: () => {
+        this.mensagemRascunho = 'Não foi possível salvar os dados da carga.';
+        this.salvandoRascunho = false;
+      },
+    });
   }
 
   atualizarUnidadesDespacho(valor: string): void {

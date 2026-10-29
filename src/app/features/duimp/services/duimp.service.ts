@@ -1,5 +1,9 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Duimp, ItemDuimp } from '../models/duimp.model';
+import type { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import type { DuimpRascunhoApiDto } from '../models/duimp-rascunho-api';
+import type { Duimp, ItemDuimp } from '../models/duimp.model';
 import { ProcessosService } from '../../processos/services/processos.service';
 
 @Injectable({
@@ -7,9 +11,30 @@ import { ProcessosService } from '../../processos/services/processos.service';
 })
 export class DuimpService {
 
+  private readonly apiUrl = `${environment.apiBaseUrl}/processos`;
   private duimps: Duimp[] = []; //Array para utilizar os metodos
 
-  constructor(private processosService: ProcessosService) { }
+  constructor(
+    private readonly processosService: ProcessosService,
+    private readonly http: HttpClient,
+  ) {}
+
+  //Metodos de API
+  obterRascunho(idProcesso: number): Observable<DuimpRascunhoApiDto> {
+    return this.http.get<DuimpRascunhoApiDto>(
+      `${this.apiUrl}/${idProcesso}/duimp`,
+    );
+  }
+
+  salvarRascunho(
+    idProcesso: number,
+    dados: DuimpRascunhoApiDto,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/${idProcesso}/duimp`,
+      dados,
+    );
+  }
 
   //Retorna Duimp ou undefined
   buscarPorProcesso(processoNumero: string): Duimp | undefined {
