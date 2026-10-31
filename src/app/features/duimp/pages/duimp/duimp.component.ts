@@ -104,7 +104,7 @@ export class DuimpComponent implements OnInit {
     private processosService: ProcessosService,
     private duimpService: DuimpService,
     private documentosService: DocumentosService,
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     const numeroProcesso = this.route.snapshot.paramMap.get('id');

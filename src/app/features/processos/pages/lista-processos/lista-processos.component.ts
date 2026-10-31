@@ -7,6 +7,7 @@ import type { Processo } from '../../models/processo.model';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
 import { ImportadoresService } from '../../services/importadores.service';
 import { ProcessosService } from '../../services/processos.service';
+import { catchError, forkJoin, map, of } from 'rxjs';
 
 @Component({
   selector: 'app-lista-processos',
@@ -30,6 +31,20 @@ export class ListaProcessosComponent implements OnInit {
 
   importadores: ImportadorApiDto[] = [];
 
+  // Identifica o que realmente mudou na tela (grid).
+  private readonly dadosOriginais = new Map<
+    number,
+    ProcessoAtualizacaoDadosDto
+  >();
+
+  readonly alteracoesPendentes = new Map<
+    number,
+    ProcessoAtualizacaoDadosDto
+  >();
+
+  salvandoAlteracoes = false;
+  mensagemSucessoAtualizacao = '';
+
   novoProcesso = {
     numero: '',
     idEstabelecimento: null as number | null,
@@ -43,12 +58,13 @@ export class ListaProcessosComponent implements OnInit {
     @Inject(ImportadoresService)
     private readonly importadoresService: ImportadoresService,
     private readonly router: Router,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.carregandoProcessos = true;
     this.processosService.carregar().subscribe({
       next: (processos) => {
+        this.definirDadosOriginais(processos);
         this.clienteSelecionado = processos[0]?.importador ?? null;
         this.carregandoProcessos = false;
       },
@@ -156,6 +172,7 @@ export class ListaProcessosComponent implements OnInit {
       })
       .subscribe({
         next: (processo) => {
+          this.guardarDadosOriginais(processo);
           this.clienteSelecionado = processo.importador;
           this.processoSelecionado = null;
 
@@ -176,14 +193,28 @@ export class ListaProcessosComponent implements OnInit {
       });
   }
 
-  salvarAlteracoes(processo: Processo): void {
+  private definirDadosOriginais(processos: Processo[]): void {
+    this.dadosOriginais.clear();
+    this.alteracoesPendentes.clear();
+
+    processos.forEach((processo) => this.guardarDadosOriginais(processo));
+  }
+
+  private guardarDadosOriginais(processo: Processo): void {
     if (processo.idProcesso == null) {
-      this.mensagemErroAtualizacao =
-        'Não foi possível identificar o processo para salvar as alterações.';
       return;
     }
 
-    const dados: ProcessoAtualizacaoDadosDto = {
+    this.dadosOriginais.set(
+      processo.idProcesso,
+      this.montarDadosAtualizacao(processo),
+    );
+  }
+
+  private montarDadosAtualizacao(
+    processo: Processo,
+  ): ProcessoAtualizacaoDadosDto {
+    return {
       referenciaCliente: processo.referenciaCliente?.trim() || null,
       previsaoChegada: processo.previsaoChegada || null,
       exportador: processo.exportador?.trim() || null,
@@ -194,16 +225,108 @@ export class ListaProcessosComponent implements OnInit {
       desembaraco: processo.dataDesembaraco || null,
       recintoAlfandegado: processo.recintoAlfandegado?.trim() || null,
     };
+  }
+
+  private dadosIguais(
+    primeiro: ProcessoAtualizacaoDadosDto,
+    segundo: ProcessoAtualizacaoDadosDto,
+  ): boolean {
+    return (
+      primeiro.referenciaCliente === segundo.referenciaCliente &&
+      primeiro.previsaoChegada === segundo.previsaoChegada &&
+      primeiro.exportador === segundo.exportador &&
+      primeiro.observacoes === segundo.observacoes &&
+      primeiro.conhecimentoMaster === segundo.conhecimentoMaster &&
+      primeiro.conhecimentoHouse === segundo.conhecimentoHouse &&
+      primeiro.modal === segundo.modal &&
+      primeiro.desembaraco === segundo.desembaraco &&
+      primeiro.recintoAlfandegado === segundo.recintoAlfandegado
+    );
+  }
+
+  registrarAlteracao(processo: Processo): void {
+    if (processo.idProcesso == null) {
+      return;
+    }
+
+    const dadosAtuais = this.montarDadosAtualizacao(processo);
+    const dadosOriginais = this.dadosOriginais.get(processo.idProcesso);
+
+    if (dadosOriginais && this.dadosIguais(dadosAtuais, dadosOriginais)) {
+      this.alteracoesPendentes.delete(processo.idProcesso);
+    } else {
+      this.alteracoesPendentes.set(processo.idProcesso, dadosAtuais);
+    }
 
     this.mensagemErroAtualizacao = '';
+    this.mensagemSucessoAtualizacao = '';
+  }
 
-    this.processosService.atualizar(processo.idProcesso, dados).subscribe({
-      error: (erro: unknown) => {
-        console.error('Erro ao atualizar processo:', erro);
-        this.mensagemErroAtualizacao =
-          `Não foi possível salvar as alterações do processo ${processo.numero}.`;
-      },
+  salvarAlteracoesPendentes(): void {
+    if (this.salvandoAlteracoes || this.alteracoesPendentes.size === 0) {
+      return;
+    }
+
+    this.salvandoAlteracoes = true;
+    this.mensagemErroAtualizacao = '';
+    this.mensagemSucessoAtualizacao = '';
+
+    const pendencias = Array.from(this.alteracoesPendentes.entries());
+
+    // Envia um PUT por processo e aguarda todas as respostas.
+    const requisicoes = pendencias.map(([idProcesso, dados]) =>
+      this.processosService.atualizar(idProcesso, dados).pipe(
+        map(() => ({ idProcesso, dados, sucesso: true })),
+        catchError((erro: unknown) => {
+          console.error(`Erro ao salvar o processo ${idProcesso}:`, erro);
+          return of({ idProcesso, dados, sucesso: false });
+        }),
+      ),
+    );
+
+    forkJoin(requisicoes).subscribe((resultados) => {
+      let quantidadeSalva = 0;
+      let quantidadeComErro = 0;
+
+      resultados.forEach((resultado) => {
+        if (!resultado.sucesso) {
+          quantidadeComErro++;
+          return;
+        }
+
+        quantidadeSalva++;
+        this.dadosOriginais.set(resultado.idProcesso, resultado.dados);
+
+        const pendenciaAtual = this.alteracoesPendentes.get(
+          resultado.idProcesso,
+        );
+
+        // Preserva uma edição mais recente feita enquanto o PUT estava em andamento.
+        if (
+          pendenciaAtual &&
+          this.dadosIguais(pendenciaAtual, resultado.dados)
+        ) {
+          this.alteracoesPendentes.delete(resultado.idProcesso);
+        }
+      });
+
+      this.mensagemSucessoAtualizacao =
+        quantidadeSalva > 0
+          ? `${quantidadeSalva} processo(s) salvo(s).`
+          : '';
+
+      this.mensagemErroAtualizacao =
+        quantidadeComErro > 0
+          ? `${quantidadeComErro} processo(s) não foram salvos. As alterações continuam pendentes.`
+          : '';
+
+      this.salvandoAlteracoes = false;
     });
+  }
+  // Mantém o HTML atual funcionando até a troca de blur para ngModelChange.
+  // Nesta etapa, este método apenas registra a edição em memória.
+  salvarAlteracoes(processo: Processo): void {
+    this.registrarAlteracao(processo);
   }
 
   get processos(): Processo[] {

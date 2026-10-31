@@ -2,7 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import type { DocumentoProcesso, TipoDocumento, StatusConferenciaDocumento } from '../models/documento-processo.model';
+import type {
+  DocumentoProcesso,
+  StatusConferenciaDocumento,
+  TipoDocumento,
+} from '../models/documento-processo.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +14,7 @@ import type { DocumentoProcesso, TipoDocumento, StatusConferenciaDocumento } fro
 export class DocumentosService {
   private readonly apiUrl = `${environment.apiBaseUrl}/processos`;
 
-  constructor(private readonly http: HttpClient) { }
+  constructor(private readonly http: HttpClient) {}
 
   listar(idProcesso: number): Observable<DocumentoProcesso[]> {
     return this.http.get<DocumentoProcesso[]>(
@@ -19,11 +23,11 @@ export class DocumentosService {
   }
 
   baixar(idProcesso: number, idDocumento: number): Observable<Blob> {
-  return this.http.get(
-    `${this.apiUrl}/${idProcesso}/documentos/${idDocumento}/arquivo`,
-    { responseType: 'blob' }, //Blob representa os bytes do arquivo recebidos da API
-  );
-}
+    return this.http.get(
+      `${this.apiUrl}/${idProcesso}/documentos/${idDocumento}/arquivo`,
+      { responseType: 'blob' }, // Blob representa os bytes do arquivo recebidos da API.
+    );
+  }
 
   enviar(
     idProcesso: number,

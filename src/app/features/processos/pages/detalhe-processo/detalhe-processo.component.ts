@@ -64,7 +64,7 @@ export class DetalheProcessoComponent implements OnInit {
     private processosService: ProcessosService,
     private documentosService: DocumentosService,
     private historicoProcessoService: HistoricoProcessoService,
-  ) { }
+  ) {}
 
   get eventosHistorico(): EventoProcesso[] {
     return this.historicoProcessoService.listar(this.processoNumero);
