@@ -274,15 +274,23 @@ export class ListaProcessosComponent implements OnInit {
     const pendencias = Array.from(this.alteracoesPendentes.entries());
 
     // Envia um PUT por processo e aguarda todas as respostas.
-    const requisicoes = pendencias.map(([idProcesso, dados]) =>
-      this.processosService.atualizar(idProcesso, dados).pipe(
-        map(() => ({ idProcesso, dados, sucesso: true })),
-        catchError((erro: unknown) => {
-          console.error(`Erro ao salvar o processo ${idProcesso}:`, erro);
-          return of({ idProcesso, dados, sucesso: false });
-        }),
-      ),
-    );
+    const requisicoes = pendencias.map(([idProcesso, dados]) => {
+      const processo = this.processos.find(
+        (item) => item.idProcesso === idProcesso
+      );
+
+      if (!processo) return of({ idProcesso, dados, sucesso: false });
+
+      return this.processosService
+        .atualizar(idProcesso, processo.status, dados)
+        .pipe(
+          map(() => ({ idProcesso, dados, sucesso: true })),
+          catchError((erro: unknown) => {
+            console.error(`Erro ao salvar o processo ${idProcesso}:`, erro);
+            return of({ idProcesso, dados, sucesso: false })
+          })
+        );
+    });
 
     forkJoin(requisicoes).subscribe((resultados) => {
       let quantidadeSalva = 0;

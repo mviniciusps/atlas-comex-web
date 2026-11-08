@@ -42,6 +42,6 @@ export interface ProcessoAtualizacaoDadosDto {
   recintoAlfandegado: string | null;
 }
 
-export interface ProcessoAtualizacaoDto {
-  dados: ProcessoAtualizacaoDadosDto;
+export interface ProcessoAtualizacaoDto extends ProcessoAtualizacaoDadosDto {
+  situacao: string;
 }

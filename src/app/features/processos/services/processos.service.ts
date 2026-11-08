@@ -41,9 +41,10 @@ export class ProcessosService {
 
   atualizar(
     idProcesso: number,
+    situacao: string,
     dados: ProcessoAtualizacaoDadosDto,
   ): Observable<void> {
-    const corpo: ProcessoAtualizacaoDto = { dados };
+    const corpo: ProcessoAtualizacaoDto = { ...dados ,situacao };
 
     return this.http.put<void>(
       `${environment.apiBaseUrl}/processos/${idProcesso}`,
