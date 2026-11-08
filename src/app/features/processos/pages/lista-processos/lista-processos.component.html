@@ -16,6 +16,33 @@
         DUIMP
       </button>
 
+      <button
+        class="botao-secundario"
+        type="button"
+        title="Salvar todas as alterações pendentes"
+        aria-label="Salvar todas as alterações pendentes"
+        [disabled]="alteracoesPendentes.size === 0 || salvandoAlteracoes"
+        (click)="salvarAlteracoesPendentes()"
+      >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M4 3h13l4 4v14H4z" />
+          <path d="M8 3v6h8V3" />
+          <path d="M8 21v-7h8v7" />
+        </svg>
+        {{ salvandoAlteracoes ? 'Salvando...' : 'Salvar' }}
+        @if (alteracoesPendentes.size > 0) {
+          ({{ alteracoesPendentes.size }})
+        }
+      </button>
+
       <button class="botao-principal" type="button" (click)="abrirFormulario()">
         <span aria-hidden="true">+</span>
         Novo Processo
@@ -23,6 +50,18 @@
     </div>
 
   </header>
+
+  @if (mensagemSucessoAtualizacao) {
+    <div class="alert alert-success mt-3" role="status">
+      {{ mensagemSucessoAtualizacao }}
+    </div>
+  }
+
+  @if (mensagemErroAtualizacao) {
+    <div class="alert alert-danger mt-3" role="alert">
+      {{ mensagemErroAtualizacao }}
+    </div>
+  }
 
   @if (carregandoProcessos) {
   <div class="alert alert-info mt-3" role="status">
@@ -55,42 +94,35 @@
 
       <label>
         Estabelecimento importador *
-        <select
-          class="form-select"
-          [(ngModel)]="novoProcesso.idEstabelecimento"
-          [disabled]="carregandoImportadores || importadores.length === 0"
-        >
+        <select class="form-select" [(ngModel)]="novoProcesso.idEstabelecimento"
+          [disabled]="carregandoImportadores || importadores.length === 0">
           <option [ngValue]="null">Selecione um estabelecimento</option>
 
           @for (importador of importadores; track importador.idImportador) {
-            @for (
-              estabelecimento of importador.estabelecimentos;
-              track estabelecimento.idEstabelecimento
-            ) {
-              <option [ngValue]="estabelecimento.idEstabelecimento">
-                {{ importador.razaoSocial }} —
-                {{ estabelecimento.nomeEstabelecimento }}
-                ({{ estabelecimento.cnpj }})
-              </option>
-            }
+          @for (
+          estabelecimento of importador.estabelecimentos;
+          track estabelecimento.idEstabelecimento
+          ) {
+          <option [ngValue]="estabelecimento.idEstabelecimento">
+            {{ importador.razaoSocial }} —
+            {{ estabelecimento.nomeEstabelecimento }}
+            ({{ estabelecimento.cnpj }})
+          </option>
+          }
           }
         </select>
         @if (carregandoImportadores) {
-          <small class="text-secondary">Carregando importadores...</small>
+        <small class="text-secondary">Carregando importadores...</small>
         } @else if (mensagemErroImportadores) {
-          <small class="text-danger">{{ mensagemErroImportadores }}</small>
+        <small class="text-danger">{{ mensagemErroImportadores }}</small>
         } @else if (importadores.length === 0) {
-          <small class="text-secondary">Nenhum importador cadastrado.</small>
+        <small class="text-secondary">Nenhum importador cadastrado.</small>
         }
       </label>
 
       <label>
         Referência do cliente
-        <input
-          type="text"
-          [(ngModel)]="novoProcesso.referenciaCliente"
-          placeholder="Referência do cliente"
-        />
+        <input type="text" [(ngModel)]="novoProcesso.referenciaCliente" placeholder="Referência do cliente" />
       </label>
 
       <label>
@@ -190,12 +222,12 @@
             <!-- Campos editáveis: ngModel atualiza os dados em memória enquanto o app está aberto. -->
             <td>
               <input type="text" class="form-control form-control-sm campo-grade"
-                [(ngModel)]="processo.referenciaCliente" placeholder="Pendente"
-                aria-label="Referência do cliente" (blur)="salvarAlteracoes(processo)" />
+                [(ngModel)]="processo.referenciaCliente" placeholder="Pendente" aria-label="Referência do cliente"
+                (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.previsaoChegada"
-                placeholder="Pendente" aria-label="Previsão de chegada" (blur)="salvarAlteracoes(processo)" />
+                placeholder="Pendente" aria-label="Previsão de chegada" (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
               <!-- Valor automático exibido como texto, sem campo para edição manual. -->
@@ -205,13 +237,13 @@
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.exportador"
-                placeholder="Pendente" aria-label="Exportador" (blur)="salvarAlteracoes(processo)" />
+                placeholder="Pendente" aria-label="Exportador" (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <!-- Observações ocupa uma coluna mais larga para facilitar leitura e edição. -->
             <td class="coluna-observacoes">
               <textarea class="form-control form-control-sm campo-grade campo-observacoes"
                 [(ngModel)]="processo.observacoes" placeholder="Adicionar observa&#231;&#227;o" rows="1"
-                aria-label="Observações do processo" (blur)="salvarAlteracoes(processo)"></textarea>
+                aria-label="Observações do processo" (ngModelChange)="registrarAlteracao(processo)"></textarea>
             </td>
             <td>
               <span class="campo-automatico" [class.valor-pendente]="!processo.cnpjImportador">
@@ -221,16 +253,16 @@
             <td>
               <input type="text" class="form-control form-control-sm campo-grade"
                 [(ngModel)]="processo.conhecimentoMaster" placeholder="Pendente" aria-label="Conhecimento Master"
-                (blur)="salvarAlteracoes(processo)" />
+                (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade"
                 [(ngModel)]="processo.conhecimentoHouse" placeholder="Pendente" aria-label="Conhecimento House"
-                (blur)="salvarAlteracoes(processo)" />
+                (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
               <select class="form-select form-select-sm campo-grade" [(ngModel)]="processo.modalidade"
-                aria-label="Modal" (change)="salvarAlteracoes(processo)">
+                aria-label="Modal" (ngModelChange)="registrarAlteracao(processo)">
                 <option value="Mar&#237;timo">Mar&#237;timo</option>
                 <option value="A&#233;reo">A&#233;reo</option>
                 <option value="Rodovi&#225;rio">Rodovi&#225;rio</option>
@@ -256,12 +288,12 @@
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.dataDesembaraco"
-                placeholder="Pendente" aria-label="Desembaraço" (blur)="salvarAlteracoes(processo)" />
+                placeholder="Pendente" aria-label="Desembaraço" (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
               <input type="text" class="form-control form-control-sm campo-grade"
                 [(ngModel)]="processo.recintoAlfandegado" placeholder="Pendente" aria-label="Recinto alfandegado"
-                (blur)="salvarAlteracoes(processo)" />
+                (ngModelChange)="registrarAlteracao(processo)" />
             </td>
           </tr>
           } @empty {
