@@ -1,13 +1,20 @@
-<main class="pagina">
+<main class="pagina container-fluid d-flex flex-column vh-100 px-3 pt-3 px-lg-4">
   <!-- Cabeçalho da tela: nome do importador ativo e ações do processo selecionado. -->
-  <header class="cabecalho">
-    <div>
+  <header class="cabecalho d-flex flex-wrap align-items-center justify-content-between flex-shrink-0">
+    <div class="marca-cliente">
+      <img
+        class="logo-atlas"
+        src="/atlas-comex-logo.png"
+        alt="Logotipo Atlas Comex"
+      />
       <!-- <p class="sobretitulo">ATLAS COMEX</p> -->
-      <h1>{{ clienteAtivo }}</h1>
+      <!-- <div>
+        <h1>{{ clienteAtivo }}</h1>
+      </div> -->
     </div>
 
     <!-- Botoes lado superior direito -->
-    <div class="acoes-cabecalho">
+    <div class="acoes-cabecalho d-flex flex-wrap">
       <button class="botao-secundario" type="button" [disabled]="!processoSelecionado" (click)="abrirUploadProcesso()">
         Upload
       </button>
@@ -51,39 +58,40 @@
 
   </header>
 
+
   @if (mensagemSucessoAtualizacao) {
-    <div class="alert alert-success mt-3" role="status">
+    <div class="alert alert-success mt-3 flex-shrink-0" role="status">
       {{ mensagemSucessoAtualizacao }}
     </div>
   }
 
   @if (mensagemErroAtualizacao) {
-    <div class="alert alert-danger mt-3" role="alert">
+    <div class="alert alert-danger mt-3 flex-shrink-0" role="alert">
       {{ mensagemErroAtualizacao }}
     </div>
   }
 
   @if (carregandoProcessos) {
-  <div class="alert alert-info mt-3" role="status">
+  <div class="alert alert-info mt-3 flex-shrink-0" role="status">
     Carregando processos...
   </div>
   }
 
   @if (mensagemErroProcessos) {
-  <div class="alert alert-danger mt-3" role="alert">
+  <div class="alert alert-danger mt-3 flex-shrink-0" role="alert">
     {{ mensagemErroProcessos }}
   </div>
   }
 
   @if (mensagemErroAtualizacao) {
-  <div class="alert alert-danger mt-3" role="alert">
+  <div class="alert alert-danger mt-3 flex-shrink-0" role="alert">
     {{ mensagemErroAtualizacao }}
   </div>
   }
 
   <!-- Formulário exibido somente quando o usuário escolhe criar um processo. -->
   @if (formularioAberto) {
-  <section class="formulario-processo">
+  <section class="formulario-processo flex-shrink-0">
     <h2>Novo processo</h2>
 
     <div class="campos-formulario">
@@ -150,19 +158,20 @@
   }
 
   <!-- Painel principal com abas de importadores, busca e grade de embarques. -->
-  <section class="painel-processos">
+  <section class="painel-processos d-flex flex-column flex-grow-1">
     <!-- Cada botão representa um importador; a aba ativa controla o grid abaixo. -->
-    <nav class="nav nav-tabs px-4 pt-3" aria-label="Clientes importadores">
+    <nav class="nav nav-tabs px-4 pt-3 flex-shrink-0" aria-label="Clientes importadores">
       @for (cliente of clientesImportadores; track cliente) {
       <button type="button" class="nav-link" [class.active]="cliente === clienteAtivo"
+        [title]="cliente"
         [attr.aria-selected]="cliente === clienteAtivo" (click)="selecionarCliente(cliente)">
-        {{ cliente }}
+        {{ primeiroNomeImportador(cliente) }}
       </button>
       }
     </nav>
 
     <!-- Busca e título secundário do conteúdo da aba selecionada. -->
-    <div class="painel-cabecalho">
+    <div class="painel-cabecalho d-flex flex-wrap flex-shrink-0">
       <div>
         <h2>Processos</h2>
       </div>
@@ -175,7 +184,7 @@
     </div>
 
     <!-- Tabela responsiva: em telas estreitas, permite rolagem horizontal. -->
-    <div class="tabela-responsiva table-responsive">
+    <div class="tabela-responsiva table-responsive flex-grow-1">
       <table class="table table-hover table-sm align-middle mb-0">
         <thead class="table-light">
           <tr>
@@ -226,7 +235,7 @@
                 (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.previsaoChegada"
+              <input type="date" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.previsaoChegada"
                 placeholder="Pendente" aria-label="Previsão de chegada" (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
@@ -287,7 +296,7 @@
               </span>
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.dataDesembaraco"
+              <input type="date" class="form-control form-control-sm campo-grade" [(ngModel)]="processo.dataDesembaraco"
                 placeholder="Pendente" aria-label="Desembaraço" (ngModelChange)="registrarAlteracao(processo)" />
             </td>
             <td>
@@ -308,4 +317,8 @@
       </table>
     </div>
   </section>
+
+  <footer class="rodape flex-shrink-0 text-center small text-secondary">
+    © {{ anoAtual }} Atlas Comex. Todos os direitos reservados.
+  </footer>
 </main>

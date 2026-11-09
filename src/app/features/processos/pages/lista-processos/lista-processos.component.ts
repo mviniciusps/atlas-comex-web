@@ -17,6 +17,8 @@ import { catchError, forkJoin, map, of } from 'rxjs';
   styleUrl: './lista-processos.component.scss',
 })
 export class ListaProcessosComponent implements OnInit {
+  readonly anoAtual = new Date().getFullYear();
+
   mensagemErro = '';
   mensagemErroProcessos = '';
   mensagemErroImportadores = '';
@@ -356,6 +358,10 @@ export class ListaProcessosComponent implements OnInit {
 
   get clienteAtivo(): string {
     return this.clienteSelecionado ?? this.clientesImportadores[0] ?? 'Clientes';
+  }
+
+  primeiroNomeImportador(nomeImportador: string): string {
+    return nomeImportador.trim().split(/\s+/)[0] ?? nomeImportador;
   }
 
   get processosDoCliente(): Processo[] {

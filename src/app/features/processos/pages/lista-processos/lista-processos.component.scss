@@ -1,16 +1,23 @@
 // Base visual do componente: fundo e cor padrão do texto.
 :host {
     display: block;
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     background: #f4f7f8;
     color: #172321;
 }
 
 // Limita e centraliza o conteúdo da página.
 .pagina {
+    box-sizing: border-box;
+    width: 100%;
     max-width: 1440px;
+    height: 100%;
+    min-height: 0;
     margin: 0 auto;
-    padding: 40px;
+    padding-bottom: 40px;
+    overflow: hidden;
 }
 
 // Alinha o título principal e os controles de ação.
@@ -20,6 +27,26 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+}
+
+.marca-cliente {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-width: 0;
+}
+
+.logo-atlas {
+    display: block;
+    width: 140px;
+    max-height: 48px;
+    margin-left: -16px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.marca-cliente h1 {
+    margin-bottom: 0;
 }
 
 .sobretitulo {
@@ -88,6 +115,27 @@ h1 {
     box-shadow: 0 3px 12px rgb(23 35 33 / 4%);
 }
 
+.painel-processos .nav-tabs .nav-link {
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px 8px 0 0;
+    color: #687572;
+    font-weight: 600;
+}
+
+// Realce ao passar o mouse por uma aba não selecionada.
+.painel-processos .nav-tabs .nav-link:hover:not(.active) {
+    background-color: #f1f3f5;
+    color: #34413e;
+}
+
+// Aba do cliente selecionado.
+.painel-processos .nav-tabs .nav-link.active {
+    border-color: #008577;
+    background-color: #008577;
+    color: #fff;
+}
+
 .cartao-indicador {
     display: flex;
     flex-direction: column;
@@ -106,7 +154,25 @@ h1 {
 }
 
 .painel-processos {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 24px;
     overflow: hidden;
+}
+
+.rodape {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 6px 12px 4px;
+    border-top: 1px solid #e3eae8;
+    background: #f4f7f8;
 }
 
 // Cabeçalho interno do grid: título e campo de busca.
@@ -129,7 +195,15 @@ h1 {
 
 // A tabela mantém todas as colunas e permite rolagem horizontal.
 .tabela-responsiva {
-    overflow-x: auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+.tabela-responsiva thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 table {
@@ -323,8 +397,11 @@ td {
     gap: 10px;
 }
 
-.acoes-cabecalho button :disabled {
-    opacity: 0.45;
+.acoes-cabecalho button:disabled {
+    background-color: #e2e6ea;
+    border-color: #cbd3da;
+    color: #6c757d;
+    opacity: 1;
     cursor: not-allowed;
 }
 
