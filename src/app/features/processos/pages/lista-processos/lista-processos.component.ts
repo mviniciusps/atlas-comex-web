@@ -1,7 +1,11 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import type { ImportadorApiDto } from '../../models/importador-api.model';
+import type {
+  ImportadorApiDto,
+  ImportadorCadastroDto,
+} from '../../models/importador-api.model';
 import type { ProcessoAtualizacaoDadosDto } from '../../models/processo-api.model';
 import type { Processo } from '../../models/processo.model';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
@@ -30,6 +34,10 @@ export class ListaProcessosComponent implements OnInit {
   carregandoProcessos = false;
   carregandoImportadores = false;
   salvandoProcesso = false;
+  cadastroImportadorAberto = false;
+  salvandoImportador = false;
+  mensagemErroCadastroImportador = '';
+  mensagemSucessoImportador = '';
 
   importadores: ImportadorApiDto[] = [];
 
@@ -52,6 +60,13 @@ export class ListaProcessosComponent implements OnInit {
     idEstabelecimento: null as number | null,
     referenciaCliente: '',
     previsaoChegada: '',
+  };
+
+  novoImportador = {
+    razaoSocial: '',
+    nomeFantasia: '',
+    cnpj: '',
+    nomeEstabelecimento: '',
   };
 
   constructor(
@@ -95,7 +110,126 @@ export class ListaProcessosComponent implements OnInit {
 
   abrirFormulario(): void {
     this.mensagemErro = '';
+    this.mensagemSucessoImportador = '';
     this.formularioAberto = true;
+  }
+
+  abrirCadastroImportador(): void {
+    this.mensagemErroCadastroImportador = '';
+    this.mensagemSucessoImportador = '';
+    this.cadastroImportadorAberto = true;
+  }
+
+  cancelarCadastroImportador(): void {
+    if (this.salvandoImportador) {
+      return;
+    }
+
+    this.cadastroImportadorAberto = false;
+    this.mensagemErroCadastroImportador = '';
+    this.limparNovoImportador();
+  }
+
+  salvarImportador(): void {
+    if (this.salvandoImportador) {
+      return;
+    }
+
+    const razaoSocial = this.novoImportador.razaoSocial.trim();
+    const cnpj = this.novoImportador.cnpj.replace(/\D/g, '');
+
+    if (!razaoSocial) {
+      this.mensagemErroCadastroImportador = 'Informe a razão social.';
+      return;
+    }
+
+    if (cnpj.length !== 14) {
+      this.mensagemErroCadastroImportador =
+        'Informe um CNPJ válido com 14 números.';
+      return;
+    }
+
+    const cnpjJaCadastrado = this.importadores.some((importador) =>
+      importador.estabelecimentos.some(
+        (estabelecimento) => estabelecimento.cnpj.replace(/\D/g, '') === cnpj,
+      ),
+    );
+
+    if (cnpjJaCadastrado) {
+      this.mensagemErroCadastroImportador =
+        'Já existe um estabelecimento cadastrado com este CNPJ.';
+      return;
+    }
+
+    const dados: ImportadorCadastroDto = {
+      razaoSocial,
+      nomeFantasia: this.novoImportador.nomeFantasia.trim() || null,
+      estabelecimentos: [
+        {
+          cnpj,
+          nomeEstabelecimento:
+            this.novoImportador.nomeEstabelecimento.trim() || null,
+        },
+      ],
+    };
+
+    this.salvandoImportador = true;
+    this.mensagemErroCadastroImportador = '';
+    this.mensagemSucessoImportador = '';
+
+    this.importadoresService.criar(dados).subscribe({
+      next: (resultado) => {
+        // Recarrega para receber os IDs de importador e estabelecimento gerados no banco.
+        this.importadoresService.listar().subscribe({
+          next: (importadores) => {
+            this.importadores = importadores;
+            const importadorCriado = importadores.find(
+              (importador) => importador.idImportador === resultado.idImportador,
+            );
+            const estabelecimentoCriado =
+              importadorCriado?.estabelecimentos[0];
+
+            if (!estabelecimentoCriado) {
+              this.mensagemErroCadastroImportador =
+                'O importador foi criado, mas não foi possível localizar o estabelecimento retornado pela API.';
+              this.salvandoImportador = false;
+              return;
+            }
+
+            this.novoProcesso.idEstabelecimento =
+              estabelecimentoCriado.idEstabelecimento;
+            this.cadastroImportadorAberto = false;
+            this.limparNovoImportador();
+            this.mensagemSucessoImportador =
+              'Importador cadastrado e estabelecimento selecionado.';
+            this.salvandoImportador = false;
+          },
+          error: (erro: unknown) => {
+            console.error('Importador criado, mas não foi possível atualizar a lista:', erro);
+            this.mensagemErroCadastroImportador =
+              'O importador foi criado, mas não foi possível atualizar a lista. Recarregue os importadores antes de continuar.';
+            this.salvandoImportador = false;
+          },
+        });
+      },
+      error: (erro: unknown) => {
+        console.error('Erro ao cadastrar importador:', erro);
+        this.mensagemErroCadastroImportador =
+          erro instanceof HttpErrorResponse && erro.status === 409
+            ? 'Já existe um estabelecimento cadastrado com este CNPJ.'
+            : 'Não foi possível cadastrar o importador. Confira os dados e tente novamente.';
+        this.salvandoImportador = false;
+      },
+    });
+  }
+
+  private limparNovoImportador(): void {
+    this.novoImportador = {
+      razaoSocial: '',
+      nomeFantasia: '',
+      cnpj: '',
+      nomeEstabelecimento: '',
+    };
   }
 
   selecionarProcesso(numero: string): void {

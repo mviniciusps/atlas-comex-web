@@ -100,10 +100,24 @@
         <input type="text" [(ngModel)]="novoProcesso.numero" placeholder="Ex.: IMP-2026-004" />
       </label>
 
-      <label>
-        Estabelecimento importador *
-        <select class="form-select" [(ngModel)]="novoProcesso.idEstabelecimento"
-          [disabled]="carregandoImportadores || importadores.length === 0">
+      <div class="campo-estabelecimento">
+        <div class="rotulo-estabelecimento">
+          <label for="estabelecimento-importador">Estabelecimento importador *</label>
+          <button
+            class="botao-adicionar-importador"
+            type="button"
+            (click)="abrirCadastroImportador()"
+          >
+            + Novo importador
+          </button>
+        </div>
+
+        <select
+          id="estabelecimento-importador"
+          class="form-select"
+          [(ngModel)]="novoProcesso.idEstabelecimento"
+          [disabled]="carregandoImportadores || importadores.length === 0"
+        >
           <option [ngValue]="null">Selecione um estabelecimento</option>
 
           @for (importador of importadores; track importador.idImportador) {
@@ -126,7 +140,7 @@
         } @else if (importadores.length === 0) {
         <small class="text-secondary">Nenhum importador cadastrado.</small>
         }
-      </label>
+      </div>
 
       <label>
         Referência do cliente
@@ -138,6 +152,90 @@
         <input type="date" [(ngModel)]="novoProcesso.previsaoChegada" />
       </label>
     </div>
+
+    @if (mensagemSucessoImportador) {
+    <div class="alert alert-success mt-3 mb-0" role="status">
+      {{ mensagemSucessoImportador }}
+    </div>
+    }
+
+    @if (cadastroImportadorAberto) {
+    <section class="cadastro-importador" aria-labelledby="titulo-cadastro-importador">
+      <h3 id="titulo-cadastro-importador">Novo importador</h3>
+      <div class="row g-3">
+        <label class="col-12 col-lg-6 campo-cadastro-importador">
+          Razão social *
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="novoImportador.razaoSocial"
+            maxlength="200"
+            autocomplete="organization"
+            placeholder="Razão social do importador"
+          />
+        </label>
+
+        <label class="col-12 col-lg-6 campo-cadastro-importador">
+          Nome fantasia
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="novoImportador.nomeFantasia"
+            maxlength="200"
+            placeholder="Nome fantasia, se houver"
+          />
+        </label>
+
+        <label class="col-12 col-lg-6 campo-cadastro-importador">
+          CNPJ do estabelecimento *
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="novoImportador.cnpj"
+            inputmode="numeric"
+            maxlength="18"
+            placeholder="00.000.000/0000-00"
+          />
+        </label>
+
+        <label class="col-12 col-lg-6 campo-cadastro-importador">
+          Nome do estabelecimento
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="novoImportador.nomeEstabelecimento"
+            maxlength="200"
+            placeholder="Ex.: Matriz"
+          />
+        </label>
+      </div>
+
+      @if (mensagemErroCadastroImportador) {
+      <div class="alert alert-danger mt-3 mb-0" role="alert">
+        {{ mensagemErroCadastroImportador }}
+      </div>
+      }
+
+      <div class="acoes-formulario">
+        <button
+          class="botao-secundario"
+          type="button"
+          (click)="cancelarCadastroImportador()"
+          [disabled]="salvandoImportador"
+        >
+          Cancelar
+        </button>
+        <button
+          class="botao-principal"
+          type="button"
+          (click)="salvarImportador()"
+          [disabled]="salvandoImportador"
+        >
+          {{ salvandoImportador ? 'Salvando...' : 'Salvar importador' }}
+        </button>
+      </div>
+    </section>
+    }
 
     <p class="nota-formulario">Os campos com * são obrigatórios.</p>
 

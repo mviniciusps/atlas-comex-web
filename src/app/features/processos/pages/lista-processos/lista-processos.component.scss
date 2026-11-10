@@ -300,6 +300,65 @@ td {
     font-weight: 600;
 }
 
+.campo-estabelecimento {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.rotulo-estabelecimento {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #46524f;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.rotulo-estabelecimento label {
+    margin: 0;
+}
+
+.botao-adicionar-importador {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #00796d;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.botao-adicionar-importador:hover {
+    color: #005f55;
+    text-decoration: underline;
+}
+
+.cadastro-importador {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #dce8e4;
+    border-radius: 10px;
+    background: #f8fbfa;
+}
+
+.cadastro-importador h3 {
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.campo-cadastro-importador {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #46524f;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .campos-formulario input,
 .campos-formulario select {
     box-sizing: border-box;
