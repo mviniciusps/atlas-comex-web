@@ -40,7 +40,7 @@
     display: block;
     width: 140px;
     max-height: 48px;
-    margin-left: -16px;
+    margin-left: 0;
     object-fit: contain;
     flex: 0 0 auto;
 }
@@ -206,6 +206,34 @@ h1 {
     z-index: 2;
 }
 
+.botao-ordenacao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.botao-ordenacao:hover {
+    color: #00796d;
+}
+
+.botao-ordenacao:focus-visible {
+    outline: 2px solid #008577;
+    outline-offset: 2px;
+}
+
+.botao-ordenacao span {
+    color: #00796d;
+    font-size: 12px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -272,12 +300,16 @@ td {
 
 // Aparência do painel de criação e organização dos campos do formulário.
 .formulario-processo {
+    box-sizing: border-box;
+    max-height: min(65dvh, calc(100dvh - 180px));
     margin: 28px 0;
     padding: 24px;
     border: 1px solid #e3eae8;
     border-radius: 12px;
     background: #fff;
     box-shadow: 0 3px 12px rgb(23 35 33 / 4%);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .formulario-processo h2 {
@@ -383,6 +415,19 @@ td {
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
+}
+
+.formulario-processo > .acoes-formulario,
+.cadastro-importador .acoes-formulario {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding-top: 12px;
+    background: #fff;
+}
+
+.cadastro-importador .acoes-formulario {
+    background: #f8fbfa;
 }
 
 .botao-secundario {

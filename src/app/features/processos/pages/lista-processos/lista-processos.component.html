@@ -276,7 +276,7 @@
 
       <label class="campo-busca">
         <span class="texto-acessivel">Buscar nos processos deste cliente</span>
-        <input type="search" class="form-control" placeholder="Buscar por processo, carga ou DUIMP"
+        <input type="search" class="form-control" placeholder="Buscar"
           [(ngModel)]="termoBusca" />
       </label>
     </div>
@@ -289,21 +289,97 @@
             <th class="coluna-selecao">
               <span class="texto-acessivel">Selecionar processo</span>
             </th>
-            <th>Número do processo</th>
-            <th>Ref. Cliente</th>
-            <th>Previsão de chegada</th>
-            <th>Chegada</th>
-            <th>Exportador</th>
-            <th class="coluna-observacoes">Observações</th>
-            <th>CNPJ</th>
-            <th>Conhecimento Master</th>
-            <th>Conhecimento House</th>
-            <th>Modal</th>
-            <th>CE Mercante / RUC</th>
-            <th>DUIMP</th>
-            <th>Data registro</th>
-            <th>Desembaraço</th>
-            <th>Recinto alfandegado</th>
+
+            <th [attr.aria-sort]="ariaOrdenacao('numero')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('numero')">
+                Número do processo
+                <span aria-hidden="true">{{ indicadorOrdenacao('numero') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('referenciaCliente')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('referenciaCliente')">
+                Ref. Cliente
+                <span aria-hidden="true">{{ indicadorOrdenacao('referenciaCliente') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('previsaoChegada')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('previsaoChegada')">
+                Previsão de chegada
+                <span aria-hidden="true">{{ indicadorOrdenacao('previsaoChegada') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('chegada')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('chegada')">
+                Chegada
+                <span aria-hidden="true">{{ indicadorOrdenacao('chegada') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('exportador')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('exportador')">
+                Exportador
+                <span aria-hidden="true">{{ indicadorOrdenacao('exportador') }}</span>
+              </button>
+            </th>
+            <th class="coluna-observacoes" [attr.aria-sort]="ariaOrdenacao('observacoes')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('observacoes')">
+                Observações
+                <span aria-hidden="true">{{ indicadorOrdenacao('observacoes') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('cnpjImportador')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('cnpjImportador')">
+                CNPJ
+                <span aria-hidden="true">{{ indicadorOrdenacao('cnpjImportador') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('conhecimentoMaster')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('conhecimentoMaster')">
+                Conhecimento Master
+                <span aria-hidden="true">{{ indicadorOrdenacao('conhecimentoMaster') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('conhecimentoHouse')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('conhecimentoHouse')">
+                Conhecimento House
+                <span aria-hidden="true">{{ indicadorOrdenacao('conhecimentoHouse') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('modalidade')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('modalidade')">
+                Modal
+                <span aria-hidden="true">{{ indicadorOrdenacao('modalidade') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('ceMercanteRuc')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('ceMercanteRuc')">
+                CE Mercante / RUC
+                <span aria-hidden="true">{{ indicadorOrdenacao('ceMercanteRuc') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('numeroDuimp')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('numeroDuimp')">
+                DUIMP
+                <span aria-hidden="true">{{ indicadorOrdenacao('numeroDuimp') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('dataRegistroDuimp')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('dataRegistroDuimp')">
+                Data registro
+                <span aria-hidden="true">{{ indicadorOrdenacao('dataRegistroDuimp') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('dataDesembaraco')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('dataDesembaraco')">
+                Desembaraço
+                <span aria-hidden="true">{{ indicadorOrdenacao('dataDesembaraco') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('recintoAlfandegado')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('recintoAlfandegado')">
+                Recinto alfandegado
+                <span aria-hidden="true">{{ indicadorOrdenacao('recintoAlfandegado') }}</span>
+              </button>
+            </th>
           </tr>
         </thead>
 

@@ -13,6 +13,24 @@ import { ImportadoresService } from '../../services/importadores.service';
 import { ProcessosService } from '../../services/processos.service';
 import { catchError, forkJoin, map, of } from 'rxjs';
 
+// Campos que podem ser ordenados no grid principal.
+type CampoOrdenacaoProcesso =
+  | 'numero'
+  | 'referenciaCliente'
+  | 'previsaoChegada'
+  | 'chegada'
+  | 'exportador'
+  | 'observacoes'
+  | 'cnpjImportador'
+  | 'conhecimentoMaster'
+  | 'conhecimentoHouse'
+  | 'modalidade'
+  | 'ceMercanteRuc'
+  | 'numeroDuimp'
+  | 'dataRegistroDuimp'
+  | 'dataDesembaraco'
+  | 'recintoAlfandegado';
+
 @Component({
   selector: 'app-lista-processos',
   standalone: true,
@@ -20,6 +38,7 @@ import { catchError, forkJoin, map, of } from 'rxjs';
   templateUrl: './lista-processos.component.html',
   styleUrl: './lista-processos.component.scss',
 })
+
 export class ListaProcessosComponent implements OnInit {
   readonly anoAtual = new Date().getFullYear();
 
@@ -28,6 +47,8 @@ export class ListaProcessosComponent implements OnInit {
   mensagemErroImportadores = '';
   mensagemErroAtualizacao = '';
   termoBusca = '';
+  campoOrdenacao: CampoOrdenacaoProcesso | null = null;
+  direcaoOrdenacao: 'asc' | 'desc' = 'asc';
   processoSelecionado: string | null = null;
   clienteSelecionado: string | null = null;
   formularioAberto = false;
@@ -498,11 +519,68 @@ export class ListaProcessosComponent implements OnInit {
     return nomeImportador.trim().split(/\s+/)[0] ?? nomeImportador;
   }
 
+  ordenarPor(campo: CampoOrdenacaoProcesso): void {
+    if (this.campoOrdenacao === campo) {
+      this.direcaoOrdenacao =
+        this.direcaoOrdenacao === 'asc' ? 'desc' : 'asc';
+      return;
+    }
+
+    this.campoOrdenacao = campo;
+    this.direcaoOrdenacao = 'asc';
+  }
+
+  indicadorOrdenacao(campo: CampoOrdenacaoProcesso): string {
+    if (this.campoOrdenacao !== campo) {
+      return '↕';
+    }
+
+    return this.direcaoOrdenacao === 'asc' ? '↑' : '↓';
+  }
+
+  ariaOrdenacao(
+    campo: CampoOrdenacaoProcesso,
+  ): 'ascending' | 'descending' | null {
+    if (this.campoOrdenacao !== campo) {
+      return null;
+    }
+
+    return this.direcaoOrdenacao === 'asc' ? 'ascending' : 'descending';
+  }
+
+  private compararValores(valorA?: string, valorB?: string): number {
+    const textoA = valorA?.trim() ?? '';
+    const textoB = valorB?.trim() ?? '';
+
+    // Mantém os campos vazios no final nas duas direções.
+    if (!textoA && !textoB) return 0;
+    if (!textoA) return 1;
+    if (!textoB) return -1;
+
+    const resultado = textoA.localeCompare(textoB, 'pt-BR', {
+      numeric: true,
+      sensitivity: 'base',
+    });
+
+    return this.direcaoOrdenacao === 'asc' ? resultado : -resultado;
+  }
+
   get processosDoCliente(): Processo[] {
-    return this.processosFiltrados.filter(
+    const processos = this.processosFiltrados.filter(
       (processo) =>
         (processo.importador?.trim() || 'Importador não identificado') ===
         this.clienteAtivo,
+    );
+
+    const campo = this.campoOrdenacao;
+
+    if (!campo) {
+      return processos;
+    }
+
+    // Ordena uma cópia para não alterar a lista original do service.
+    return [...processos].sort((processoA, processoB) =>
+      this.compararValores(processoA[campo], processoB[campo]),
     );
   }
 
