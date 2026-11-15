@@ -8,7 +8,7 @@ export interface ImportadorApiDto {
 export interface EstabelecimentoImportadorApiDto {
   idEstabelecimento: number;
   cnpj: string;
-  nomeEstabelecimento: string;
+  nomeEstabelecimento?: string | null;
 }
 
 export interface ImportadorCadastroDto {
@@ -17,11 +17,30 @@ export interface ImportadorCadastroDto {
   estabelecimentos: EstabelecimentoImportadorCadastroDto[];
 }
 
+
 export interface EstabelecimentoImportadorCadastroDto {
   cnpj: string;
-  nomeEstabelecimento: string | null;
+  logradouro: string | null;
+  numeroEndereco: string | null;
+  complementoEndereco: string | null;
+  bairro: string | null;
+  municipio: string | null;
+  uf: string | null;
+  cep: string | null;
 }
 
 export interface ImportadorCriadoApiDto {
   idImportador: number;
+}
+
+export interface ImportadorCnpjConsultaApiDto {
+  cnpj: string;
+  razaoSocial: string;
+  logradouro: string | null;
+  numeroEndereco: string | null;
+  complementoEndereco: string | null;
+  bairro: string | null;
+  municipio: string | null;
+  uf: string | null;
+  cep: string | null;
 }

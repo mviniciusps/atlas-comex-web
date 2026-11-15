@@ -8,6 +8,7 @@ import type {
 } from '../../models/importador-api.model';
 import type { ProcessoAtualizacaoDadosDto } from '../../models/processo-api.model';
 import type { Processo } from '../../models/processo.model';
+import type { ImportadorCnpjConsultaApiDto } from '../../models/importador-api.model';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
 import { ImportadoresService } from '../../services/importadores.service';
 import { ProcessosService } from '../../services/processos.service';
@@ -59,6 +60,10 @@ export class ListaProcessosComponent implements OnInit {
   salvandoImportador = false;
   mensagemErroCadastroImportador = '';
   mensagemSucessoImportador = '';
+  consultandoCnpj = false;
+  dadosCnpjConsultados = false;
+  editandoDadosImportador = false;
+  private ultimoCnpjConsultado = '';
 
   importadores: ImportadorApiDto[] = [];
 
@@ -84,11 +89,16 @@ export class ListaProcessosComponent implements OnInit {
   };
 
   novoImportador = {
-    razaoSocial: '',
-    nomeFantasia: '',
-    cnpj: '',
-    nomeEstabelecimento: '',
-  };
+  razaoSocial: '',
+  cnpj: '',
+  logradouro: '',
+  numeroEndereco: '',
+  complementoEndereco: '',
+  bairro: '',
+  municipio: '',
+  uf: '',
+  cep: ''
+};
 
   constructor(
     private readonly processosService: ProcessosService,
@@ -259,6 +269,7 @@ export class ListaProcessosComponent implements OnInit {
   }
 
   cancelarFormulario(): void {
+    this.cadastroImportadorAberto = false;
     this.formularioAberto = false;
     this.mensagemErro = '';
     this.novoProcesso = {
@@ -516,7 +527,9 @@ export class ListaProcessosComponent implements OnInit {
   }
 
   primeiroNomeImportador(nomeImportador: string): string {
-    return nomeImportador.trim().split(/\s+/)[0] ?? nomeImportador;
+    const primeiroNome = nomeImportador.trim().split(/\s+/)[0];
+
+    return primeiroNome?.toLocaleUpperCase('pt-BR') ?? '';
   }
 
   ordenarPor(campo: CampoOrdenacaoProcesso): void {

@@ -6,13 +6,15 @@ import type {
   ImportadorApiDto,
   ImportadorCadastroDto,
   ImportadorCriadoApiDto,
+  ImportadorCnpjConsultaApiDto
 } from '../models/importador-api.model';
 
 @Injectable({
   providedIn: 'root',
 })
+
 export class ImportadoresService {
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
   listar(): Observable<ImportadorApiDto[]> {
     return this.http.get<ImportadorApiDto[]>(
@@ -25,5 +27,14 @@ export class ImportadoresService {
       `${environment.apiBaseUrl}/importadores`,
       dados,
     );
+  }
+
+  consultarCnpj(
+    cnpj: string
+  ): Observable<ImportadorCnpjConsultaApiDto> {
+    return this.http.get<ImportadorCnpjConsultaApiDto>(
+      `${environment.apiBaseUrl}/importadores/consultar-cnpj`,
+      { params: { cnpj } }
+    )
   }
 }

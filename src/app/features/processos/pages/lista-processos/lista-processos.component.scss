@@ -417,7 +417,7 @@ td {
     margin-top: 20px;
 }
 
-.formulario-processo > .acoes-formulario,
+.formulario-processo>.acoes-formulario,
 .cadastro-importador .acoes-formulario {
     position: sticky;
     bottom: 0;
@@ -594,4 +594,46 @@ td.coluna-observacoes {
     // Destaca valores ainda não recebidos pela integração.
     color: #dc3545;
     opacity: 1;
+}
+
+.campo-grade.valor-pendente,
+.campo-automatico.valor-pendente {
+    border-color: #f2dada;
+    border-radius: 4px;
+    background-color: #fff3f3;
+}
+
+.camada-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgb(13 25 35 / 55%);
+    backdrop-filter: blur(5px);
+}
+
+.camada-processo {
+    z-index: 1000;
+}
+
+.camada-importador {
+    z-index: 1010;
+    background: rgb(13 25 35 / 32%);
+    backdrop-filter: blur(3px);
+}
+
+.janela-modal {
+    box-sizing: border-box;
+    width: min(760px, 100%);
+    max-height: calc(100dvh - 32px);
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.janela-modal.janela-importador {
+    width: min(640px, 100%);
+    background: #fff;
 }
