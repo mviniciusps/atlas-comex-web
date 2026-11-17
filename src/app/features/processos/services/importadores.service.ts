@@ -6,7 +6,7 @@ import type {
   ImportadorApiDto,
   ImportadorCadastroDto,
   ImportadorCriadoApiDto,
-  ImportadorCnpjConsultaApiDto
+  ImportadorCnpjConsultaApiDto,
 } from '../models/importador-api.model';
 
 @Injectable({
@@ -34,7 +34,7 @@ export class ImportadoresService {
   ): Observable<ImportadorCnpjConsultaApiDto> {
     return this.http.get<ImportadorCnpjConsultaApiDto>(
       `${environment.apiBaseUrl}/importadores/consultar-cnpj`,
-      { params: { cnpj } }
-    )
+      { params: { cnpj } },
+    );
   }
 }

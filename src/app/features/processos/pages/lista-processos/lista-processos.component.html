@@ -111,9 +111,7 @@
             track estabelecimento.idEstabelecimento
             ) {
             <option [ngValue]="estabelecimento.idEstabelecimento">
-              {{ importador.razaoSocial }} —
-              {{ estabelecimento.nomeEstabelecimento }}
-              ({{ estabelecimento.cnpj }})
+              {{ importador.razaoSocial }} ({{ estabelecimento.cnpj }})
             </option>
             }
             }
@@ -184,28 +182,91 @@
 
         <div class="modal-body">
           <div class="row g-3">
-            <label class="col-12 col-lg-6 campo-cadastro-importador">
-              Razão social *
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.razaoSocial" maxlength="200"
-                autocomplete="organization" placeholder="Razão social do importador" />
-            </label>
-
-            <label class="col-12 col-lg-6 campo-cadastro-importador">
-              Nome fantasia
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.nomeFantasia" maxlength="200"
-                placeholder="Nome fantasia, se houver" />
-            </label>
-
-            <label class="col-12 col-lg-6 campo-cadastro-importador">
+            <label class="col-12 campo-cadastro-importador">
               CNPJ do estabelecimento *
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.cnpj" inputmode="numeric" maxlength="18"
-                placeholder="00.000.000/0000-00" />
+              <input
+                type="text"
+                class="form-control"
+                [ngModel]="novoImportador.cnpj"
+                (ngModelChange)="atualizarCnpj($event)"
+                (blur)="consultarCnpj()"
+                [disabled]="consultandoCnpj || salvandoImportador"
+                inputmode="text"
+                maxlength="18"
+                autocomplete="off"
+                placeholder="00.000.000/0000-00"
+              />
+            </label>
+
+            <div class="col-12 d-flex justify-content-between align-items-center">
+              @if (consultandoCnpj) {
+                <small class="text-secondary">Consultando CNPJ...</small>
+              } @else if (dadosCnpjConsultados && !editandoDadosImportador) {
+                <small class="text-success">Dados consultados.</small>
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  type="button"
+                  (click)="liberarEdicaoDadosImportador()"
+                  aria-label="Editar dados do importador"
+                >
+                  ✎ Editar
+                </button>
+              }
+            </div>
+
+            <label class="col-12 campo-cadastro-importador">
+              Razão social *
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="novoImportador.razaoSocial"
+                maxlength="200"
+                autocomplete="organization"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador"
+              />
             </label>
 
             <label class="col-12 col-lg-6 campo-cadastro-importador">
-              Nome do estabelecimento
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.nomeEstabelecimento" maxlength="200"
-                placeholder="Ex.: Matriz" />
+              Logradouro
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.logradouro"
+                maxlength="200" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+            </label>
+
+            <label class="col-12 col-lg-6 campo-cadastro-importador">
+              Número
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.numeroEndereco"
+                maxlength="30" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+            </label>
+
+            <label class="col-12 campo-cadastro-importador">
+              Complemento
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.complementoEndereco"
+                maxlength="200" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+            </label>
+
+            <label class="col-12 col-lg-6 campo-cadastro-importador">
+              Bairro
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.bairro"
+                maxlength="100" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+            </label>
+
+            <label class="col-12 col-lg-6 campo-cadastro-importador">
+              Município
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.municipio"
+                maxlength="100" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+            </label>
+
+            <label class="col-12 col-lg-6 campo-cadastro-importador">
+              UF
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.uf"
+                maxlength="2" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+            </label>
+
+            <label class="col-12 col-lg-6 campo-cadastro-importador">
+              CEP
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.cep"
+                maxlength="8" inputmode="numeric"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
           </div>
 
@@ -221,7 +282,8 @@
             [disabled]="salvandoImportador">
             Cancelar
           </button>
-          <button class="botao-principal" type="button" (click)="salvarImportador()" [disabled]="salvandoImportador">
+          <button class="botao-principal" type="button" (click)="salvarImportador()"
+            [disabled]="salvandoImportador || consultandoCnpj">
             {{ salvandoImportador ? 'Salvando...' : 'Salvar importador' }}
           </button>
         </div>

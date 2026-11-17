@@ -5,10 +5,10 @@ import { Router, RouterLink } from '@angular/router';
 import type {
   ImportadorApiDto,
   ImportadorCadastroDto,
+  ImportadorCnpjConsultaApiDto,
 } from '../../models/importador-api.model';
 import type { ProcessoAtualizacaoDadosDto } from '../../models/processo-api.model';
 import type { Processo } from '../../models/processo.model';
-import type { ImportadorCnpjConsultaApiDto } from '../../models/importador-api.model';
 import { HistoricoProcessoService } from '../../services/historico-processo.service';
 import { ImportadoresService } from '../../services/importadores.service';
 import { ProcessosService } from '../../services/processos.service';
@@ -89,16 +89,16 @@ export class ListaProcessosComponent implements OnInit {
   };
 
   novoImportador = {
-  razaoSocial: '',
-  cnpj: '',
-  logradouro: '',
-  numeroEndereco: '',
-  complementoEndereco: '',
-  bairro: '',
-  municipio: '',
-  uf: '',
-  cep: ''
-};
+    razaoSocial: '',
+    cnpj: '',
+    logradouro: '',
+    numeroEndereco: '',
+    complementoEndereco: '',
+    bairro: '',
+    municipio: '',
+    uf: '',
+    cep: '',
+  };
 
   constructor(
     private readonly processosService: ProcessosService,
@@ -146,9 +146,88 @@ export class ListaProcessosComponent implements OnInit {
   }
 
   abrirCadastroImportador(): void {
+    this.limparNovoImportador();
     this.mensagemErroCadastroImportador = '';
     this.mensagemSucessoImportador = '';
     this.cadastroImportadorAberto = true;
+  }
+
+  atualizarCnpj(cnpjDigitado: string): void {
+    this.novoImportador = {
+      razaoSocial: '',
+      cnpj: cnpjDigitado.toUpperCase(),
+      logradouro: '',
+      numeroEndereco: '',
+      complementoEndereco: '',
+      bairro: '',
+      municipio: '',
+      uf: '',
+      cep: '',
+    };
+
+    this.ultimoCnpjConsultado = '';
+    this.dadosCnpjConsultados = false;
+    this.editandoDadosImportador = false;
+    this.mensagemErroCadastroImportador = '';
+  }
+
+  private normalizarCnpj(cnpj: string): string {
+    return cnpj.replace(/[^a-z0-9]/gi, '').toUpperCase();
+  }
+
+  consultarCnpj(): void {
+    const cnpj = this.normalizarCnpj(this.novoImportador.cnpj);
+
+    if (!cnpj) {
+      return;
+    }
+
+    if (!/^[A-Z0-9]{12}\d{2}$/.test(cnpj)) {
+      this.mensagemErroCadastroImportador =
+        'Informe 12 letras ou números seguidos de 2 dígitos no CNPJ.';
+      return;
+    }
+
+    if (this.consultandoCnpj || cnpj === this.ultimoCnpjConsultado) {
+      return;
+    }
+
+    this.consultandoCnpj = true;
+    this.mensagemErroCadastroImportador = '';
+
+    this.importadoresService.consultarCnpj(cnpj).subscribe({
+      next: (dados: ImportadorCnpjConsultaApiDto) => {
+        this.novoImportador = {
+          cnpj: dados.cnpj,
+          razaoSocial: dados.razaoSocial ?? '',
+          logradouro: dados.logradouro ?? '',
+          numeroEndereco: dados.numeroEndereco ?? '',
+          complementoEndereco: dados.complementoEndereco ?? '',
+          bairro: dados.bairro ?? '',
+          municipio: dados.municipio ?? '',
+          uf: dados.uf ?? '',
+          cep: dados.cep ?? '',
+        };
+
+        this.ultimoCnpjConsultado = cnpj;
+        this.dadosCnpjConsultados = true;
+        this.editandoDadosImportador = false;
+        this.consultandoCnpj = false;
+      },
+      error: (erro: unknown) => {
+        this.dadosCnpjConsultados = false;
+        this.editandoDadosImportador = true;
+        this.consultandoCnpj = false;
+        this.mensagemErroCadastroImportador =
+          erro instanceof HttpErrorResponse && erro.status === 404
+            ? 'CNPJ não encontrado. Você pode preencher os dados manualmente.'
+            : 'Não foi possível consultar o CNPJ. Você pode preencher os dados manualmente.';
+      },
+    });
+  }
+
+  liberarEdicaoDadosImportador(): void {
+    this.editandoDadosImportador = true;
   }
 
   cancelarCadastroImportador(): void {
@@ -167,22 +246,23 @@ export class ListaProcessosComponent implements OnInit {
     }
 
     const razaoSocial = this.novoImportador.razaoSocial.trim();
-    const cnpj = this.novoImportador.cnpj.replace(/\D/g, '');
+    const cnpj = this.normalizarCnpj(this.novoImportador.cnpj);
 
     if (!razaoSocial) {
       this.mensagemErroCadastroImportador = 'Informe a razão social.';
       return;
     }
 
-    if (cnpj.length !== 14) {
+    if (!/^[A-Z0-9]{12}\d{2}$/.test(cnpj)) {
       this.mensagemErroCadastroImportador =
-        'Informe um CNPJ válido com 14 números.';
+        'Informe 12 letras ou números seguidos de 2 dígitos no CNPJ.';
       return;
     }
 
     const cnpjJaCadastrado = this.importadores.some((importador) =>
       importador.estabelecimentos.some(
-        (estabelecimento) => estabelecimento.cnpj.replace(/\D/g, '') === cnpj,
+        (estabelecimento) =>
+          this.normalizarCnpj(estabelecimento.cnpj) === cnpj,
       ),
     );
 
@@ -194,12 +274,18 @@ export class ListaProcessosComponent implements OnInit {
 
     const dados: ImportadorCadastroDto = {
       razaoSocial,
-      nomeFantasia: this.novoImportador.nomeFantasia.trim() || null,
+      nomeFantasia: null,
       estabelecimentos: [
         {
           cnpj,
-          nomeEstabelecimento:
-            this.novoImportador.nomeEstabelecimento.trim() || null,
+          logradouro: this.novoImportador.logradouro.trim() || null,
+          numeroEndereco: this.novoImportador.numeroEndereco.trim() || null,
+          complementoEndereco:
+            this.novoImportador.complementoEndereco.trim() || null,
+          bairro: this.novoImportador.bairro.trim() || null,
+          municipio: this.novoImportador.municipio.trim() || null,
+          uf: this.novoImportador.uf.trim().toUpperCase() || null,
+          cep: this.novoImportador.cep.trim() || null,
         },
       ],
     };
@@ -257,10 +343,20 @@ export class ListaProcessosComponent implements OnInit {
   private limparNovoImportador(): void {
     this.novoImportador = {
       razaoSocial: '',
-      nomeFantasia: '',
       cnpj: '',
-      nomeEstabelecimento: '',
+      logradouro: '',
+      numeroEndereco: '',
+      complementoEndereco: '',
+      bairro: '',
+      municipio: '',
+      uf: '',
+      cep: '',
     };
+
+    this.consultandoCnpj = false;
+    this.dadosCnpjConsultados = false;
+    this.editandoDadosImportador = false;
+    this.ultimoCnpjConsultado = '';
   }
 
   selecionarProcesso(numero: string): void {
