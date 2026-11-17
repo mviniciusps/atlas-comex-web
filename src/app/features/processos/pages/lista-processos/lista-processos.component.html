@@ -12,7 +12,7 @@
     <!-- Botoes lado superior direito -->
     <div class="acoes-cabecalho d-flex flex-wrap">
       <button class="botao-secundario" type="button" [disabled]="!processoSelecionado" (click)="abrirUploadProcesso()">
-        Upload
+        Documentos
       </button>
 
       <button class="botao-secundario" type="button" [disabled]="!processoSelecionado" (click)="abrirDuimpProcesso()">
@@ -43,12 +43,6 @@
   </header>
 
 
-  @if (mensagemSucessoAtualizacao) {
-  <div class="alert alert-success mt-3 flex-shrink-0" role="status">
-    {{ mensagemSucessoAtualizacao }}
-  </div>
-  }
-
   @if (mensagemErroAtualizacao) {
   <div class="alert alert-danger mt-3 flex-shrink-0" role="alert">
     {{ mensagemErroAtualizacao }}
@@ -67,96 +61,84 @@
   </div>
   }
 
-  @if (mensagemErroAtualizacao) {
-  <div class="alert alert-danger mt-3 flex-shrink-0" role="alert">
-    {{ mensagemErroAtualizacao }}
-  </div>
-  }
-
   <!-- Formulário exibido somente quando o usuário escolhe criar um processo. -->
   @if (formularioAberto) {
   <div class="modal-backdrop fade show" style="backdrop-filter: blur(5px);"></div>
-  <div
-    class="modal d-block"
-    tabindex="-1"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="titulo-novo-processo"
-  >
+  <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-novo-processo">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
       <section class="modal-content formulario-processo m-0">
-      <h2 id="titulo-novo-processo">Novo processo</h2>
+        <h2 id="titulo-novo-processo">Novo processo</h2>
 
-      <div class="campos-formulario">
-        <label>
-          Número do processo *
-          <input type="text" [(ngModel)]="novoProcesso.numero" placeholder="Ex.: IMP-2026-004" />
-        </label>
+        <div class="campos-formulario">
+          <label>
+            Número do processo *
+            <input type="text" [(ngModel)]="novoProcesso.numero" placeholder="Ex.: IMP-2026-004" />
+          </label>
 
-        <div class="campo-estabelecimento">
-          <div class="rotulo-estabelecimento">
-            <label for="estabelecimento-importador">Estabelecimento importador *</label>
-            <button class="botao-adicionar-importador" type="button" (click)="abrirCadastroImportador()">
-              + Novo importador
-            </button>
+          <div class="campo-estabelecimento">
+            <div class="rotulo-estabelecimento">
+              <label for="estabelecimento-importador">Estabelecimento importador *</label>
+              <button class="botao-adicionar-importador" type="button" (click)="abrirCadastroImportador()">
+                + Novo importador
+              </button>
+            </div>
+
+            <select id="estabelecimento-importador" class="form-select" [(ngModel)]="novoProcesso.idEstabelecimento"
+              [disabled]="carregandoImportadores || importadores.length === 0">
+              <option [ngValue]="null">Selecione um estabelecimento</option>
+
+              @for (importador of importadores; track importador.idImportador) {
+              @for (
+              estabelecimento of importador.estabelecimentos;
+              track estabelecimento.idEstabelecimento
+              ) {
+              <option [ngValue]="estabelecimento.idEstabelecimento">
+                {{ importador.razaoSocial }} ({{ estabelecimento.cnpj }})
+              </option>
+              }
+              }
+            </select>
+            @if (carregandoImportadores) {
+            <small class="text-secondary">Carregando importadores...</small>
+            } @else if (mensagemErroImportadores) {
+            <small class="text-danger">{{ mensagemErroImportadores }}</small>
+            } @else if (importadores.length === 0) {
+            <small class="text-secondary">Nenhum importador cadastrado.</small>
+            }
           </div>
 
-          <select id="estabelecimento-importador" class="form-select" [(ngModel)]="novoProcesso.idEstabelecimento"
-            [disabled]="carregandoImportadores || importadores.length === 0">
-            <option [ngValue]="null">Selecione um estabelecimento</option>
+          <label>
+            Referência do cliente
+            <input type="text" [(ngModel)]="novoProcesso.referenciaCliente" placeholder="Referência do cliente" />
+          </label>
 
-            @for (importador of importadores; track importador.idImportador) {
-            @for (
-            estabelecimento of importador.estabelecimentos;
-            track estabelecimento.idEstabelecimento
-            ) {
-            <option [ngValue]="estabelecimento.idEstabelecimento">
-              {{ importador.razaoSocial }} ({{ estabelecimento.cnpj }})
-            </option>
-            }
-            }
-          </select>
-          @if (carregandoImportadores) {
-          <small class="text-secondary">Carregando importadores...</small>
-          } @else if (mensagemErroImportadores) {
-          <small class="text-danger">{{ mensagemErroImportadores }}</small>
-          } @else if (importadores.length === 0) {
-          <small class="text-secondary">Nenhum importador cadastrado.</small>
-          }
+          <label>
+            Chegada prevista
+            <input type="date" [(ngModel)]="novoProcesso.previsaoChegada" />
+          </label>
         </div>
 
-        <label>
-          Referência do cliente
-          <input type="text" [(ngModel)]="novoProcesso.referenciaCliente" placeholder="Referência do cliente" />
-        </label>
+        @if (mensagemSucessoImportador) {
+        <div class="alert alert-success mt-3 mb-0" role="status">
+          {{ mensagemSucessoImportador }}
+        </div>
+        }
 
-        <label>
-          Chegada prevista
-          <input type="date" [(ngModel)]="novoProcesso.previsaoChegada" />
-        </label>
-      </div>
+        <p class="nota-formulario">Os campos com * são obrigatórios.</p>
 
-      @if (mensagemSucessoImportador) {
-      <div class="alert alert-success mt-3 mb-0" role="status">
-        {{ mensagemSucessoImportador }}
-      </div>
-      }
+        @if (mensagemErro) {
+        <p class="erro-formulario" role="alert">{{ mensagemErro }}</p>
+        }
 
-      <p class="nota-formulario">Os campos com * são obrigatórios.</p>
+        <div class="acoes-formulario">
+          <button class="botao-secundario" type="button" (click)="cancelarFormulario()" [disabled]="salvandoProcesso">
+            Cancelar
+          </button>
 
-      @if (mensagemErro) {
-      <p class="erro-formulario" role="alert">{{ mensagemErro }}</p>
-      }
-
-      <div class="acoes-formulario">
-        <button class="botao-secundario" type="button" (click)="cancelarFormulario()" [disabled]="salvandoProcesso">
-          Cancelar
-        </button>
-
-        <button class="botao-principal" type="button" (click)="adicionarProcesso()" [disabled]="salvandoProcesso">
-          {{ salvandoProcesso ? 'Salvando...' : 'Salvar processo' }}
-        </button>
-      </div>
+          <button class="botao-principal" type="button" (click)="adicionarProcesso()" [disabled]="salvandoProcesso">
+            {{ salvandoProcesso ? 'Salvando...' : 'Salvar processo' }}
+          </button>
+        </div>
       </section>
     </div>
   </div>
@@ -164,14 +146,8 @@
 
   @if (cadastroImportadorAberto) {
   <div class="modal-backdrop fade show" style="z-index: 1060; backdrop-filter: blur(4px);"></div>
-  <div
-    class="modal d-block"
-    style="z-index: 1065;"
-    tabindex="-1"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="titulo-cadastro-importador"
-  >
+  <div class="modal d-block" style="z-index: 1065;" tabindex="-1" role="dialog" aria-modal="true"
+    aria-labelledby="titulo-cadastro-importador">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <section class="modal-content cadastro-importador m-0 p-0">
         <div class="modal-header">
@@ -184,88 +160,70 @@
           <div class="row g-3">
             <label class="col-12 campo-cadastro-importador">
               CNPJ do estabelecimento *
-              <input
-                type="text"
-                class="form-control"
-                [ngModel]="novoImportador.cnpj"
-                (ngModelChange)="atualizarCnpj($event)"
-                (blur)="consultarCnpj()"
-                [disabled]="consultandoCnpj || salvandoImportador"
-                inputmode="text"
-                maxlength="18"
-                autocomplete="off"
-                placeholder="00.000.000/0000-00"
-              />
+              <input type="text" class="form-control" [ngModel]="novoImportador.cnpj"
+                (ngModelChange)="atualizarCnpj($event)" (blur)="consultarCnpj()"
+                [disabled]="consultandoCnpj || salvandoImportador" inputmode="text" maxlength="18" autocomplete="off"
+                placeholder="00.000.000/0000-00" />
             </label>
 
             <div class="col-12 d-flex justify-content-between align-items-center">
               @if (consultandoCnpj) {
-                <small class="text-secondary">Consultando CNPJ...</small>
+              <small class="text-secondary">Consultando CNPJ...</small>
               } @else if (dadosCnpjConsultados && !editandoDadosImportador) {
-                <small class="text-success">Dados consultados.</small>
-                <button
-                  class="btn btn-outline-secondary btn-sm"
-                  type="button"
-                  (click)="liberarEdicaoDadosImportador()"
-                  aria-label="Editar dados do importador"
-                >
-                  ✎ Editar
-                </button>
+              <small class="text-success">Dados consultados.</small>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="liberarEdicaoDadosImportador()"
+                aria-label="Editar dados do importador">
+                ✎ Editar
+              </button>
               }
             </div>
 
             <label class="col-12 campo-cadastro-importador">
               Razão social *
-              <input
-                type="text"
-                class="form-control"
-                [(ngModel)]="novoImportador.razaoSocial"
-                maxlength="200"
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.razaoSocial" maxlength="200"
                 autocomplete="organization"
-                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador"
-              />
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
 
             <label class="col-12 col-lg-6 campo-cadastro-importador">
               Logradouro
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.logradouro"
-                maxlength="200" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.logradouro" maxlength="200"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
 
             <label class="col-12 col-lg-6 campo-cadastro-importador">
               Número
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.numeroEndereco"
-                maxlength="30" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.numeroEndereco" maxlength="30"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
 
             <label class="col-12 campo-cadastro-importador">
               Complemento
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.complementoEndereco"
-                maxlength="200" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.complementoEndereco" maxlength="200"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
 
             <label class="col-12 col-lg-6 campo-cadastro-importador">
               Bairro
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.bairro"
-                maxlength="100" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.bairro" maxlength="100"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
 
             <label class="col-12 col-lg-6 campo-cadastro-importador">
               Município
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.municipio"
-                maxlength="100" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.municipio" maxlength="100"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
 
             <label class="col-12 col-lg-6 campo-cadastro-importador">
               UF
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.uf"
-                maxlength="2" [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.uf" maxlength="2"
+                [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
 
             <label class="col-12 col-lg-6 campo-cadastro-importador">
               CEP
-              <input type="text" class="form-control" [(ngModel)]="novoImportador.cep"
-                maxlength="8" inputmode="numeric"
+              <input type="text" class="form-control" [(ngModel)]="novoImportador.cep" maxlength="8" inputmode="numeric"
                 [disabled]="!editandoDadosImportador || consultandoCnpj || salvandoImportador" />
             </label>
           </div>
@@ -290,254 +248,252 @@
       </section>
     </div>
   </div>
-    }
+  }
 
-    <!-- Painel principal com abas de importadores, busca e grade de embarques. -->
-    <section class="painel-processos d-flex flex-column flex-grow-1">
-      <!-- Cada botão representa um importador; a aba ativa controla o grid abaixo. -->
-      <nav class="nav nav-tabs px-4 pt-3 flex-shrink-0" aria-label="Clientes importadores">
-        @for (cliente of clientesImportadores; track cliente) {
-        <button type="button" class="nav-link" [class.active]="cliente === clienteAtivo" [title]="cliente"
-          [attr.aria-selected]="cliente === clienteAtivo" (click)="selecionarCliente(cliente)">
-          {{ primeiroNomeImportador(cliente) }}
-        </button>
-        }
-      </nav>
+  <!-- Painel principal com abas de importadores, busca e grade de embarques. -->
+  <section class="painel-processos d-flex flex-column flex-grow-1">
+    <!-- Cada botão representa um importador; a aba ativa controla o grid abaixo. -->
+    <nav class="nav nav-tabs px-4 pt-3 flex-shrink-0" aria-label="Clientes importadores">
+      @for (cliente of clientesImportadores; track cliente) {
+      <button type="button" class="nav-link" [class.active]="cliente === clienteAtivo" [title]="cliente"
+        [attr.aria-selected]="cliente === clienteAtivo" (click)="selecionarCliente(cliente)">
+        {{ primeiroNomeImportador(cliente) }}
+      </button>
+      }
+    </nav>
 
-      <!-- Busca e título secundário do conteúdo da aba selecionada. -->
-      <div class="painel-cabecalho d-flex flex-wrap flex-shrink-0">
-        <div>
-          <h2>Processos</h2>
-        </div>
-
-        <label class="campo-busca">
-          <span class="texto-acessivel">Buscar nos processos deste cliente</span>
-          <input type="search" class="form-control" placeholder="Buscar" [(ngModel)]="termoBusca" />
-        </label>
+    <!-- Busca e título secundário do conteúdo da aba selecionada. -->
+    <div class="painel-cabecalho d-flex flex-wrap flex-shrink-0">
+      <div>
+        <h2>Processos</h2>
       </div>
 
-      <!-- Tabela responsiva: em telas estreitas, permite rolagem horizontal. -->
-      <div class="tabela-responsiva table-responsive flex-grow-1">
-        <table class="table table-hover table-sm align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th class="coluna-selecao">
-                <span class="texto-acessivel">Selecionar processo</span>
-              </th>
+      <label class="campo-busca">
+        <span class="texto-acessivel">Buscar nos processos deste cliente</span>
+        <input type="search" class="form-control" placeholder="Buscar" [(ngModel)]="termoBusca" />
+      </label>
+    </div>
 
-              <th [attr.aria-sort]="ariaOrdenacao('numero')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('numero')">
-                  Número do processo
-                  <span aria-hidden="true">{{ indicadorOrdenacao('numero') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('referenciaCliente')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('referenciaCliente')">
-                  Ref. Cliente
-                  <span aria-hidden="true">{{ indicadorOrdenacao('referenciaCliente') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('previsaoChegada')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('previsaoChegada')">
-                  Previsão de chegada
-                  <span aria-hidden="true">{{ indicadorOrdenacao('previsaoChegada') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('chegada')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('chegada')">
-                  Chegada
-                  <span aria-hidden="true">{{ indicadorOrdenacao('chegada') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('exportador')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('exportador')">
-                  Exportador
-                  <span aria-hidden="true">{{ indicadorOrdenacao('exportador') }}</span>
-                </button>
-              </th>
-              <th class="coluna-observacoes" [attr.aria-sort]="ariaOrdenacao('observacoes')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('observacoes')">
-                  Observações
-                  <span aria-hidden="true">{{ indicadorOrdenacao('observacoes') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('cnpjImportador')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('cnpjImportador')">
-                  CNPJ
-                  <span aria-hidden="true">{{ indicadorOrdenacao('cnpjImportador') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('conhecimentoMaster')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('conhecimentoMaster')">
-                  Conhecimento Master
-                  <span aria-hidden="true">{{ indicadorOrdenacao('conhecimentoMaster') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('conhecimentoHouse')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('conhecimentoHouse')">
-                  Conhecimento House
-                  <span aria-hidden="true">{{ indicadorOrdenacao('conhecimentoHouse') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('modalidade')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('modalidade')">
-                  Modal
-                  <span aria-hidden="true">{{ indicadorOrdenacao('modalidade') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('ceMercanteRuc')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('ceMercanteRuc')">
-                  CE Mercante / RUC
-                  <span aria-hidden="true">{{ indicadorOrdenacao('ceMercanteRuc') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('numeroDuimp')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('numeroDuimp')">
-                  DUIMP
-                  <span aria-hidden="true">{{ indicadorOrdenacao('numeroDuimp') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('dataRegistroDuimp')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('dataRegistroDuimp')">
-                  Data registro
-                  <span aria-hidden="true">{{ indicadorOrdenacao('dataRegistroDuimp') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('dataDesembaraco')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('dataDesembaraco')">
-                  Desembaraço
-                  <span aria-hidden="true">{{ indicadorOrdenacao('dataDesembaraco') }}</span>
-                </button>
-              </th>
-              <th [attr.aria-sort]="ariaOrdenacao('recintoAlfandegado')">
-                <button class="botao-ordenacao" type="button" (click)="ordenarPor('recintoAlfandegado')">
-                  Recinto alfandegado
-                  <span aria-hidden="true">{{ indicadorOrdenacao('recintoAlfandegado') }}</span>
-                </button>
-              </th>
-            </tr>
-          </thead>
+    <!-- Tabela responsiva: em telas estreitas, permite rolagem horizontal. -->
+    <div class="tabela-responsiva table-responsive flex-grow-1">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="coluna-selecao">
+              <span class="texto-acessivel">Selecionar processo</span>
+            </th>
 
-          <tbody>
+            <th [attr.aria-sort]="ariaOrdenacao('numero')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('numero')">
+                Número do processo
+                <span aria-hidden="true">{{ indicadorOrdenacao('numero') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('referenciaCliente')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('referenciaCliente')">
+                Ref. Cliente
+                <span aria-hidden="true">{{ indicadorOrdenacao('referenciaCliente') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('previsaoChegada')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('previsaoChegada')">
+                Previsão de chegada
+                <span aria-hidden="true">{{ indicadorOrdenacao('previsaoChegada') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('chegada')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('chegada')">
+                Chegada
+                <span aria-hidden="true">{{ indicadorOrdenacao('chegada') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('exportador')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('exportador')">
+                Exportador
+                <span aria-hidden="true">{{ indicadorOrdenacao('exportador') }}</span>
+              </button>
+            </th>
+            <th class="coluna-observacoes" [attr.aria-sort]="ariaOrdenacao('observacoes')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('observacoes')">
+                Observações
+                <span aria-hidden="true">{{ indicadorOrdenacao('observacoes') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('cnpjImportador')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('cnpjImportador')">
+                CNPJ
+                <span aria-hidden="true">{{ indicadorOrdenacao('cnpjImportador') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('conhecimentoMaster')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('conhecimentoMaster')">
+                Conhecimento Master
+                <span aria-hidden="true">{{ indicadorOrdenacao('conhecimentoMaster') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('conhecimentoHouse')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('conhecimentoHouse')">
+                Conhecimento House
+                <span aria-hidden="true">{{ indicadorOrdenacao('conhecimentoHouse') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('modalidade')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('modalidade')">
+                Modal
+                <span aria-hidden="true">{{ indicadorOrdenacao('modalidade') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('ceMercanteRuc')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('ceMercanteRuc')">
+                CE Mercante / RUC
+                <span aria-hidden="true">{{ indicadorOrdenacao('ceMercanteRuc') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('numeroDuimp')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('numeroDuimp')">
+                DUIMP
+                <span aria-hidden="true">{{ indicadorOrdenacao('numeroDuimp') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('dataRegistroDuimp')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('dataRegistroDuimp')">
+                Data registro
+                <span aria-hidden="true">{{ indicadorOrdenacao('dataRegistroDuimp') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('dataDesembaraco')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('dataDesembaraco')">
+                Desembaraço
+                <span aria-hidden="true">{{ indicadorOrdenacao('dataDesembaraco') }}</span>
+              </button>
+            </th>
+            <th [attr.aria-sort]="ariaOrdenacao('recintoAlfandegado')">
+              <button class="botao-ordenacao" type="button" (click)="ordenarPor('recintoAlfandegado')">
+                Recinto alfandegado
+                <span aria-hidden="true">{{ indicadorOrdenacao('recintoAlfandegado') }}</span>
+              </button>
+            </th>
+          </tr>
+        </thead>
 
-            <!-- Uma linha para cada processo do importador ativo que corresponde à busca. -->
-            @for (processo of processosDoCliente; track processo.numero) {
-            <tr [class.linha-selecionada]="processoSelecionado === processo.numero">
-              <!-- Checkbox que seleciona o processo para as ações do cabeçalho. -->
-              <td class="coluna-selecao text-center align-middle">
-                <!-- O checkbox fica centralizado dentro da primeira coluna. -->
-                <input type="checkbox" [checked]="processoSelecionado === processo.numero"
-                  (change)="selecionarProcesso(processo.numero)"
-                  [attr.aria-label]="'Selecionar processo ' + processo.numero" />
-              </td>
+        <tbody>
 
-              <td>
-                <!-- O número abre a página de detalhes do processo. -->
-                <a class="link-processo" [routerLink]="['/processos', processo.numero]">
-                  {{ processo.numero }}
-                </a>
-              </td>
-              <!-- Campos editáveis: ngModel atualiza os dados em memória enquanto o app está aberto. -->
-              <td>
-                <input type="text" class="form-control form-control-sm campo-grade"
-                  [class.valor-pendente]="!processo.referenciaCliente"
-                  [(ngModel)]="processo.referenciaCliente" placeholder="Pendente" aria-label="Referência do cliente"
-                  (ngModelChange)="registrarAlteracao(processo)" />
-              </td>
-              <td>
-                <input type="date" class="form-control form-control-sm campo-grade"
-                  [class.valor-pendente]="!processo.previsaoChegada"
-                  [(ngModel)]="processo.previsaoChegada" placeholder="Pendente" aria-label="Previsão de chegada"
-                  (ngModelChange)="registrarAlteracao(processo)" />
-              </td>
-              <td>
-                <!-- Valor automático exibido como texto, sem campo para edição manual. -->
-                <span class="campo-automatico" [class.valor-pendente]="!processo.chegada">
-                  {{ processo.chegada || 'Pendente' }}
-                </span>
-              </td>
-              <td>
-                <input type="text" class="form-control form-control-sm campo-grade"
-                  [class.valor-pendente]="!processo.exportador" [(ngModel)]="processo.exportador"
-                  placeholder="Pendente" aria-label="Exportador" (ngModelChange)="registrarAlteracao(processo)" />
-              </td>
-              <!-- Observações ocupa uma coluna mais larga para facilitar leitura e edição. -->
-              <td class="coluna-observacoes">
-                <textarea class="form-control form-control-sm campo-grade campo-observacoes"
-                  [(ngModel)]="processo.observacoes" placeholder="Adicionar observa&#231;&#227;o" rows="1"
-                  aria-label="Observações do processo" (ngModelChange)="registrarAlteracao(processo)"></textarea>
-              </td>
-              <td>
-                <span class="campo-automatico" [class.valor-pendente]="!processo.cnpjImportador">
-                  {{ processo.cnpjImportador || 'Pendente' }}
-                </span>
-              </td>
-              <td>
-                <input type="text" class="form-control form-control-sm campo-grade"
-                  [class.valor-pendente]="!processo.conhecimentoMaster"
-                  [(ngModel)]="processo.conhecimentoMaster" placeholder="Pendente" aria-label="Conhecimento Master"
-                  (ngModelChange)="registrarAlteracao(processo)" />
-              </td>
-              <td>
-                <input type="text" class="form-control form-control-sm campo-grade"
-                  [class.valor-pendente]="!processo.conhecimentoHouse"
-                  [(ngModel)]="processo.conhecimentoHouse" placeholder="Pendente" aria-label="Conhecimento House"
-                  (ngModelChange)="registrarAlteracao(processo)" />
-              </td>
-              <td>
-                <select class="form-select form-select-sm campo-grade" [(ngModel)]="processo.modalidade"
-                  [class.valor-pendente]="!processo.modalidade"
-                  aria-label="Modal" (ngModelChange)="registrarAlteracao(processo)">
-                  <option value="Mar&#237;timo">Mar&#237;timo</option>
-                  <option value="A&#233;reo">A&#233;reo</option>
-                  <option value="Rodovi&#225;rio">Rodovi&#225;rio</option>
-                </select>
-              </td>
-              <td>
-                <!-- Valor automático exibido como texto, sem campo para edição manual. -->
-                <span class="campo-automatico" [class.valor-pendente]="!processo.ceMercanteRuc">
-                  {{ processo.ceMercanteRuc || 'Pendente' }}
-                </span>
-              </td>
-              <td>
-                <!-- Valor automático exibido como texto, sem campo para edição manual. -->
-                <span class="campo-automatico" [class.valor-pendente]="!processo.numeroDuimp">
-                  {{ processo.numeroDuimp || 'Pendente' }}
-                </span>
-              </td>
-              <td>
-                <!-- Valor automático exibido como texto, sem campo para edição manual. -->
-                <span class="campo-automatico" [class.valor-pendente]="!processo.dataRegistroDuimp">
-                  {{ processo.dataRegistroDuimp || 'Pendente' }}
-                </span>
-              </td>
-              <td>
-                <input type="date" class="form-control form-control-sm campo-grade"
-                  [class.valor-pendente]="!processo.dataDesembaraco"
-                  [(ngModel)]="processo.dataDesembaraco" placeholder="Pendente" aria-label="Desembaraço"
-                  (ngModelChange)="registrarAlteracao(processo)" />
-              </td>
-              <td>
-                <input type="text" class="form-control form-control-sm campo-grade"
-                  [class.valor-pendente]="!processo.recintoAlfandegado"
-                  [(ngModel)]="processo.recintoAlfandegado" placeholder="Pendente" aria-label="Recinto alfandegado"
-                  (ngModelChange)="registrarAlteracao(processo)" />
-              </td>
-            </tr>
-            } @empty {
-            <tr>
-              <td class="sem-resultados" colspan="16">
-                Nenhum processo corresponde à busca.
-              </td>
-            </tr>
-            }
+          <!-- Uma linha para cada processo do importador ativo que corresponde à busca. -->
+          @for (processo of processosDoCliente; track processo.numero) {
+          <tr [class.linha-selecionada]="processoSelecionado === processo.numero">
+            <!-- Checkbox que seleciona o processo para as ações do cabeçalho. -->
+            <td class="coluna-selecao text-center align-middle">
+              <!-- O checkbox fica centralizado dentro da primeira coluna. -->
+              <input type="checkbox" [checked]="processoSelecionado === processo.numero"
+                (change)="selecionarProcesso(processo.numero)"
+                [attr.aria-label]="'Selecionar processo ' + processo.numero" />
+            </td>
 
-          </tbody>
-        </table>
-      </div>
-    </section>
+            <td>
+              <!-- O número abre a página de detalhes do processo. -->
+              <a class="link-processo" [routerLink]="['/processos', processo.numero]">
+                {{ processo.numero }}
+              </a>
+            </td>
+            <!-- Campos editáveis: ngModel atualiza os dados em memória enquanto o app está aberto. -->
+            <td>
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [class.valor-pendente]="!processo.referenciaCliente" [(ngModel)]="processo.referenciaCliente"
+                placeholder="Pendente" aria-label="Referência do cliente"
+                (ngModelChange)="registrarAlteracao(processo)" />
+            </td>
+            <td>
+              <input type="date" class="form-control form-control-sm campo-grade"
+                [class.valor-pendente]="!processo.previsaoChegada" [(ngModel)]="processo.previsaoChegada"
+                placeholder="Pendente" aria-label="Previsão de chegada"
+                (ngModelChange)="registrarAlteracao(processo)" />
+            </td>
+            <td>
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.chegada">
+                {{ processo.chegada || 'Pendente' }}
+              </span>
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [class.valor-pendente]="!processo.exportador" [(ngModel)]="processo.exportador" placeholder="Pendente"
+                aria-label="Exportador" (ngModelChange)="registrarAlteracao(processo)" />
+            </td>
+            <!-- Observações ocupa uma coluna mais larga para facilitar leitura e edição. -->
+            <td class="coluna-observacoes">
+              <textarea class="form-control form-control-sm campo-grade campo-observacoes"
+                [(ngModel)]="processo.observacoes" placeholder="Adicionar observa&#231;&#227;o" rows="1"
+                aria-label="Observações do processo" (ngModelChange)="registrarAlteracao(processo)"></textarea>
+            </td>
+            <td>
+              <span class="campo-automatico" [class.valor-pendente]="!processo.cnpjImportador">
+                {{ formatarCnpj(processo.cnpjImportador) }}
+              </span>
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [class.valor-pendente]="!processo.conhecimentoMaster" [(ngModel)]="processo.conhecimentoMaster"
+                placeholder="Pendente" aria-label="Conhecimento Master"
+                (ngModelChange)="registrarAlteracao(processo)" />
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [class.valor-pendente]="!processo.conhecimentoHouse" [(ngModel)]="processo.conhecimentoHouse"
+                placeholder="Pendente" aria-label="Conhecimento House" (ngModelChange)="registrarAlteracao(processo)" />
+            </td>
+            <td>
+              <select class="form-select form-select-sm campo-grade" [(ngModel)]="processo.modalidade"
+                [class.valor-pendente]="!processo.modalidade" aria-label="Modal"
+                (ngModelChange)="registrarAlteracao(processo)">
+                <option value="Mar&#237;timo">Mar&#237;timo</option>
+                <option value="A&#233;reo">A&#233;reo</option>
+                <option value="Rodovi&#225;rio">Rodovi&#225;rio</option>
+              </select>
+            </td>
+            <td>
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.ceMercanteRuc">
+                {{ processo.ceMercanteRuc || 'Pendente' }}
+              </span>
+            </td>
+            <td>
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.numeroDuimp">
+                {{ processo.numeroDuimp || 'Pendente' }}
+              </span>
+            </td>
+            <td>
+              <!-- Valor automático exibido como texto, sem campo para edição manual. -->
+              <span class="campo-automatico" [class.valor-pendente]="!processo.dataRegistroDuimp">
+                {{ processo.dataRegistroDuimp || 'Pendente' }}
+              </span>
+            </td>
+            <td>
+              <span class="campo-automatico" [class.valor-pendente]="!processo.dataDesembaraco">
+                {{ formatarDataGrade(processo.dataDesembaraco) }}
+              </span>
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm campo-grade"
+                [class.valor-pendente]="!processo.recintoAlfandegado" [(ngModel)]="processo.recintoAlfandegado"
+                placeholder="Pendente" aria-label="Recinto alfandegado"
+                (ngModelChange)="registrarAlteracao(processo)" />
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td class="sem-resultados" colspan="16">
+              Nenhum processo corresponde à busca.
+            </td>
+          </tr>
+          }
 
-    <footer class="rodape flex-shrink-0 text-center small text-secondary">
-      © {{ anoAtual }} Atlas Comex. Todos os direitos reservados.
-    </footer>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="rodape flex-shrink-0 text-center small text-secondary">
+    © {{ anoAtual }} Atlas Comex. Todos os direitos reservados.
+  </footer>
 </main>

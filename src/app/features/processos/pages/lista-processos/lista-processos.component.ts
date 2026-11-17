@@ -79,7 +79,6 @@ export class ListaProcessosComponent implements OnInit {
   >();
 
   salvandoAlteracoes = false;
-  mensagemSucessoAtualizacao = '';
 
   novoProcesso = {
     numero: '',
@@ -523,7 +522,6 @@ export class ListaProcessosComponent implements OnInit {
     }
 
     this.mensagemErroAtualizacao = '';
-    this.mensagemSucessoAtualizacao = '';
   }
 
   salvarAlteracoesPendentes(): void {
@@ -533,7 +531,6 @@ export class ListaProcessosComponent implements OnInit {
 
     this.salvandoAlteracoes = true;
     this.mensagemErroAtualizacao = '';
-    this.mensagemSucessoAtualizacao = '';
 
     const pendencias = Array.from(this.alteracoesPendentes.entries());
 
@@ -557,7 +554,6 @@ export class ListaProcessosComponent implements OnInit {
     });
 
     forkJoin(requisicoes).subscribe((resultados) => {
-      let quantidadeSalva = 0;
       let quantidadeComErro = 0;
 
       resultados.forEach((resultado) => {
@@ -566,7 +562,6 @@ export class ListaProcessosComponent implements OnInit {
           return;
         }
 
-        quantidadeSalva++;
         this.dadosOriginais.set(resultado.idProcesso, resultado.dados);
 
         const pendenciaAtual = this.alteracoesPendentes.get(
@@ -581,11 +576,6 @@ export class ListaProcessosComponent implements OnInit {
           this.alteracoesPendentes.delete(resultado.idProcesso);
         }
       });
-
-      this.mensagemSucessoAtualizacao =
-        quantidadeSalva > 0
-          ? `${quantidadeSalva} processo(s) salvo(s).`
-          : '';
 
       this.mensagemErroAtualizacao =
         quantidadeComErro > 0
@@ -626,6 +616,23 @@ export class ListaProcessosComponent implements OnInit {
     const primeiroNome = nomeImportador.trim().split(/\s+/)[0];
 
     return primeiroNome?.toLocaleUpperCase('pt-BR') ?? '';
+  }
+
+  formatarCnpj(valor?: string | null): string {
+    const cnpj = (valor ?? '').replace(/[^0-9a-z]/gi, '').toUpperCase();
+
+    if (!cnpj) return 'Pendente';
+    if (!/^[A-Z0-9]{12}\d{2}$/.test(cnpj)) return valor ?? 'Pendente';
+
+    return `${cnpj.slice(0, 2)}.${cnpj.slice(2, 5)}.${cnpj.slice(5, 8)}/${cnpj.slice(8, 12)}-${cnpj.slice(12)}`;
+  }
+
+  formatarDataGrade(valor?: string | null): string {
+    if (!valor) return 'Pendente';
+
+    const data = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
+
+    return data ? `${data[3]}/${data[2]}/${data[1]}` : valor;
   }
 
   ordenarPor(campo: CampoOrdenacaoProcesso): void {
