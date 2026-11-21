@@ -11,32 +11,85 @@
     padding: 40px;
 }
 
-.voltar {
-    display: inline-block;
-    margin-bottom: 24px;
+.pagina.com-topo-fixo {
+    padding-top: 108px;
+}
+
+.topo-fixo {
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    background: #f4f7f8;
+    border-bottom: 1px solid #dfe7e4;
+}
+
+.topo-fixo-conteudo {
+    box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 8px 40px 0;
+}
+
+.voltar-icone {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
     color: #00796d;
-    font-weight: 600;
     text-decoration: none;
 }
 
-.voltar:hover {
-    text-decoration: underline;
+.topo-fixo .voltar-icone {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+}
+
+.voltar-icone:hover {
+    background: #e8f1ee;
+}
+
+.voltar-icone:focus-visible {
+    outline: 2px solid #008577;
+    outline-offset: 2px;
+}
+
+.voltar-icone svg {
+    width: 16px;
+    height: 16px;
 }
 
 .cabecalho {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 28px;
+    gap: 16px;
+    margin-bottom: 0;
+    padding: 0 0 8px;
+}
+
+.identificacao-processo {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    min-width: 0;
+    padding-left: 32px;
+    white-space: nowrap;
 }
 
 .sobretitulo {
-    margin: 0 0 8px;
+    margin: 0;
     color: #008577;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 1.4px;
+    letter-spacing: 0.8px;
 }
 
 h1,
@@ -46,13 +99,18 @@ p {
 }
 
 h1 {
-    margin-bottom: 8px;
-    font-size: 30px;
+    margin-bottom: 0;
+    font-size: 18px;
 }
 
 .descricao {
+    flex: 0 1 auto;
+    min-width: 0;
     margin-bottom: 0;
     color: #687572;
+    font-size: 13px;
+    text-align: right;
+    white-space: nowrap;
 }
 
 .cartao {
@@ -88,24 +146,6 @@ h1 {
     font-weight: 600;
 }
 
-.status {
-    display: inline-block;
-    padding: 7px 11px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.status-andamento {
-    background: #e5f4ef;
-    color: #08745f;
-}
-
-.status-pendente {
-    background: #fff3dc;
-    color: #946200;
-}
-
 .etapas {
     display: grid;
     gap: 14px;
@@ -133,16 +173,23 @@ h1 {
 
 .abas-processo {
     display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+    width: 25%;
+    min-width: 240px;
+    margin-bottom: 0;
     border-bottom: 1px solid #dfe7e4;
 }
 
+#documentos {
+    scroll-margin-top: 108px;
+}
+
 .aba {
-    padding: 12px 16px;
+    flex: 1;
+    padding: 7px 10px;
     color: #687572;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
+    text-align: center;
     text-decoration: none;
 }
 

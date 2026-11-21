@@ -1,25 +1,37 @@
-<main class="pagina">
-  @if (processo) {
-  <a class="voltar" routerLink="/">← Voltar aos processos</a>
+<main class="pagina" [class.com-topo-fixo]="processo">
+  @if (carregandoProcesso) {
+  <section class="cartao estado-processo" role="status">
+    Carregando processo...
+  </section>
+  } @else if (processo) {
+  <div class="topo-fixo">
+    <div class="topo-fixo-conteudo">
+      <a class="voltar-icone" routerLink="/" aria-label="Voltar aos processos" title="Voltar aos processos">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+      </a>
 
-  <header class="cabecalho">
-    <div>
-      <p class="sobretitulo">PROCESSO DE IMPORTAÇÃO</p>
-      <h1>{{ processo.numero }}</h1>
-      <p class="descricao">{{ processo.importador }}</p>
+      <header class="cabecalho">
+        <div class="identificacao-processo">
+          <p class="sobretitulo">IMPORTAÇÃO</p>
+          <h1>{{ processo.numero }}</h1>
+        </div>
+        <p class="descricao">{{ processo.importador }}</p>
+      </header>
+
+      <nav class="abas-processo" aria-label="Seções do processo">
+        <a class="aba ativa" [routerLink]="['/processos', processoNumero]" fragment="documentos">
+          Documentos
+        </a>
+        <a class="aba" [routerLink]="['/processos', processoNumero, 'duimp']">
+          DUIMP
+        </a>
+      </nav>
     </div>
-
-    <span [class]="'status status-' + processo.statusClass">
-      {{ processo.status }}
-    </span>
-  </header>
-
-  <nav class="abas-processo" aria-label="Seções do processo">
-    <a class="aba ativa" [routerLink]="['/processos', processoNumero]" fragment="documentos">Documentos</a>
-    <a class="aba" [routerLink]="['/processos', processoNumero, 'duimp']">
-      DUIMP
-    </a>
-  </nav>
+  </div>
 
   <section class="cartao" id="documentos">
     <h2>Documentos do embarque</h2>
@@ -141,8 +153,18 @@
   } @else {
   <section class="cartao nao-encontrado">
     <h1>Processo não encontrado</h1>
+    @if (erroCarregamentoProcesso) {
+    <p>{{ erroCarregamentoProcesso }}</p>
+    } @else {
     <p>Volte à lista e selecione um processo cadastrado.</p>
-    <a class="voltar" routerLink="/">Voltar aos processos</a>
+    }
+    <a class="voltar-icone" routerLink="/" aria-label="Voltar aos processos" title="Voltar aos processos">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" />
+        <path d="m12 19-7-7 7-7" />
+      </svg>
+    </a>
   </section>
   }
 </main>

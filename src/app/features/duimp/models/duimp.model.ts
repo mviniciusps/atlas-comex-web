@@ -43,6 +43,7 @@ export interface DadosCargaDuimp {
 
 export interface ItemDuimp {
   id: number;
+  numeroAdicao?: number | null;
   descricaoMercadoria: string;
   ncm: string;
   quantidade: number | null;
@@ -89,8 +90,12 @@ export interface Duimp {
   cpfCnpjImportador: string;
   nomeImportador: string;
   enderecoImportador: string;
+  numeroEnderecoImportador: string;
+  bairroImportador: string;
   municipioImportador: string;
   ufImportador: string;
+  cepImportador: string;
+  paisImportador: string;
   complementoEnderecoImportador: string;
   informacoesComplementaresVariaveis: string;
   usarTextoPadrao: boolean;

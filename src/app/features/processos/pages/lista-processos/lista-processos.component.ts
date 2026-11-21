@@ -273,7 +273,6 @@ export class ListaProcessosComponent implements OnInit {
 
     const dados: ImportadorCadastroDto = {
       razaoSocial,
-      nomeFantasia: null,
       estabelecimentos: [
         {
           cnpj,
@@ -485,7 +484,6 @@ export class ListaProcessosComponent implements OnInit {
       conhecimentoMaster: processo.conhecimentoMaster?.trim() || null,
       conhecimentoHouse: processo.conhecimentoHouse?.trim() || null,
       modal: processo.modalidade || null,
-      desembaraco: processo.dataDesembaraco || null,
       recintoAlfandegado: processo.recintoAlfandegado?.trim() || null,
     };
   }
@@ -502,7 +500,6 @@ export class ListaProcessosComponent implements OnInit {
       primeiro.conhecimentoMaster === segundo.conhecimentoMaster &&
       primeiro.conhecimentoHouse === segundo.conhecimentoHouse &&
       primeiro.modal === segundo.modal &&
-      primeiro.desembaraco === segundo.desembaraco &&
       primeiro.recintoAlfandegado === segundo.recintoAlfandegado
     );
   }

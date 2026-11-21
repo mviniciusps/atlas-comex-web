@@ -1,26 +1,50 @@
-<main class="pagina"> <!--  Abrange pagina inteira -->
+<main class="pagina" [class.com-topo-fixo]="processo">
 
-  @if (processo && duimp) { <!--  Se PROCESSO e DUIMP forem verdadeiros -->
+  @if (carregandoProcesso) {
+  <section class="cartao estado-processo" role="status">
+    Carregando processo...
+  </section>
+  } @else if (processo && duimp) {
 
-  <a class="voltar" [routerLink]="['/processos', processo.numero]">
-    ← Voltar ao processo
-  </a>
-  <header class="cabecalho">
-    <div>
-      <p class="sobretitulo">
-        MÓDULO DUIMP
-      </p>
-      <h1>
-        DUIMP do processo {{ processo.numero }}
-      </h1>
-      <p class="descricao">
-        {{ processo.importador }}
-        <span>
-          ·
-        </span>
-        {{ processo.modalidade }}
-      </p>
+  <div class="topo-fixo">
+    <div class="topo-fixo-conteudo">
+      <a class="voltar-icone" routerLink="/" aria-label="Voltar aos processos" title="Voltar aos processos">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+      </a>
+      <header class="cabecalho-processo">
+        <div class="identificacao-processo">
+          <p class="sobretitulo-processo">IMPORTAÇÃO</p>
+          <h1>{{ processo.numero }}</h1>
+        </div>
+        <p class="importador-processo">{{ processo.importador }}</p>
+      </header>
+      <nav class="abas-processo" aria-label="Navegação do processo">
+        <a class="aba-processo" [routerLink]="['/processos', processo.numero]" fragment="documentos">Documentos</a>
+        <a class="aba-processo ativa" [routerLink]="['/processos', processo.numero, 'duimp']" aria-current="page">DUIMP</a>
+      </nav>
     </div>
+  </div>
+  <section class="barra-acoes" aria-label="Ações da DUIMP">
+    <div class="acoes-download">
+      <button class="botao-secundario" type="button" (click)="baixarRascunho()">
+        ↓ Baixar rascunho
+      </button>
+      <button class="botao-secundario" type="button" (click)="baixarItens()">
+        ↓ Baixar itens
+      </button>
+    </div>
+    <button
+      class="botao-primario"
+      type="button"
+      [disabled]="carregandoRascunho || salvandoRascunho || carregandoProcesso"
+      (click)="salvarRascunhoApi()"
+    >
+      {{ salvandoRascunho ? 'Salvando...' : 'Salvar rascunho' }}
+    </button>
     <label class="situacao-controle">
       Situação
       <select [(ngModel)]="duimp.situacaoDuimp" (ngModelChange)="atualizarDadosDuimp()">
@@ -34,19 +58,10 @@
           Pronta para revisão
         </option>
       </select>
+      <span class="ajuda">Situação de trabalho local; a API atual ainda não a persiste.</span>
     </label>
-  </header>
-  <section class="barra-acoes" aria-label="Ações da DUIMP">
-    <div class="acoes-download">
-      <button class="botao-secundario" type="button" (click)="baixarRascunho()">
-        ↓ Baixar rascunho
-      </button>
-      <button class="botao-secundario" type="button" (click)="baixarItens()">
-        ↓ Baixar itens
-      </button>
-    </div>
     <button class="botao-primario" type="button" (click)="analisarInconsistencias()">
-      ✦ Analisar inconsistências com IA
+      Conferir inconsistências
     </button>
   </section>
   @if (mensagemAnalise) {
@@ -122,9 +137,19 @@
           placeholder="Nome do importador" />
       </label>
       <label>
-        Endereço
+        Logradouro
         <input [(ngModel)]="duimp.enderecoImportador" (ngModelChange)="atualizarDadosDuimp()"
-          placeholder="Logradouro, número e bairro" />
+          placeholder="Rua ou avenida" />
+      </label>
+      <label>
+        Número
+        <input [(ngModel)]="duimp.numeroEnderecoImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Número" />
+      </label>
+      <label>
+        Bairro
+        <input [(ngModel)]="duimp.bairroImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Bairro" />
       </label>
       <label>
         Município
@@ -135,6 +160,16 @@
         UF
         <input maxlength="2" [(ngModel)]="duimp.ufImportador" (ngModelChange)="atualizarDadosDuimp()"
           placeholder="UF" />
+      </label>
+      <label>
+        CEP
+        <input [(ngModel)]="duimp.cepImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="00000-000" />
+      </label>
+      <label>
+        País
+        <input [(ngModel)]="duimp.paisImportador" (ngModelChange)="atualizarDadosDuimp()"
+          placeholder="Brasil" />
       </label>
       <label class="campo-largo">
         Complemento do endereço
@@ -638,6 +673,10 @@
       </label>
     </div>
 
+    <p class="ajuda">
+      A invoice é anexada ao processo. A leitura automática por IA ainda depende de integração.
+    </p>
+
     @if (mensagemUploadInvoice) {
 
     <p class="mensagem-sucesso" role="status">
@@ -803,6 +842,10 @@
           <input [(ngModel)]="novoItemDuimp.descricaoMercadoria" placeholder="Descrição comercial" />
         </label>
         <label>
+          Número da adição
+          <input type="number" min="1" [(ngModel)]="novoItemDuimp.numeroAdicao" />
+        </label>
+        <label>
           Versão do produto
           <input [(ngModel)]="novoItemDuimp.versaoProduto" />
         </label>
@@ -878,7 +921,7 @@
         <label>
           UF(s) de consumo
           <span class="ajuda">
-            Separe múltiplas UFs por vírgula.
+            A API atual aceita uma UF e um município por item.
           </span>
           <input [(ngModel)]="novoItemDuimp.ufsConsumo" placeholder="SP, RJ" />
         </label>
@@ -1103,11 +1146,12 @@
       </article>
       <article>
         <span>
-          VMLE estimado
+          Soma nominal dos itens
         </span>
         <strong>
-          {{ totalItens | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+          {{ totalItens | number:'1.2-2':'pt-BR' }}
         </strong>
+        <small>Sem conversão cambial</small>
       </article>
       <article>
         <span>
@@ -1140,18 +1184,18 @@
           @for (item of duimp.itens; track item.id; let i = $index) {
           <tr>
             <td>
-              {{ i + 1 }}
+              {{ item.numeroAdicao ?? i + 1 }}
             </td>
             <td>
               1
             </td>
             <td>
-              {{ item.moedaNegociada === 'USD' ? ((item.valorUnitario ?? 0) * (item.quantidade ?? 0) |
+              {{ item.moedaNegociada === 'USD' ? ((item.valorUnitarioCondicaoVenda ?? item.valorUnitario ?? 0) * (item.quantidade ?? 0) |
               number:'1.2-2':'pt-BR') : '—' }}
             </td>
             <td>
-              {{ ((item.valorUnitarioCondicaoVenda ?? item.valorUnitario ?? 0) * (item.quantidade ?? 0)) |
-              currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+              {{ item.moedaNegociada === 'BRL' ? (((item.valorUnitarioCondicaoVenda ?? item.valorUnitario ?? 0) * (item.quantidade ?? 0)) |
+              currency:'BRL':'symbol':'1.2-2':'pt-BR') : '—' }}
             </td>
           </tr>
           } @empty {
@@ -1248,33 +1292,30 @@
         </option>
       </select>
       <span class="ajuda">
-        A conta deverá ser confirmada conforme o cadastro disponível no Portal Único.
+        Este campo ainda não é persistido pela API atual.
       </span>
     </label>
   </section>
   }
   <footer class="rodape-pagina">
     <span aria-live="polite">
-      {{ carregandoRascunho ? 'Carregando carga...' : mensagemRascunho }}
+      {{ carregandoRascunho ? 'Carregando rascunho...' : mensagemRascunho }}
     </span>
-    @if (abaAtiva === 'carga') {
-      <button
-        class="botao-secundario"
-        type="button"
-        [disabled]="carregandoRascunho || salvandoRascunho"
-        (click)="salvarCargaNaApi()"
-      >
-        {{ salvandoRascunho ? 'Salvando...' : 'Salvar dados da carga' }}
-      </button>
-    }
   </footer>
   } @else {
   <section class="cartao nao-encontrado">
-    <h1>
-      Processo não encontrado
-    </h1>
-    <a routerLink="/processos">
-      Voltar aos processos
+    <h1>Processo não encontrado</h1>
+    @if (erroCarregamentoProcesso) {
+    <p>{{ erroCarregamentoProcesso }}</p>
+    } @else {
+    <p>Volte à lista e selecione um processo cadastrado.</p>
+    }
+    <a class="voltar-icone" routerLink="/" aria-label="Voltar aos processos" title="Voltar aos processos">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" />
+        <path d="m12 19-7-7 7-7" />
+      </svg>
     </a>
   </section>
   }

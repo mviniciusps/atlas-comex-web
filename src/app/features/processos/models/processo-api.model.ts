@@ -38,7 +38,6 @@ export interface ProcessoAtualizacaoDadosDto {
   conhecimentoMaster: string | null;
   conhecimentoHouse: string | null;
   modal: string | null;
-  desembaraco: string | null;
   recintoAlfandegado: string | null;
 }
 

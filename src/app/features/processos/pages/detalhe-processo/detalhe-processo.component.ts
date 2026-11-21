@@ -27,6 +27,8 @@ import {
 export class DetalheProcessoComponent implements OnInit {
   processo?: Processo;
   processoNumero = '';
+  carregandoProcesso = false;
+  erroCarregamentoProcesso = '';
   mensagensUpload: string[] = [];
   documentos: DocumentoProcesso[] = [];
   carregandoDocumentos = false;
@@ -90,11 +92,31 @@ export class DetalheProcessoComponent implements OnInit {
   ngOnInit(): void {
     const numero = this.route.snapshot.paramMap.get('id');
 
-    if (numero) {
-      this.processoNumero = numero;
-      this.processo = this.processosService.buscarPorNumero(numero);
+    if (!numero) return;
+
+    this.processoNumero = numero;
+    this.processo = this.processosService.buscarPorNumero(numero);
+
+    if (this.processo) {
       this.atualizarDocumentos();
+      return;
     }
+
+    this.carregandoProcesso = true;
+    this.processosService.carregar().subscribe({
+      next: (processos) => {
+        this.processo = processos.find((item) => item.numero === numero);
+        this.carregandoProcesso = false;
+
+        if (this.processo) {
+          this.atualizarDocumentos();
+        }
+      },
+      error: () => {
+        this.erroCarregamentoProcesso = 'Não foi possível carregar o processo.';
+        this.carregandoProcesso = false;
+      },
+    });
   }
 
   atualizarDocumentos(): void {

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable, switchMap, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type { SituacaoDuimp } from '../../duimp/models/duimp.model';
 import type {
@@ -30,12 +30,26 @@ export class ProcessosService {
 
   criar(dados: ProcessoCriacaoDto): Observable<Processo> {
     return this.http
-      .post<ProcessoApiDto>(`${environment.apiBaseUrl}/processos`, dados)
+      .post<{ idProcesso: number }>(`${environment.apiBaseUrl}/processos`, dados)
       .pipe(
-        map((processoApi) => this.converterProcessoApi(processoApi)),
-        tap((processo) => {
-          this.processos = [processo, ...this.processos];
-        }),
+        map((resposta) => resposta.idProcesso),
+        switchMap((idProcesso) =>
+          this.carregar().pipe(
+            map((processos) => {
+              const processoCriado = processos.find(
+                (processo) => processo.idProcesso === idProcesso,
+              );
+
+              if (!processoCriado) {
+                throw new Error(
+                  'A API criou o processo, mas ele não apareceu na listagem.',
+                );
+              }
+
+              return processoCriado;
+            }),
+          ),
+        ),
       );
   }
 
@@ -44,7 +58,7 @@ export class ProcessosService {
     situacao: string,
     dados: ProcessoAtualizacaoDadosDto,
   ): Observable<void> {
-    const corpo: ProcessoAtualizacaoDto = { ...dados ,situacao };
+    const corpo: ProcessoAtualizacaoDto = { ...dados, situacao };
 
     return this.http.put<void>(
       `${environment.apiBaseUrl}/processos/${idProcesso}`,

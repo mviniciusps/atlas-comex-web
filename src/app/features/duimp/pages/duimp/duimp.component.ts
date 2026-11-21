@@ -52,6 +52,8 @@ export class DuimpComponent implements OnInit {
   processo?: Processo;
   duimp?: Duimp;
   processoNumero = '';
+  carregandoProcesso = false;
+  erroCarregamentoProcesso = '';
   abaAtiva: AbaDuimp = 'identificacao';
   abaItemAtiva: 'mercadoria' | 'tributos' = 'mercadoria';
   documentos: DocumentoProcesso[] = [];
@@ -113,22 +115,52 @@ export class DuimpComponent implements OnInit {
 
     this.processoNumero = numeroProcesso;
     this.processo = this.processosService.buscarPorNumero(numeroProcesso);
-    this.duimp = this.processo
-      ? this.duimpService.obterOuCriar(numeroProcesso)
-      : undefined;
+
+    if (this.processo) {
+      this.inicializarProcesso(this.processo);
+      return;
+    }
+
+    this.carregandoProcesso = true;
+    this.processosService.carregar().subscribe({
+      next: (processos) => {
+        const processo = processos.find((item) => item.numero === numeroProcesso);
+        this.carregandoProcesso = false;
+
+        if (processo) {
+          this.inicializarProcesso(processo);
+        }
+      },
+      error: () => {
+        this.erroCarregamentoProcesso = 'Não foi possível carregar o processo.';
+        this.carregandoProcesso = false;
+      },
+    });
+  }
+
+  private inicializarProcesso(processo: Processo): void {
+    this.processo = processo;
+    this.duimp = this.duimpService.obterOuCriar(processo.numero);
     this.carregarRascunhoApi();
     this.atualizarDocumentos();
   }
 
   get modalidadeAerea(): boolean {
-    return this.processo?.modalidade.toLocaleLowerCase().includes('aére') ?? false;
+    const modalidade = this.processo?.modalidade
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase();
+
+    return modalidade?.includes('aere') ?? false;
   }
 
   get totalItens(): number {
     return (
       this.duimp?.itens.reduce(
         (total, item) =>
-          total + (item.quantidade ?? 0) * (item.valorUnitario ?? 0),
+          total +
+          (item.quantidade ?? 0) *
+            (item.valorUnitarioCondicaoVenda ?? item.valorUnitario ?? 0),
         0,
       ) ?? 0
     );
@@ -156,21 +188,136 @@ export class DuimpComponent implements OnInit {
 
     this.duimpService.obterRascunho(idProcesso).subscribe({
       next: (rascunho) => {
-        this.rascunhoApi = rascunho;
-        this.aplicarCargaApi(rascunho.carga);
+        this.aplicarRascunhoApi(rascunho);
         this.carregandoRascunho = false;
       },
       error: (erro: HttpErrorResponse) => {
         if (erro.status === 404) {
           this.rascunhoApi = this.criarRascunhoVazio();
-          this.mensagemRascunho = 'Ainda não há dados de carga salvos.';
+          this.mensagemRascunho = 'Ainda não há rascunho salvo para este processo.';
         } else {
-          this.mensagemRascunho = 'Não foi possível carregar os dados da carga.';
+          this.mensagemRascunho = 'Não foi possível carregar o rascunho da DUIMP.';
         }
 
         this.carregandoRascunho = false;
       },
     });
+  }
+
+  private aplicarRascunhoApi(rascunho: DuimpRascunhoApiDto): void {
+    if (!this.duimp) return;
+
+    this.rascunhoApi = rascunho;
+    this.duimp.tipoPessoaImportador =
+      rascunho.tipoPessoaImportador === 'F'
+        ? 'Pessoa Física'
+        : rascunho.tipoPessoaImportador === 'J'
+          ? 'Pessoa Jurídica'
+          : this.duimp.tipoPessoaImportador;
+    this.duimp.cpfCnpjImportador =
+      rascunho.documentoImportador ?? this.duimp.cpfCnpjImportador;
+    this.duimp.nomeImportador =
+      rascunho.nomeImportador ?? this.duimp.nomeImportador;
+    this.duimp.enderecoImportador = rascunho.logradouroImportador ?? '';
+    this.duimp.numeroEnderecoImportador =
+      rascunho.numeroEnderecoImportador ?? '';
+    this.duimp.complementoEnderecoImportador =
+      rascunho.complementoEnderecoImportador ?? '';
+    this.duimp.bairroImportador = rascunho.bairroImportador ?? '';
+    this.duimp.municipioImportador = rascunho.municipioImportador ?? '';
+    this.duimp.ufImportador = rascunho.ufImportador ?? '';
+    this.duimp.cepImportador = rascunho.cepImportador ?? '';
+    this.duimp.paisImportador = rascunho.paisImportador ?? 'Brasil';
+    this.duimp.informacoesComplementaresVariaveis =
+      rascunho.informacoesComplementaresGeradas ?? '';
+    this.duimp.textoPadrao =
+      rascunho.informacoesComplementaresAdicionais ?? '';
+    this.duimp.usarTextoPadrao = Boolean(
+      rascunho.informacoesComplementaresAdicionais?.trim(),
+    );
+    this.duimp.itens = (rascunho.itens ?? []).map((item, indice) => {
+      const fabricante = this.combinarCodigoNome(
+        item.codigoFabricante,
+        item.nomeFabricante,
+      );
+      const exportador = this.combinarCodigoNome(
+        item.codigoExportador,
+        item.nomeExportador,
+      );
+
+      return {
+        id: item.numeroItem || indice + 1,
+        numeroAdicao: item.numeroAdicao,
+        descricaoMercadoria: item.nomeProduto ?? '',
+        ncm: item.ncm ?? '',
+        quantidade:
+          item.quantidadeUnidadeComercializada ??
+          item.quantidadeMedidaEstatistica,
+        unidadeMedida: item.unidadeComercializada ?? '',
+        valorUnitario: item.valorUnitarioCondicaoVenda,
+        caracterizacaoImportacao: item.caracterizacaoImportacao ?? '',
+        versaoProduto: item.versaoProduto ?? '',
+        paisOrigemFabricante: item.paisOrigem ?? '',
+        codigoNomeFabricante: fabricante,
+        versaoFabricante: item.versaoFabricante ?? '',
+        enderecoFabricante: item.enderecoFabricante ?? '',
+        exportadorEhFabricante: item.exportadorEhFabricante,
+        paisOrigemExportador: item.paisExportador ?? '',
+        codigoNomeExportador: exportador,
+        versaoExportador: item.versaoExportador ?? '',
+        enderecoExportador: item.enderecoExportador ?? '',
+        ufsConsumo: item.ufConsumo ?? '',
+        municipiosConsumo: item.municipioConsumo ?? '',
+        aplicacao: item.aplicacao ?? '',
+        condicaoMercadoria:
+          item.condicaoMercadoria === 'Usado' ? 'Usada' : 'Nova',
+        unidadeEstatistica: item.unidadeMedidaEstatistica ?? '',
+        quantidadeEstatistica: item.quantidadeMedidaEstatistica,
+        pesoLiquido: item.pesoLiquido,
+        unidadeComercializada: item.unidadeComercializada ?? '',
+        quantidadeComercializada: item.quantidadeUnidadeComercializada,
+        moedaNegociada: item.moedaNegociada ?? '',
+        valorUnitarioCondicaoVenda: item.valorUnitarioCondicaoVenda,
+        numeroSerie: item.numeroSerie ?? '',
+        detalhamentoProduto: item.detalhamentoProduto ?? '',
+        metodoValoracao: item.metodoValoracao ?? '',
+        incoterm: item.incoterm ?? '',
+        coberturaCambial: item.coberturaCambial ?? '',
+      };
+    });
+
+    if (rascunho.carga) {
+      this.aplicarCargaApi(rascunho.carga);
+    }
+
+    this.duimp.valorAduaneiro = this.totalItens;
+    this.duimpService.salvar(this.duimp);
+  }
+
+  private combinarCodigoNome(
+    codigo: string | null,
+    nome: string | null,
+  ): string {
+    const partes = [codigo?.trim(), nome?.trim()].filter(Boolean);
+    return partes.join(' — ');
+  }
+
+  private separarCodigoNome(valor: string | undefined): {
+    codigo: string | null;
+    nome: string | null;
+  } {
+    const texto = valor?.trim() ?? '';
+    const separador = ' — ';
+    const indiceSeparador = texto.indexOf(separador);
+
+    if (indiceSeparador < 0) {
+      return { codigo: null, nome: texto || null };
+    }
+
+    return {
+      codigo: texto.slice(0, indiceSeparador).trim() || null,
+      nome: texto.slice(indiceSeparador + separador.length).trim() || null,
+    };
   }
 
   private aplicarCargaApi(carga: CargaDuimpApiDto | null): void {
@@ -180,7 +327,7 @@ export class DuimpComponent implements OnInit {
 
     this.duimp.carga = {
       ...this.duimp.carga,
-      unidadesDespacho: carga.unidadesDespacho,
+      unidadesDespacho: carga.unidadesDespacho ?? [],
       numeroCe:
         carga.tipoIdentificacaoCarga === 'CE'
           ? carga.identificacaoCarga ?? ''
@@ -202,14 +349,14 @@ export class DuimpComponent implements OnInit {
       moedaSeguro: carga.codigoMoedaSeguro ?? '',
       valorSeguroMoeda: carga.valorSeguroMoeda,
       valorSeguroReais: carga.valorSeguroReais,
-      componentesFrete: carga.componentesFrete.map((componente, indice) => ({
+      componentesFrete: (carga.componentesFrete ?? []).map((componente, indice) => ({
         id: indice + 1,
         pagamento: componente.pagamento ?? '',
         tipo: componente.tipo ?? '',
         moeda: componente.moeda ?? '',
         valor: componente.valorMoeda,
       })),
-      embalagens: carga.embalagens.map((embalagem, indice) => ({
+      embalagens: (carga.embalagens ?? []).map((embalagem, indice) => ({
         id: indice + 1,
         item: embalagem.item ?? '',
         tipo: embalagem.tipo ?? '',
@@ -278,7 +425,7 @@ export class DuimpComponent implements OnInit {
     };
   }
 
-  salvarCargaNaApi(): void {
+  salvarRascunhoApi(): void {
     const idProcesso = this.processo?.idProcesso;
     const duimp = this.duimp;
 
@@ -291,9 +438,96 @@ export class DuimpComponent implements OnInit {
       return;
     }
 
+    const itensComMultiplosLocais = duimp.itens.find((item) => {
+      const ufs = (item.ufsConsumo ?? '')
+        .split(/[;,]/)
+        .map((uf) => uf.trim())
+        .filter(Boolean);
+      const municipios = (item.municipiosConsumo ?? '')
+        .split(/[;,]/)
+        .map((municipio) => municipio.trim())
+        .filter(Boolean);
+
+      return ufs.length > 1 || municipios.length > 1;
+    });
+
+    if (itensComMultiplosLocais) {
+      this.mensagemRascunho =
+        'A API atual aceita apenas uma UF e um município de consumo por item. Ajuste os itens antes de salvar.';
+      return;
+    }
+
+    const rascunhoBase = this.rascunhoApi ?? this.criarRascunhoVazio();
     const dados: DuimpRascunhoApiDto = {
-      ...(this.rascunhoApi ?? this.criarRascunhoVazio()),
+      tipoPessoaImportador:
+        duimp.tipoPessoaImportador === 'Pessoa Física' ? 'F' : 'J',
+      documentoImportador:
+        duimp.cpfCnpjImportador.replace(/[^a-z0-9]/gi, '').toUpperCase() || null,
+      nomeImportador: duimp.nomeImportador.trim() || null,
+      logradouroImportador: duimp.enderecoImportador.trim() || null,
+      numeroEnderecoImportador:
+        duimp.numeroEnderecoImportador.trim() || null,
+      complementoEnderecoImportador:
+        duimp.complementoEnderecoImportador.trim() || null,
+      bairroImportador: duimp.bairroImportador.trim() || null,
+      codigoMunicipioImportador: rascunhoBase.codigoMunicipioImportador,
+      municipioImportador: duimp.municipioImportador.trim() || null,
+      ufImportador: duimp.ufImportador.trim().toUpperCase() || null,
+      cepImportador: duimp.cepImportador.replace(/\D/g, '') || null,
+      paisImportador: duimp.paisImportador.trim() || null,
+      informacoesComplementaresGeradas:
+        duimp.informacoesComplementaresVariaveis.trim() || null,
+      informacoesComplementaresAdicionais: duimp.usarTextoPadrao
+        ? duimp.textoPadrao.trim() || null
+        : null,
       carga: this.montarCargaApi(duimp.carga),
+      itens: duimp.itens.map((item, indice) => {
+        const fabricante = this.separarCodigoNome(item.codigoNomeFabricante);
+        const exportador = this.separarCodigoNome(item.codigoNomeExportador);
+        const ufConsumo = item.ufsConsumo?.trim().toUpperCase() || '';
+
+        return {
+          numeroItem: indice + 1,
+          numeroAdicao: item.numeroAdicao ?? null,
+          caracterizacaoImportacao:
+            item.caracterizacaoImportacao?.trim() || null,
+          nomeProduto: item.descricaoMercadoria.trim() || null,
+          versaoProduto: item.versaoProduto?.trim() || null,
+          ncm: item.ncm.replace(/\D/g, '') || null,
+          paisOrigem: item.paisOrigemFabricante?.trim().toUpperCase() || null,
+          codigoFabricante: fabricante.codigo,
+          nomeFabricante: fabricante.nome,
+          versaoFabricante: item.versaoFabricante?.trim() || null,
+          enderecoFabricante: item.enderecoFabricante?.trim() || null,
+          exportadorEhFabricante: item.exportadorEhFabricante ?? null,
+          paisExportador: item.paisOrigemExportador?.trim().toUpperCase() || null,
+          codigoExportador: exportador.codigo,
+          nomeExportador: exportador.nome,
+          versaoExportador: item.versaoExportador?.trim() || null,
+          enderecoExportador: item.enderecoExportador?.trim() || null,
+          ufConsumo: ufConsumo || null,
+          codigoMunicipioConsumo: null,
+          municipioConsumo: item.municipiosConsumo?.trim() || null,
+          aplicacao: item.aplicacao?.trim() || null,
+          condicaoMercadoria:
+            item.condicaoMercadoria === 'Usada' ? 'Usado' : 'Novo',
+          unidadeMedidaEstatistica: item.unidadeEstatistica?.trim() || null,
+          quantidadeMedidaEstatistica: item.quantidadeEstatistica ?? null,
+          pesoLiquido: item.pesoLiquido ?? null,
+          unidadeComercializada:
+            item.unidadeComercializada?.trim() || item.unidadeMedida.trim() || null,
+          quantidadeUnidadeComercializada:
+            item.quantidadeComercializada ?? item.quantidade ?? null,
+          moedaNegociada: item.moedaNegociada?.trim() || null,
+          valorUnitarioCondicaoVenda:
+            item.valorUnitarioCondicaoVenda ?? item.valorUnitario ?? null,
+          numeroSerie: item.numeroSerie?.trim() || null,
+          detalhamentoProduto: item.detalhamentoProduto?.trim() || null,
+          metodoValoracao: item.metodoValoracao?.trim() || null,
+          incoterm: item.incoterm?.trim() || null,
+          coberturaCambial: item.coberturaCambial?.trim() || null,
+        };
+      }),
     };
 
     this.salvandoRascunho = true;
@@ -303,11 +537,20 @@ export class DuimpComponent implements OnInit {
       next: () => {
         this.rascunhoApi = dados;
         this.atualizarDadosDuimp();
-        this.mensagemRascunho = 'Dados da carga salvos.';
+        this.mensagemRascunho = 'Rascunho da DUIMP salvo.';
         this.salvandoRascunho = false;
       },
-      error: () => {
-        this.mensagemRascunho = 'Não foi possível salvar os dados da carga.';
+      error: (erro: HttpErrorResponse) => {
+        const errosApi = erro.error?.errors as
+          | Record<string, string[]>
+          | undefined;
+        const primeiroErro = errosApi
+          ? Object.values(errosApi).flat().find(Boolean)
+          : null;
+
+        this.mensagemRascunho = primeiroErro
+          ? `A API recusou o rascunho: ${primeiroErro}`
+          : 'Não foi possível salvar o rascunho da DUIMP.';
         this.salvandoRascunho = false;
       },
     });
@@ -575,6 +818,7 @@ export class DuimpComponent implements OnInit {
 
     const colunas = [
       'DescricaoMercadoria',
+      'NumeroAdicao',
       'NCM',
       'Quantidade',
       'UnidadeMedida',
@@ -639,25 +883,128 @@ export class DuimpComponent implements OnInit {
   }
 
   baixarRascunho(): void {
-    if (!this.duimp) return;
-    const conteudo = JSON.stringify(
-      {
-        processo: this.processo,
-        duimp: this.duimp,
-        documentosIncluidos: this.documentosIncluidos.map((documento) => ({
-          nome: documento.nomeArquivo,
-          tipo: documento.tipoDocumento,
-        })),
-      },
-      null,
-      2,
+    if (!this.duimp || !this.processo) return;
+
+    const workbook = utils.book_new();
+    const tabela = <T extends object>(linhas: T[], colunas: string[]) =>
+      linhas.length ? utils.json_to_sheet(linhas) : utils.aoa_to_sheet([colunas]);
+    const ficha = (
+      linhas: Array<[string, string | number | null | undefined]>,
+    ) => utils.aoa_to_sheet([['Campo', 'Valor'], ...linhas]);
+    const identificacao = ficha([
+      ['Processo', this.processo.numero],
+      ['Importador', this.duimp.nomeImportador],
+      ['Tipo de pessoa', this.duimp.tipoPessoaImportador],
+      ['CPF/CNPJ', this.duimp.cpfCnpjImportador],
+      ['Logradouro', this.duimp.enderecoImportador],
+      ['Número', this.duimp.numeroEnderecoImportador],
+      ['Complemento', this.duimp.complementoEnderecoImportador],
+      ['Bairro', this.duimp.bairroImportador],
+      ['Município', this.duimp.municipioImportador],
+      ['UF', this.duimp.ufImportador],
+      ['CEP', this.duimp.cepImportador],
+      ['País', this.duimp.paisImportador],
+      ['Informações complementares variáveis', this.duimp.informacoesComplementaresVariaveis],
+      [
+        'Texto adicional',
+        this.duimp.usarTextoPadrao ? this.duimp.textoPadrao : '',
+      ],
+      ['Situação local', this.duimp.situacaoDuimp],
+    ]);
+    const carga = ficha([
+      ['Modal', this.processo.modalidade],
+      ['Unidades de despacho', this.duimp.carga.unidadesDespacho.join(', ')],
+      ['CE Mercante', this.duimp.carga.numeroCe],
+      ['RUC', this.duimp.carga.numeroRuc],
+      ['Local de embarque', this.duimp.carga.localEmbarque],
+      ['Data do conhecimento', this.duimp.carga.dataConhecimento],
+      ['País de procedência', this.duimp.carga.paisProcedencia],
+      ['Peso bruto', this.duimp.carga.pesoBruto],
+      ['Peso líquido', this.duimp.carga.pesoLiquido],
+      ['Moeda do frete', this.duimp.carga.moedaFrete],
+      ['Frete na moeda', this.duimp.carga.valorFreteMoeda],
+      ['Frete em reais', this.duimp.carga.valorFreteReais],
+      ['AFRMM/TUM', this.duimp.carga.valorAfrmmTum],
+      ['AFRMM/TUM pago', this.duimp.carga.afrmmTumPago ? 'Sim' : 'Não'],
+      ['Moeda do seguro', this.duimp.carga.moedaSeguro],
+      ['Seguro na moeda', this.duimp.carga.valorSeguroMoeda],
+      ['Seguro em reais', this.duimp.carga.valorSeguroReais],
+    ]);
+    const itens = this.duimp.itens.map((item, indice) => ({
+      Numero: indice + 1,
+      NumeroAdicao: item.numeroAdicao ?? '',
+      DescricaoMercadoria: item.descricaoMercadoria,
+      NCM: item.ncm,
+      Quantidade: item.quantidade ?? '',
+      UnidadeMedida: item.unidadeMedida,
+      ValorUnitario: item.valorUnitario ?? '',
+      CaracterizacaoImportacao: item.caracterizacaoImportacao ?? '',
+      VersaoProduto: item.versaoProduto ?? '',
+      PaisOrigemFabricante: item.paisOrigemFabricante ?? '',
+      CodigoNomeFabricante: item.codigoNomeFabricante ?? '',
+      VersaoFabricante: item.versaoFabricante ?? '',
+      EnderecoFabricante: item.enderecoFabricante ?? '',
+      ExportadorEhFabricante: item.exportadorEhFabricante ?? '',
+      PaisOrigemExportador: item.paisOrigemExportador ?? '',
+      CodigoNomeExportador: item.codigoNomeExportador ?? '',
+      VersaoExportador: item.versaoExportador ?? '',
+      EnderecoExportador: item.enderecoExportador ?? '',
+      UfsConsumo: item.ufsConsumo ?? '',
+      MunicipiosConsumo: item.municipiosConsumo ?? '',
+      Aplicacao: item.aplicacao ?? '',
+      CondicaoMercadoria: item.condicaoMercadoria ?? '',
+      UnidadeEstatistica: item.unidadeEstatistica ?? '',
+      QuantidadeEstatistica: item.quantidadeEstatistica ?? '',
+      PesoLiquido: item.pesoLiquido ?? '',
+      UnidadeComercializada: item.unidadeComercializada ?? '',
+      QuantidadeComercializada: item.quantidadeComercializada ?? '',
+      MoedaNegociada: item.moedaNegociada ?? '',
+      ValorUnitarioCondicaoVenda: item.valorUnitarioCondicaoVenda ?? '',
+      NumeroSerie: item.numeroSerie ?? '',
+      DetalhamentoProduto: item.detalhamentoProduto ?? '',
+      MetodoValoracao: item.metodoValoracao ?? '',
+      Incoterm: item.incoterm ?? '',
+      CoberturaCambial: item.coberturaCambial ?? '',
+    }));
+    const componentesFrete = this.duimp.carga.componentesFrete.map((item) => ({
+      Pagamento: item.pagamento,
+      Tipo: item.tipo,
+      Moeda: item.moeda,
+      ValorMoeda: item.valor,
+    }));
+    const embalagens = this.duimp.carga.embalagens.map((item) => ({
+      Item: item.item,
+      Tipo: item.tipo,
+      Quantidade: item.quantidade ?? '',
+    }));
+    const documentos = this.documentosIncluidos.map((documento) => ({
+      Nome: documento.nomeArquivo,
+      Tipo: documento.tipoDocumento,
+      TamanhoBytes: documento.tamanhoBytes,
+      IncluirNaDuimp: 'Sim',
+    }));
+
+    utils.book_append_sheet(workbook, identificacao, 'Identificacao');
+    utils.book_append_sheet(workbook, carga, 'Carga');
+    utils.book_append_sheet(
+      workbook,
+      tabela(componentesFrete, ['Pagamento', 'Tipo', 'Moeda', 'ValorMoeda']),
+      'Componentes frete',
     );
-    const url = URL.createObjectURL(new Blob([conteudo], { type: 'application/json' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `rascunho - duimp - ${this.processoNumero}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    utils.book_append_sheet(
+      workbook,
+      tabela(embalagens, ['Item', 'Tipo', 'Quantidade']),
+      'Embalagens',
+    );
+    utils.book_append_sheet(workbook, tabela(itens, ['Numero', 'NumeroAdicao', 'DescricaoMercadoria', 'NCM']), 'Itens');
+    utils.book_append_sheet(
+      workbook,
+      tabela(documentos, ['Nome', 'Tipo', 'TamanhoBytes', 'IncluirNaDuimp']),
+      'Documentos',
+    );
+
+    const nomeSeguro = this.processoNumero.replace(/[<>:"/\\|?*]/g, '-');
+    writeFileXLSX(workbook, `rascunho-duimp-${nomeSeguro}.xlsx`);
   }
 
   analisarInconsistencias(): void {
@@ -668,12 +1015,14 @@ export class DuimpComponent implements OnInit {
     const avisos: string[] = [];
     const duimp = this.duimp;
     const carga = duimp.carga;
-    const documentoImportador = duimp.cpfCnpjImportador.replace(/\D/g, '');
-    const tamanhoDocumento = duimp.tipoPessoaImportador === 'Pessoa Jurídica'
-      ? 14
-      : 11;
+    const documentoImportador = duimp.cpfCnpjImportador
+      .replace(/[^a-z0-9]/gi, '')
+      .toUpperCase();
+    const documentoValido = duimp.tipoPessoaImportador === 'Pessoa Jurídica'
+      ? /^[A-Z0-9]{12}\d{2}$/.test(documentoImportador)
+      : /^\d{11}$/.test(documentoImportador);
 
-    if (documentoImportador.length !== tamanhoDocumento) {
+    if (!documentoValido) {
       avisos.push(
         `Identificação: confira o ${duimp.tipoPessoaImportador === 'Pessoa Jurídica' ? 'CNPJ' : 'CPF'
         } do importador.`,
@@ -798,7 +1147,7 @@ export class DuimpComponent implements OnInit {
 
     this.inconsistencias = avisos;
     this.mensagemAnalise = avisos.length
-      ? `Conferência local concluída: ${avisos.length} ponto(s) para revisar.Esta análise não usa IA nem valida regras oficiais do Portal Único.`
+      ? `Conferência local concluída: ${avisos.length} ponto(s) para revisar. Esta análise não usa IA nem valida regras oficiais do Portal Único.`
       : 'Conferência local concluída sem alertas básicos. A validação oficial e a análise por IA ainda serão integradas.';
   }
 
@@ -816,6 +1165,7 @@ export class DuimpComponent implements OnInit {
 
     return {
       ...itemVazio,
+      numeroAdicao: this.converterNumeroExcel(linha['NumeroAdicao']),
       descricaoMercadoria: String(
         linha['DescricaoMercadoria'] ?? '',
       ).trim(),
@@ -912,6 +1262,7 @@ export class DuimpComponent implements OnInit {
 
   criarItemVazio(): ItemPlanilha {
     return {
+      numeroAdicao: null,
       descricaoMercadoria: '',
       ncm: '',
       quantidade: null,
